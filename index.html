@@ -1,1 +1,1160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RKT HUB — Панель управления</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Unbounded:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0e17;
+  --bg2: #111827;
+  --bg3: #1a2234;
+  --accent: #00d4aa;
+  --accent2: #00b894;
+  --red: #ff6b6b;
+  --orange: #ffa94d;
+  --yellow: #ffd43b;
+  --blue: #4dabf7;
+  --purple: #b197fc;
+  --text: #e8ecf1;
+  --text2: #8899aa;
+  --border: #243044;
+  --glass: rgba(17, 24, 39, 0.85);
+  --radius: 12px;
+  --shadow: 0 4px 30px rgba(0,0,0,0.4);
+}
 
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 20% 50%, rgba(0,212,170,0.06) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 20%, rgba(75,171,247,0.04) 0%, transparent 50%),
+              radial-gradient(ellipse at 50% 80%, rgba(177,151,252,0.03) 0%, transparent 50%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 260px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 24px 0;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+  transition: transform 0.3s;
+}
+
+.logo {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.logo h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.logo span {
+  font-size: 11px;
+  color: var(--text2);
+  display: block;
+  margin-top: 4px;
+}
+
+.nav { flex: 1; padding: 0 12px; }
+
+.nav-section {
+  font-size: 10px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 16px 12px 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+  color: var(--text2);
+  text-decoration: none;
+}
+
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: rgba(0,212,170,0.1); color: var(--accent); }
+.nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-item .badge {
+  margin-left: auto;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+/* ===== MAIN ===== */
+.main {
+  flex: 1;
+  margin-left: 260px;
+  padding: 32px;
+  max-width: 1200px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+
+.page-header h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--bg);
+}
+.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+
+.btn-secondary {
+  background: var(--bg3);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { border-color: var(--accent); }
+
+.btn-danger { background: rgba(255,107,107,0.15); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
+.btn-danger:hover { background: rgba(255,107,107,0.25); }
+
+/* ===== METRICS ===== */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.metric-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.metric-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.metric-card:nth-child(1)::after { background: var(--accent); }
+.metric-card:nth-child(2)::after { background: var(--blue); }
+.metric-card:nth-child(3)::after { background: var(--orange); }
+.metric-card:nth-child(4)::after { background: var(--purple); }
+.metric-card:nth-child(5)::after { background: var(--yellow); }
+
+.metric-card .icon { font-size: 28px; margin-bottom: 8px; }
+.metric-card .value {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1;
+}
+.metric-card .label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+
+/* ===== TABLE ===== */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.card-header h3 { font-size: 15px; font-weight: 600; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+th {
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--text2);
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(36,48,68,0.5);
+  vertical-align: middle;
+}
+
+tr:hover td { background: rgba(0,212,170,0.03); }
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-active { background: rgba(0,212,170,0.15); color: var(--accent); }
+.status-talks { background: rgba(255,169,77,0.15); color: var(--orange); }
+.status-research { background: rgba(75,171,247,0.15); color: var(--blue); }
+.status-pause { background: rgba(136,153,170,0.15); color: var(--text2); }
+.status-urgent { background: rgba(255,107,107,0.15); color: var(--red); }
+.status-work { background: rgba(177,151,252,0.15); color: var(--purple); }
+
+.priority-p1 { color: var(--red); font-weight: 700; }
+.priority-p2 { color: var(--orange); font-weight: 600; }
+.priority-p3 { color: var(--text2); }
+
+.progress-bar {
+  width: 80px;
+  height: 6px;
+  background: var(--bg);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+  transition: width 0.3s;
+}
+
+.actions-cell { display: flex; gap: 4px; }
+.action-btn {
+  width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+.action-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,170,0.05); }
+.action-btn.del:hover { border-color: var(--red); color: var(--red); background: rgba(255,107,107,0.05); }
+
+/* ===== MODAL ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+}
+.modal-overlay.show { display: flex; }
+
+.modal {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  width: 500px;
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.modal-close {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-close:hover { color: var(--red); border-color: var(--red); }
+
+.modal-body { padding: 24px; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.form-group textarea { min-height: 80px; resize: vertical; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ===== LOADING ===== */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ===== CONFIG BANNER ===== */
+.config-banner {
+  background: linear-gradient(135deg, rgba(255,169,77,0.1), rgba(255,107,107,0.1));
+  border: 1px solid rgba(255,169,77,0.3);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+
+.config-banner h3 { color: var(--orange); font-size: 14px; margin-bottom: 8px; }
+.config-banner p { color: var(--text2); font-size: 12px; line-height: 1.6; }
+.config-banner input {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  margin-top: 10px;
+}
+.config-banner .btn { margin-top: 10px; }
+
+/* ===== EMPTY STATE ===== */
+.empty { text-align: center; padding: 40px; color: var(--text2); }
+.empty .icon { font-size: 40px; margin-bottom: 12px; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main { margin-left: 0; padding: 16px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .form-row { grid-template-columns: 1fr; }
+  .mobile-toggle {
+    display: flex !important;
+    position: fixed;
+    top: 12px; left: 12px;
+    z-index: 200;
+    width: 40px; height: 40px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 20px;
+  }
+}
+
+.mobile-toggle { display: none; }
+
+/* ===== PAGE SECTIONS (hidden/shown) ===== */
+.page { display: none; }
+.page.active { display: block; }
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--accent);
+  color: var(--bg);
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 2000;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>RKT HUB</h1>
+      <span>Система управления проектами</span>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Главное</div>
+      <a class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
+        <span class="icon">📊</span> Дашборд
+      </a>
+
+      <div class="nav-section">Данные</div>
+      <a class="nav-item" onclick="showPage('partners')" data-page="partners">
+        <span class="icon">🤝</span> Партнёры <span class="badge" id="badge-partners">0</span>
+      </a>
+      <a class="nav-item" onclick="showPage('projects')" data-page="projects">
+        <span class="icon">📁</span> Проекты <span class="badge" id="badge-projects">0</span>
+      </a>
+      <a class="nav-item" onclick="showPage('tasks')" data-page="tasks">
+        <span class="icon">✅</span> Задачи <span class="badge" id="badge-tasks">0</span>
+      </a>
+      <a class="nav-item" onclick="showPage('directions')" data-page="directions">
+        <span class="icon">📂</span> Направления
+      </a>
+
+      <div class="nav-section">Управление</div>
+      <a class="nav-item" onclick="showPage('staff')" data-page="staff">
+        <span class="icon">👥</span> Сотрудники
+      </a>
+      <a class="nav-item" onclick="showPage('approvals')" data-page="approvals">
+        <span class="icon">📋</span> Согласования <span class="badge" id="badge-approvals" style="background:var(--orange)">0</span>
+      </a>
+      <a class="nav-item" onclick="showPage('comms')" data-page="comms">
+        <span class="icon">💬</span> Коммуникации
+      </a>
+
+      <div class="nav-section">Настройки</div>
+      <a class="nav-item" onclick="showPage('settings')" data-page="settings">
+        <span class="icon">⚙️</span> Настройки
+      </a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+
+    <!-- CONFIG BANNER -->
+    <div class="config-banner" id="configBanner">
+      <h3>⚙️ Подключение к Google Sheets</h3>
+      <p>Вставь URL Google Apps Script для подключения к данным. Без него интерфейс работает в демо-режиме.</p>
+      <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/...../exec">
+      <button class="btn btn-primary" onclick="connectAPI()">Подключить</button>
+    </div>
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h2>📊 Дашборд</h2>
+        <button class="btn btn-secondary" onclick="loadData()">🔄 Обновить</button>
+      </div>
+
+      <div class="metrics" id="metrics">
+        <div class="metric-card"><div class="icon">🤝</div><div class="value" id="m-partners">0</div><div class="label">Партнёров</div></div>
+        <div class="metric-card"><div class="icon">📁</div><div class="value" id="m-projects">0</div><div class="label">Проектов</div></div>
+        <div class="metric-card"><div class="icon">✅</div><div class="value" id="m-tasks">0</div><div class="label">Задач</div></div>
+        <div class="metric-card"><div class="icon">👥</div><div class="value" id="m-staff">0</div><div class="label">Сотрудников</div></div>
+        <div class="metric-card"><div class="icon">📂</div><div class="value" id="m-dirs">5</div><div class="label">Направлений</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>🔴 Срочные задачи</h3></div>
+        <table>
+          <thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Дедлайн</th></tr></thead>
+          <tbody id="urgent-tasks"></tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h3>📁 Активные проекты</h3></div>
+        <table>
+          <thead><tr><th>Проект</th><th>Направление</th><th>Статус</th><th>Прогресс</th><th>Дедлайн</th></tr></thead>
+          <tbody id="active-projects"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PARTNERS ===== -->
+    <div class="page" id="page-partners">
+      <div class="page-header">
+        <h2>🤝 Партнёры</h2>
+        <button class="btn btn-primary" onclick="openModal('partner')">+ Добавить</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Название</th><th>Страна</th><th>Направление</th><th>Продукт</th><th>Статус</th><th></th></tr></thead>
+          <tbody id="partners-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== PROJECTS ===== -->
+    <div class="page" id="page-projects">
+      <div class="page-header">
+        <h2>📁 Проекты</h2>
+        <button class="btn btn-primary" onclick="openModal('project')">+ Добавить</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Проект</th><th>Направление</th><th>Статус</th><th>Приоритет</th><th>Прогресс</th><th>Дедлайн</th><th></th></tr></thead>
+          <tbody id="projects-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== TASKS ===== -->
+    <div class="page" id="page-tasks">
+      <div class="page-header">
+        <h2>✅ Задачи</h2>
+        <button class="btn btn-primary" onclick="openModal('task')">+ Добавить</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Описание</th><th>Направление</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th><th></th></tr></thead>
+          <tbody id="tasks-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== STAFF ===== -->
+    <div class="page" id="page-staff">
+      <div class="page-header">
+        <h2>👥 Сотрудники</h2>
+        <button class="btn btn-primary" onclick="openModal('staff')">+ Добавить</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Имя</th><th>Роль</th><th>Направление</th><th>Telegram</th><th>Статус</th><th></th></tr></thead>
+          <tbody id="staff-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== DIRECTIONS ===== -->
+    <div class="page" id="page-directions">
+      <div class="page-header"><h2>📂 Направления</h2></div>
+      <div class="metrics" id="dir-cards"></div>
+    </div>
+
+    <!-- ===== APPROVALS ===== -->
+    <div class="page" id="page-approvals">
+      <div class="page-header"><h2>📋 Согласования</h2></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Тип</th><th>Описание</th><th>От</th><th>Направление</th><th>Статус</th><th></th></tr></thead>
+          <tbody id="approvals-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== COMMS ===== -->
+    <div class="page" id="page-comms">
+      <div class="page-header">
+        <h2>💬 Коммуникации</h2>
+        <button class="btn btn-primary" onclick="openModal('comm')">+ Записать</button>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Партнёр</th><th>Тип</th><th>Тема</th><th>Дата</th><th>Автор</th></tr></thead>
+          <tbody id="comms-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="page" id="page-settings">
+      <div class="page-header"><h2>⚙️ Настройки</h2></div>
+      <div class="card" style="padding:24px">
+        <div class="form-group">
+          <label>URL Google Apps Script</label>
+          <input type="text" id="settingsApiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+        </div>
+        <div class="form-group">
+          <label>Google Sheet ID</label>
+          <input type="text" value="1YVGQc7eHOCeCHEKEe1u0G3McdsDPMzXaGh6hWBdMDNI" readonly style="opacity:0.6">
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">Сохранить</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Добавить</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" id="modalSave" onclick="saveModal()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== STATE ==========
+let API_URL = localStorage.getItem('rkt_api_url') || 'https://daniyal2212.app.n8n.cloud/webhook/rkt-api';
+let DATA = {
+  partners: [], tasks: [], directions: [], staff: [], projects: [], approvals: [], comms: []
+};
+let currentModal = '';
+
+// ========== DEMO DATA ==========
+const DEMO = {
+  partners: [
+    {ID:'P001',Название:'Syno Medical',Страна:'Китай',Направление:'КТ',Продукт:'КТ-сканеры 16/32/64/128 срезов',Статус:'Активный'},
+    {ID:'P002',Название:'Neusoft Medical',Страна:'Китай',Направление:'КТ',Продукт:'КТ-сканеры, МРТ, УЗИ',Статус:'Research'},
+    {ID:'P003',Название:'United Imaging',Страна:'Китай',Направление:'КТ',Продукт:'КТ, МРТ, ПЭТ/КТ',Статус:'Research'},
+    {ID:'P004',Название:'Browiner',Страна:'Китай',Направление:'КТ',Продукт:'КТ-сканеры бюджетного сегмента',Статус:'Research'},
+    {ID:'P005',Название:'KangDuo',Страна:'Китай',Направление:'Роботы',Продукт:'Хирургический робот',Статус:'Переговоры'},
+    {ID:'P006',Название:'MicroPort',Страна:'Китай',Направление:'Роботы',Продукт:'Toumai хирургический робот',Статус:'Переговоры'},
+    {ID:'P007',Название:'Intuitive Surgical',Страна:'США',Направление:'Роботы',Продукт:'Da Vinci хирургический робот',Статус:'Пауза'},
+    {ID:'P008',Название:'TINAVI',Страна:'Китай',Направление:'Роботы',Продукт:'Ортопедический робот TiRobot',Статус:'Research'},
+    {ID:'P009',Название:'Wandong Medical',Страна:'Китай',Направление:'Рентген',Продукт:'Цифровые рентген-аппараты',Статус:'Research'},
+    {ID:'P010',Название:'Angell Technology',Страна:'Китай',Направление:'Рентген',Продукт:'Портативные рентген-аппараты',Статус:'Research'},
+    {ID:'P011',Название:'Dornier MedTech',Страна:'Германия',Направление:'Урология',Продукт:'Литотриптеры',Статус:'Пауза'},
+    {ID:'P012',Название:'Shenzhen Huikang',Страна:'Китай',Направление:'Урология',Продукт:'Литотриптеры, урологические столы',Статус:'Research'},
+    {ID:'P013',Название:'Neusoft PACS',Страна:'Китай',Направление:'PACS',Продукт:'PACS/RIS системы',Статус:'Research'},
+    {ID:'P014',Название:'Ростех',Страна:'Россия',Направление:'КТ',Продукт:'Стратегический партнёр',Статус:'Переговоры'},
+    {ID:'P015',Название:'Росатом',Страна:'Россия',Направление:'КТ',Продукт:'Стратегический партнёр',Статус:'Research'},
+    {ID:'P016',Название:'ОЭЗ Алабуга',Страна:'Россия',Направление:'КТ',Продукт:'Производственная площадка',Статус:'Активный'},
+  ],
+  tasks: [
+    {ID:'T001',Описание:'Финализировать OEM-контракт с Syno Medical',Направление:'КТ',Приоритет:'P1',Статус:'В работе',Дедлайн:'2026-03-01'},
+    {ID:'T002',Описание:'Написать письмо в KangDuo о партнёрстве',Направление:'Роботы',Приоритет:'P1',Статус:'В работе',Дедлайн:'2026-02-15'},
+    {ID:'T003',Описание:'Подготовить презентацию для инвесторов',Направление:'КТ',Приоритет:'P1',Статус:'В работе',Дедлайн:'2026-02-28'},
+    {ID:'T004',Описание:'Подготовить заявку резидента ОЭЗ Алабуга',Направление:'КТ',Приоритет:'P1',Статус:'В работе',Дедлайн:'2026-04-01'},
+    {ID:'T005',Описание:'Изучить модельный ряд Neusoft КТ',Направление:'КТ',Приоритет:'P2',Статус:'В работе',Дедлайн:'2026-03-15'},
+    {ID:'T006',Описание:'Запросить каталог у Wandong Medical',Направление:'Рентген',Приоритет:'P2',Статус:'В работе',Дедлайн:'2026-02-28'},
+    {ID:'T007',Описание:'Изучить рынок хирургических роботов в РФ',Направление:'Роботы',Приоритет:'P2',Статус:'В работе',Дедлайн:'2026-03-01'},
+    {ID:'T008',Описание:'Follow-up MicroPort по Toumai',Направление:'Роботы',Приоритет:'P2',Статус:'В работе',Дедлайн:'2026-02-20'},
+  ],
+  directions: [
+    {Название:'КТ',Статус:'Активный',Этап:'Переговоры с производителем'},
+    {Название:'Рентген',Статус:'Активный',Этап:'Исследование рынка'},
+    {Название:'Роботы',Статус:'Активный',Этап:'Поиск партнёров'},
+    {Название:'Урология',Статус:'Активный',Этап:'Исследование'},
+    {Название:'PACS',Статус:'Активный',Этап:'Исследование'},
+  ],
+  staff: [
+    {ID:'EMP001',Имя:'Даниял Арсланов',Telegram_ID:'1144907578',Роль:'CEO',Направление:'Все',Статус:'Активный'},
+    {ID:'EMP002',Имя:'(Заместитель)',Роль:'Зам',Направление:'Все',Статус:'Активный'},
+  ],
+  projects: [
+    {ID:'PRJ001',Название:'Локализация КТ-16 Syno',Направление:'КТ',Статус:'В работе',Приоритет:'P1',Прогресс:'25%',Дедлайн:'2027-12-01'},
+    {ID:'PRJ002',Название:'Партнёрство KangDuo',Направление:'Роботы',Статус:'Переговоры',Приоритет:'P1',Прогресс:'10%',Дедлайн:'2027-06-01'},
+    {ID:'PRJ003',Название:'Резидент ОЭЗ Алабуга',Направление:'КТ',Статус:'Подготовка',Приоритет:'P1',Прогресс:'40%',Дедлайн:'2026-04-01'},
+    {ID:'PRJ004',Название:'Исследование рентген рынка',Направление:'Рентген',Статус:'В работе',Приоритет:'P2',Прогресс:'30%',Дедлайн:'2026-03-15'},
+    {ID:'PRJ005',Название:'PACS интеграция',Направление:'PACS',Статус:'Исследование',Приоритет:'P3',Прогресс:'5%',Дедлайн:'2026-06-01'},
+  ],
+  approvals: [
+    {ID:'APR001',Тип:'Изменение статуса',Описание:'Syno Medical → Контракт',От_кого:'EMP003',Направление:'КТ',Статус:'⏳ Ожидает'},
+  ],
+  comms: []
+};
+
+// ========== INIT ==========
+window.addEventListener('DOMContentLoaded', () => {
+  if (API_URL) {
+    document.getElementById('configBanner').style.display = 'none';
+    document.getElementById('settingsApiUrl').value = API_URL;
+    loadData();
+  } else {
+    DATA = {...DEMO};
+    renderAll();
+  }
+});
+
+function connectAPI() {
+  const url = document.getElementById('apiUrl').value.trim();
+  if (!url) return;
+  API_URL = url;
+  localStorage.setItem('rkt_api_url', url);
+  document.getElementById('configBanner').style.display = 'none';
+  document.getElementById('settingsApiUrl').value = url;
+  loadData();
+}
+
+function saveSettings() {
+  const url = document.getElementById('settingsApiUrl').value.trim();
+  if (url) {
+    API_URL = url;
+    localStorage.setItem('rkt_api_url', url);
+    loadData();
+    toast('✅ Настройки сохранены');
+  }
+}
+
+// ========== API ==========
+async function loadData() {
+  if (!API_URL) { DATA = {...DEMO}; renderAll(); return; }
+  try {
+    const r = await fetch(API_URL + '?action=dashboard');
+    const d = await r.json();
+    DATA.partners = d.partners || [];
+    DATA.tasks = d.tasks || [];
+    DATA.directions = d.directions || [];
+    DATA.staff = d.staff || [];
+    DATA.projects = d.projects || [];
+    DATA.approvals = d.approvals || [];
+    DATA.comms = d.comms || [];
+    renderAll();
+    toast('✅ Данные загружены');
+  } catch(e) {
+    console.error(e);
+    DATA = {...DEMO};
+    renderAll();
+    toast('⚠️ Ошибка загрузки, демо-режим');
+  }
+}
+
+async function apiPost(action, data) {
+  if (!API_URL) {
+    // Demo mode: add to local data
+    demoAdd(data.sheet, data.row);
+    renderAll();
+    toast('✅ Добавлено (демо)');
+    return;
+  }
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      body: JSON.stringify({action, ...data})
+    });
+    loadData();
+    toast('✅ Сохранено');
+  } catch(e) {
+    toast('❌ Ошибка');
+  }
+}
+
+function demoAdd(sheet, row) {
+  const map = {
+    'Партнёры': 'partners', 'Проекты': 'projects', 'Задачи': 'tasks',
+    'Сотрудники': 'staff', 'Коммуникации': 'comms', 'Согласования': 'approvals'
+  };
+  const key = map[sheet];
+  if (key && DATA[key]) DATA[key].push(row);
+}
+
+// ========== NAVIGATION ==========
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page)?.classList.add('active');
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.querySelector('.sidebar').classList.remove('open');
+}
+
+// ========== RENDER ==========
+function renderAll() {
+  // Metrics
+  document.getElementById('m-partners').textContent = DATA.partners.length;
+  document.getElementById('m-projects').textContent = DATA.projects.length;
+  document.getElementById('m-tasks').textContent = DATA.tasks.filter(t => t.Статус !== 'Готово').length;
+  document.getElementById('m-staff').textContent = DATA.staff.length;
+  document.getElementById('m-dirs').textContent = DATA.directions.length;
+
+  // Badges
+  document.getElementById('badge-partners').textContent = DATA.partners.length;
+  document.getElementById('badge-projects').textContent = DATA.projects.length;
+  document.getElementById('badge-tasks').textContent = DATA.tasks.filter(t => t.Статус !== 'Готово').length;
+  document.getElementById('badge-approvals').textContent = DATA.approvals.filter(a => a.Статус?.includes('Ожидает')).length;
+
+  renderUrgentTasks();
+  renderActiveProjects();
+  renderPartners();
+  renderProjects();
+  renderTasks();
+  renderStaff();
+  renderDirections();
+  renderApprovals();
+}
+
+function statusClass(s) {
+  if (!s) return '';
+  if (s === 'Активный' || s.includes('Готово')) return 'status-active';
+  if (s === 'Переговоры') return 'status-talks';
+  if (s === 'Research' || s.includes('Исследование')) return 'status-research';
+  if (s === 'Пауза') return 'status-pause';
+  if (s.includes('работе') || s.includes('Подготовка')) return 'status-work';
+  if (s.includes('Ожидает')) return 'status-urgent';
+  return '';
+}
+
+function priorityClass(p) {
+  return p === 'P1' ? 'priority-p1' : p === 'P2' ? 'priority-p2' : 'priority-p3';
+}
+
+function progressBar(p) {
+  const val = parseInt(p) || 0;
+  return `<div style="display:flex;align-items:center;gap:8px"><div class="progress-bar"><div class="progress-bar-fill" style="width:${val}%"></div></div><span style="font-size:11px;color:var(--text2)">${val}%</span></div>`;
+}
+
+function actionBtns(type, id) {
+  return `<div class="actions-cell">
+    <button class="action-btn" onclick="editItem('${type}','${id}')" title="Редактировать">✏️</button>
+    <button class="action-btn del" onclick="deleteItem('${type}','${id}')" title="Удалить">🗑</button>
+  </div>`;
+}
+
+function renderUrgentTasks() {
+  const el = document.getElementById('urgent-tasks');
+  const urgent = DATA.tasks.filter(t => t.Приоритет === 'P1' && t.Статус !== 'Готово').slice(0, 5);
+  el.innerHTML = urgent.length ? urgent.map(t => `<tr>
+    <td>${t.Описание || t.Название || ''}</td>
+    <td>${t.Направление || ''}</td>
+    <td><span class="${priorityClass(t.Приоритет)}">${t.Приоритет}</span></td>
+    <td>${t.Дедлайн || '—'}</td>
+  </tr>`).join('') : '<tr><td colspan="4" class="empty">Нет срочных задач 🎉</td></tr>';
+}
+
+function renderActiveProjects() {
+  const el = document.getElementById('active-projects');
+  const active = DATA.projects.filter(p => p.Статус !== 'Завершён').slice(0, 5);
+  el.innerHTML = active.length ? active.map(p => `<tr>
+    <td><strong>${p.Название || ''}</strong></td>
+    <td>${p.Направление || ''}</td>
+    <td><span class="status ${statusClass(p.Статус)}">${p.Статус || ''}</span></td>
+    <td>${progressBar(p.Прогресс)}</td>
+    <td>${p.Дедлайн || '—'}</td>
+  </tr>`).join('') : '<tr><td colspan="5" class="empty">Нет активных проектов</td></tr>';
+}
+
+function renderPartners() {
+  const el = document.getElementById('partners-table');
+  el.innerHTML = DATA.partners.map(p => `<tr>
+    <td><strong>${p.Название || ''}</strong></td>
+    <td>${p.Страна || ''}</td>
+    <td>${p.Направление || ''}</td>
+    <td style="font-size:12px">${p.Продукт || ''}</td>
+    <td><span class="status ${statusClass(p.Статус)}">${p.Статус || ''}</span></td>
+    <td>${actionBtns('partner', p.ID)}</td>
+  </tr>`).join('');
+}
+
+function renderProjects() {
+  const el = document.getElementById('projects-table');
+  el.innerHTML = DATA.projects.map(p => `<tr>
+    <td><strong>${p.Название || ''}</strong></td>
+    <td>${p.Направление || ''}</td>
+    <td><span class="status ${statusClass(p.Статус)}">${p.Статус || ''}</span></td>
+    <td><span class="${priorityClass(p.Приоритет)}">${p.Приоритет || ''}</span></td>
+    <td>${progressBar(p.Прогресс)}</td>
+    <td>${p.Дедлайн || '—'}</td>
+    <td>${actionBtns('project', p.ID)}</td>
+  </tr>`).join('');
+}
+
+function renderTasks() {
+  const el = document.getElementById('tasks-table');
+  const sorted = [...DATA.tasks].sort((a,b) => ({'P1':1,'P2':2,'P3':3}[a.Приоритет]||9) - ({'P1':1,'P2':2,'P3':3}[b.Приоритет]||9));
+  el.innerHTML = sorted.map(t => `<tr>
+    <td>${t.Описание || t.Название || ''}</td>
+    <td>${t.Направление || ''}</td>
+    <td><span class="${priorityClass(t.Приоритет)}">${t.Приоритет || ''}</span></td>
+    <td><span class="status ${statusClass(t.Статус)}">${t.Статус || ''}</span></td>
+    <td>${t.Дедлайн || '—'}</td>
+    <td>${actionBtns('task', t.ID)}</td>
+  </tr>`).join('');
+}
+
+function renderStaff() {
+  const el = document.getElementById('staff-table');
+  const roleE = {'CEO':'👑','Зам':'⭐','Руководитель':'📋'};
+  el.innerHTML = DATA.staff.map(s => `<tr>
+    <td><strong>${s.Имя || '(не заполнено)'}</strong></td>
+    <td>${roleE[s.Роль]||'👤'} ${s.Роль || ''}</td>
+    <td>${s.Направление || ''}</td>
+    <td style="font-size:11px">${s.Telegram_ID ? '✅ ' + s.Telegram_ID : '❌'}</td>
+    <td><span class="status ${s.Статус === 'Активный' ? 'status-active' : 'status-pause'}">${s.Статус || ''}</span></td>
+    <td>${actionBtns('staff', s.ID)}</td>
+  </tr>`).join('');
+}
+
+function renderDirections() {
+  const el = document.getElementById('dir-cards');
+  const emojiMap = {'КТ':'🔬','Рентген':'📡','Роботы':'🤖','Урология':'💊','PACS':'💻'};
+  el.innerHTML = DATA.directions.map(d => {
+    const cnt = DATA.partners.filter(p => (p.Направление||'').includes(d.Название)).length;
+    const prj = DATA.projects.filter(p => (p.Направление||'').includes(d.Название)).length;
+    const tsk = DATA.tasks.filter(t => (t.Направление||'').includes(d.Название) && t.Статус !== 'Готово').length;
+    return `<div class="metric-card" style="cursor:default">
+      <div class="icon">${emojiMap[d.Название]||'📌'}</div>
+      <div class="value" style="font-size:20px">${d.Название}</div>
+      <div class="label">${d.Этап || ''}</div>
+      <div style="margin-top:12px;font-size:12px;color:var(--text2)">
+        🤝 ${cnt} партн. &nbsp; 📁 ${prj} проект. &nbsp; ✅ ${tsk} задач
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderApprovals() {
+  const el = document.getElementById('approvals-table');
+  el.innerHTML = DATA.approvals.length ? DATA.approvals.map(a => `<tr>
+    <td>${a.Тип || ''}</td>
+    <td>${a.Описание || ''}</td>
+    <td>${a.От_кого || ''}</td>
+    <td>${a.Направление || ''}</td>
+    <td><span class="status ${statusClass(a.Статус)}">${a.Статус || ''}</span></td>
+    <td>
+      <div class="actions-cell">
+        <button class="action-btn" onclick="approveItem('${a.ID}')" title="Одобрить" style="color:var(--accent)">✅</button>
+        <button class="action-btn del" onclick="rejectItem('${a.ID}')" title="Отклонить">❌</button>
+      </div>
+    </td>
+  </tr>`).join('') : '<tr><td colspan="6" class="empty">Нет ожидающих согласований</td></tr>';
+}
+
+// ========== MODALS ==========
+const MODAL_FORMS = {
+  partner: {title:'Добавить партнёра', sheet:'Партнёры', fields:[
+    {name:'Название',type:'text',required:true},
+    {name:'Страна',type:'text'},
+    {name:'Направление',type:'select',options:['КТ','Рентген','Роботы','Урология','PACS']},
+    {name:'Продукт',type:'text'},
+    {name:'Статус',type:'select',options:['Research','Переговоры','Активный','Пауза']},
+    {name:'Описание',type:'textarea'},
+  ]},
+  project: {title:'Добавить проект', sheet:'Проекты', fields:[
+    {name:'Название',type:'text',required:true},
+    {name:'Направление',type:'select',options:['КТ','Рентген','Роботы','Урология','PACS']},
+    {name:'Описание',type:'textarea'},
+    {name:'Статус',type:'select',options:['Исследование','Подготовка','В работе','Переговоры','Завершён']},
+    {name:'Приоритет',type:'select',options:['P1','P2','P3']},
+    {name:'Дедлайн',type:'date'},
+    {name:'Прогресс',type:'text',placeholder:'25%'},
+    {name:'Партнёр',type:'text'},
+  ]},
+  task: {title:'Добавить задачу', sheet:'Задачи', fields:[
+    {name:'Описание',type:'text',required:true},
+    {name:'Направление',type:'select',options:['КТ','Рентген','Роботы','Урология','PACS','Общее']},
+    {name:'Приоритет',type:'select',options:['P1','P2','P3']},
+    {name:'Статус',type:'select',options:['⏳ В очереди','В работе','Готово']},
+    {name:'Дедлайн',type:'date'},
+  ]},
+  staff: {title:'Добавить сотрудника', sheet:'Сотрудники', fields:[
+    {name:'Имя',type:'text',required:true},
+    {name:'Telegram_ID',type:'text',placeholder:'ID из Telegram'},
+    {name:'Username',type:'text',placeholder:'@username'},
+    {name:'Роль',type:'select',options:['CEO','Зам','Руководитель']},
+    {name:'Направление',type:'select',options:['Все','КТ','Рентген','Роботы','Урология','PACS']},
+    {name:'Email',type:'text'},
+    {name:'Телефон',type:'text'},
+  ]},
+  comm: {title:'Записать коммуникацию', sheet:'Коммуникации', fields:[
+    {name:'Партнёр',type:'text',required:true},
+    {name:'Тип',type:'select',options:['Звонок','Email','Встреча','Письмо','Чат']},
+    {name:'Тема',type:'textarea'},
+  ]}
+};
+
+function openModal(type) {
+  currentModal = type;
+  const cfg = MODAL_FORMS[type];
+  document.getElementById('modalTitle').textContent = cfg.title;
+
+  let html = '';
+  for (const f of cfg.fields) {
+    html += `<div class="form-group">
+      <label>${f.name}${f.required ? ' *' : ''}</label>`;
+    if (f.type === 'select') {
+      html += `<select id="field-${f.name}">${f.options.map(o => `<option>${o}</option>`).join('')}</select>`;
+    } else if (f.type === 'textarea') {
+      html += `<textarea id="field-${f.name}" placeholder="${f.placeholder||''}"></textarea>`;
+    } else {
+      html += `<input type="${f.type}" id="field-${f.name}" placeholder="${f.placeholder||''}">`;
+    }
+    html += '</div>';
+  }
+
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  currentModal = '';
+}
+
+function saveModal() {
+  const cfg = MODAL_FORMS[currentModal];
+  const row = { ID: currentModal[0].toUpperCase() + String(Date.now()).slice(-5) };
+
+  for (const f of cfg.fields) {
+    const el = document.getElementById('field-' + f.name);
+    row[f.name] = el?.value || '';
+  }
+
+  // Add timestamps
+  const now = new Date().toISOString().split('T')[0];
+  if (cfg.sheet === 'Сотрудники') row['Статус'] = 'Активный';
+  if (cfg.sheet === 'Сотрудники') row['Дата_добавления'] = now;
+  if (cfg.sheet === 'Проекты') { row['Создано'] = now; row['Обновлено'] = now; }
+
+  apiPost('add', { sheet: cfg.sheet, row });
+  closeModal();
+}
+
+function editItem(type, id) {
+  toast('Редактирование — в разработке');
+}
+
+function deleteItem(type, id) {
+  if (!confirm('Удалить?')) return;
+  const map = {'partner':'partners','project':'projects','task':'tasks','staff':'staff'};
+  const key = map[type];
+  if (key) DATA[key] = DATA[key].filter(i => i.ID !== id);
+  renderAll();
+  toast('🗑 Удалено');
+}
+
+function approveItem(id) {
+  const a = DATA.approvals.find(i => i.ID === id);
+  if (a) a.Статус = '✅ Одобрено';
+  renderAll();
+  toast('✅ Одобрено');
+}
+
+function rejectItem(id) {
+  const a = DATA.approvals.find(i => i.ID === id);
+  if (a) a.Статус = '❌ Отклонено';
+  renderAll();
+  toast('❌ Отклонено');
+}
+
+// ========== TOAST ==========
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
