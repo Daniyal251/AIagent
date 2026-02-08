@@ -4,28 +4,46 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>RKT HUB — Панель управления</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Unbounded:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏥</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+/* ===== CSS VARIABLES ===== */
 :root {
   --bg: #0a0e17;
   --bg2: #111827;
   --bg3: #1a2234;
+  --bg4: #1f2b3d;
   --accent: #00d4aa;
   --accent2: #00b894;
+  --accent-glow: rgba(0,212,170,0.15);
   --red: #ff6b6b;
+  --red-glow: rgba(255,107,107,0.15);
   --orange: #ffa94d;
+  --orange-glow: rgba(255,169,77,0.15);
   --yellow: #ffd43b;
   --blue: #4dabf7;
+  --blue-glow: rgba(75,171,247,0.15);
   --purple: #b197fc;
+  --purple-glow: rgba(177,151,252,0.15);
+  --green: #51cf66;
   --text: #e8ecf1;
   --text2: #8899aa;
+  --text3: #5a6a7a;
   --border: #243044;
+  --border2: #2d3f56;
   --glass: rgba(17, 24, 39, 0.85);
   --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 16px;
   --shadow: 0 4px 30px rgba(0,0,0,0.4);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.5);
+  --transition: all 0.2s ease;
+  --sidebar-w: 260px;
 }
 
-* { margin:0; padding:0; box-sizing:border-box; }
+/* ===== RESET ===== */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
 body {
   font-family: 'JetBrains Mono', monospace;
@@ -33,147 +51,382 @@ body {
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
+  line-height: 1.5;
 }
 
+/* Background gradient */
 body::before {
   content: '';
   position: fixed;
   top: -50%; left: -50%;
   width: 200%; height: 200%;
-  background: radial-gradient(ellipse at 20% 50%, rgba(0,212,170,0.06) 0%, transparent 50%),
-              radial-gradient(ellipse at 80% 20%, rgba(75,171,247,0.04) 0%, transparent 50%),
-              radial-gradient(ellipse at 50% 80%, rgba(177,151,252,0.03) 0%, transparent 50%);
+  background:
+    radial-gradient(ellipse at 20% 50%, rgba(0,212,170,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(75,171,247,0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 50% 80%, rgba(177,151,252,0.03) 0%, transparent 50%);
   z-index: 0;
   pointer-events: none;
 }
 
-.app { position: relative; z-index: 1; display: flex; min-height: 100vh; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text2); }
+
+/* ============================================================
+   LOGIN SCREEN
+   ============================================================ */
+.login-screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  background: var(--bg);
+}
+
+.login-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 52px 44px;
+  width: 440px;
+  max-width: 92vw;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  position: relative;
+  overflow: hidden;
+  animation: loginFadeIn 0.5s ease;
+}
+
+@keyframes loginFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--accent), var(--blue), var(--purple), var(--accent));
+  background-size: 300% 100%;
+  animation: gradientShift 4s ease infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.login-icon { font-size: 72px; margin-bottom: 20px; display: block; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }
+.login-logo {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 36px;
+  font-weight: 900;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+.login-sub { color: var(--text2); font-size: 13px; margin-bottom: 36px; }
+
+.login-label {
+  display: block;
+  text-align: left;
+  font-size: 11px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.login-input {
+  width: 100%;
+  padding: 16px 20px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 3px;
+  transition: var(--transition);
+  margin-bottom: 10px;
+}
+
+.login-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-glow); }
+.login-input::placeholder { color: var(--text3); font-size: 13px; letter-spacing: 0; }
+
+.login-hint {
+  font-size: 11px;
+  color: var(--text2);
+  margin-bottom: 28px;
+  line-height: 1.8;
+}
+.login-hint a { color: var(--accent); font-weight: 600; }
+
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: var(--bg);
+  border: none;
+  border-radius: var(--radius);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,212,170,0.3); }
+.login-btn:active { transform: translateY(0); }
+.login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.login-error {
+  color: var(--red);
+  font-size: 13px;
+  margin-top: 16px;
+  display: none;
+  padding: 10px;
+  background: var(--red-glow);
+  border-radius: var(--radius-sm);
+}
+
+.login-loading {
+  margin-top: 16px;
+  color: var(--text2);
+  font-size: 13px;
+  display: none;
+}
+
+/* ============================================================
+   APP LAYOUT
+   ============================================================ */
+.app {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 100vh;
+}
 
 /* ===== SIDEBAR ===== */
 .sidebar {
-  width: 260px;
+  width: var(--sidebar-w);
   background: var(--bg2);
   border-right: 1px solid var(--border);
-  padding: 24px 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
   position: fixed;
   top: 0; left: 0; bottom: 0;
   z-index: 100;
-  transition: transform 0.3s;
+  transition: transform 0.3s ease;
+  overflow-y: auto;
 }
 
-.logo {
-  padding: 0 24px 24px;
+.logo-section {
+  padding: 28px 24px 20px;
   border-bottom: 1px solid var(--border);
-  margin-bottom: 16px;
 }
 
-.logo h1 {
+.logo-section h1 {
   font-family: 'Unbounded', sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 900;
   background: linear-gradient(135deg, var(--accent), var(--blue));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  letter-spacing: -0.5px;
 }
-
-.logo span {
+.logo-section .subtitle {
   font-size: 11px;
   color: var(--text2);
-  display: block;
   margin-top: 4px;
 }
 
-.nav { flex: 1; padding: 0 12px; }
-
+.nav { flex: 1; padding: 12px; }
 .nav-section {
   font-size: 10px;
-  color: var(--text2);
+  color: var(--text3);
   text-transform: uppercase;
-  letter-spacing: 2px;
-  padding: 16px 12px 8px;
+  letter-spacing: 2.5px;
+  padding: 20px 12px 8px;
+  font-weight: 600;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
   font-size: 13px;
   color: var(--text2);
   text-decoration: none;
+  margin-bottom: 2px;
+  position: relative;
 }
 
-.nav-item:hover { background: var(--bg3); color: var(--text); }
-.nav-item.active { background: rgba(0,212,170,0.1); color: var(--accent); }
-.nav-item .icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-item:hover { background: var(--bg3); color: var(--text); text-decoration: none; }
+.nav-item.active {
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 25%; bottom: 25%;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+}
+
+.nav-item .icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+.nav-item .label { flex: 1; }
 .nav-item .badge {
-  margin-left: auto;
   background: var(--accent);
   color: var(--bg);
   font-size: 10px;
   font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 10px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  min-width: 22px;
+  text-align: center;
 }
+.nav-item .badge-orange { background: var(--orange); }
+.nav-item.hidden { display: none; }
+
+/* User bar */
+.user-bar {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--bg3);
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.user-avatar {
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--blue));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--bg);
+  flex-shrink: 0;
+}
+
+.user-name { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.user-role-text { font-size: 11px; color: var(--text2); }
+
+.logout-btn {
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.logout-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-glow); }
 
 /* ===== MAIN ===== */
 .main {
   flex: 1;
-  margin-left: 260px;
-  padding: 32px;
-  max-width: 1200px;
+  margin-left: var(--sidebar-w);
+  padding: 32px 36px;
+  max-width: 1300px;
+  min-height: 100vh;
 }
 
+/* ===== PAGE HEADER ===== */
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .page-header h2 {
   font-family: 'Unbounded', sans-serif;
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
+.page-header .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ===== BUTTONS ===== */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   border: none;
   cursor: pointer;
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: var(--transition);
+  white-space: nowrap;
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
   color: var(--bg);
 }
-.btn-primary:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,212,170,0.3); }
 
 .btn-secondary {
   background: var(--bg3);
   color: var(--text);
   border: 1px solid var(--border);
 }
-.btn-secondary:hover { border-color: var(--accent); }
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
-.btn-danger { background: rgba(255,107,107,0.15); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
+.btn-danger { background: var(--red-glow); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
 .btn-danger:hover { background: rgba(255,107,107,0.25); }
 
-/* ===== METRICS ===== */
+.btn-sm { padding: 6px 14px; font-size: 11px; }
+.btn-xs { padding: 4px 10px; font-size: 10px; }
+
+.btn-approve { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(0,212,170,0.3); }
+.btn-approve:hover { background: rgba(0,212,170,0.25); }
+.btn-reject { background: var(--red-glow); color: var(--red); border: 1px solid rgba(255,107,107,0.3); }
+.btn-reject:hover { background: rgba(255,107,107,0.25); }
+
+/* ===== METRICS CARDS ===== */
 .metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -185,10 +438,13 @@ body::before {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: 22px;
   position: relative;
   overflow: hidden;
+  transition: var(--transition);
 }
+
+.metric-card:hover { border-color: var(--border2); transform: translateY(-2px); box-shadow: var(--shadow); }
 
 .metric-card::after {
   content: '';
@@ -196,23 +452,31 @@ body::before {
   top: 0; left: 0; right: 0;
   height: 3px;
 }
+.metric-card:nth-child(1)::after { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+.metric-card:nth-child(2)::after { background: linear-gradient(90deg, var(--blue), #228be6); }
+.metric-card:nth-child(3)::after { background: linear-gradient(90deg, var(--orange), #fd7e14); }
+.metric-card:nth-child(4)::after { background: linear-gradient(90deg, var(--purple), #7950f2); }
+.metric-card:nth-child(5)::after { background: linear-gradient(90deg, var(--yellow), #fab005); }
 
-.metric-card:nth-child(1)::after { background: var(--accent); }
-.metric-card:nth-child(2)::after { background: var(--blue); }
-.metric-card:nth-child(3)::after { background: var(--orange); }
-.metric-card:nth-child(4)::after { background: var(--purple); }
-.metric-card:nth-child(5)::after { background: var(--yellow); }
-
-.metric-card .icon { font-size: 28px; margin-bottom: 8px; }
-.metric-card .value {
+.metric-card .m-icon { font-size: 30px; margin-bottom: 10px; }
+.metric-card .m-value {
   font-family: 'Unbounded', sans-serif;
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 900;
   line-height: 1;
 }
-.metric-card .label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.metric-card .m-label {
+  font-size: 12px;
+  color: var(--text2);
+  margin-top: 6px;
+}
+.metric-card .m-sub {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 4px;
+}
 
-/* ===== TABLE ===== */
+/* ===== CARDS ===== */
 .card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -225,11 +489,14 @@ body::before {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 16px 22px;
   border-bottom: 1px solid var(--border);
+  background: rgba(26,34,52,0.5);
 }
+.card-header h3 { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
 
-.card-header h3 { font-size: 15px; font-weight: 600; }
+/* ===== TABLE ===== */
+.table-wrap { overflow-x: auto; }
 
 table {
   width: 100%;
@@ -237,64 +504,68 @@ table {
   font-size: 13px;
 }
 
-th {
+thead th {
   text-align: left;
-  padding: 12px 16px;
+  padding: 12px 18px;
   color: var(--text2);
   font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
   border-bottom: 1px solid var(--border);
   background: var(--bg3);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-td {
-  padding: 12px 16px;
-  border-bottom: 1px solid rgba(36,48,68,0.5);
+tbody td {
+  padding: 13px 18px;
+  border-bottom: 1px solid rgba(36,48,68,0.4);
   vertical-align: middle;
 }
 
-tr:hover td { background: rgba(0,212,170,0.03); }
+tbody tr { transition: background 0.15s; }
+tbody tr:hover td { background: rgba(0,212,170,0.03); }
+tbody tr:last-child td { border-bottom: none; }
 
+/* ===== STATUS BADGES ===== */
 .status {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 3px 10px;
+  padding: 4px 12px;
   border-radius: 20px;
   font-size: 11px;
   font-weight: 600;
+  white-space: nowrap;
 }
 
-.status-active { background: rgba(0,212,170,0.15); color: var(--accent); }
-.status-talks { background: rgba(255,169,77,0.15); color: var(--orange); }
-.status-research { background: rgba(75,171,247,0.15); color: var(--blue); }
-.status-pause { background: rgba(136,153,170,0.15); color: var(--text2); }
-.status-urgent { background: rgba(255,107,107,0.15); color: var(--red); }
-.status-work { background: rgba(177,151,252,0.15); color: var(--purple); }
+.s-active { background: var(--accent-glow); color: var(--accent); }
+.s-talks { background: var(--orange-glow); color: var(--orange); }
+.s-research { background: var(--blue-glow); color: var(--blue); }
+.s-pause { background: rgba(136,153,170,0.15); color: var(--text2); }
+.s-urgent { background: var(--red-glow); color: var(--red); }
+.s-work { background: var(--purple-glow); color: var(--purple); }
+.s-done { background: rgba(81,207,102,0.15); color: var(--green); }
 
-.priority-p1 { color: var(--red); font-weight: 700; }
-.priority-p2 { color: var(--orange); font-weight: 600; }
-.priority-p3 { color: var(--text2); }
+/* ===== PRIORITY ===== */
+.p1 { color: var(--red); font-weight: 700; }
+.p2 { color: var(--orange); font-weight: 600; }
+.p3 { color: var(--text2); }
 
-.progress-bar {
-  width: 80px;
-  height: 6px;
-  background: var(--bg);
-  border-radius: 3px;
-  overflow: hidden;
-}
-.progress-bar-fill {
-  height: 100%;
-  border-radius: 3px;
-  background: var(--accent);
-  transition: width 0.3s;
-}
+/* ===== PROGRESS BAR ===== */
+.progress-wrap { display: flex; align-items: center; gap: 10px; }
+.progress-bar { width: 90px; height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.5s ease; }
+.progress-text { font-size: 11px; color: var(--text2); font-weight: 600; min-width: 30px; }
 
-.actions-cell { display: flex; gap: 4px; }
-.action-btn {
-  width: 28px; height: 28px;
+/* ===== ACTION BUTTONS ===== */
+.actions-cell { display: flex; gap: 5px; }
+
+.act-btn {
+  width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
   border-radius: 6px;
   border: 1px solid var(--border);
@@ -302,87 +573,131 @@ tr:hover td { background: rgba(0,212,170,0.03); }
   color: var(--text2);
   cursor: pointer;
   font-size: 14px;
-  transition: all 0.15s;
+  transition: var(--transition);
 }
-.action-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(0,212,170,0.05); }
-.action-btn.del:hover { border-color: var(--red); color: var(--red); background: rgba(255,107,107,0.05); }
+
+.act-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+.act-btn.del:hover { border-color: var(--red); color: var(--red); background: var(--red-glow); }
+.act-btn.view:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-glow); }
+
+/* ===== FILTERS ===== */
+.filters-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+
+.filter-chip {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.filter-chip:hover { border-color: var(--accent); color: var(--text); }
+.filter-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+.search-input {
+  padding: 8px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  width: 220px;
+  transition: var(--transition);
+}
+.search-input:focus { outline: none; border-color: var(--accent); width: 280px; }
+.search-input::placeholder { color: var(--text3); }
 
 /* ===== MODAL ===== */
 .modal-overlay {
   display: none;
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
   z-index: 1000;
   justify-content: center;
   align-items: center;
+  animation: fadeIn 0.2s ease;
 }
 .modal-overlay.show { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .modal {
   background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  width: 500px;
-  max-width: 90vw;
-  max-height: 85vh;
+  border-radius: var(--radius-lg);
+  width: 560px;
+  max-width: 92vw;
+  max-height: 88vh;
   overflow-y: auto;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow-lg);
+  animation: slideUp 0.25s ease;
 }
+
+@keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
+  padding: 22px 28px;
   border-bottom: 1px solid var(--border);
+  background: rgba(26,34,52,0.5);
 }
 
 .modal-header h3 {
   font-family: 'Unbounded', sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 700;
 }
 
 .modal-close {
-  width: 32px; height: 32px;
-  border-radius: 8px;
+  width: 34px; height: 34px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text2);
   cursor: pointer;
-  font-size: 18px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: var(--transition);
 }
-.modal-close:hover { color: var(--red); border-color: var(--red); }
+.modal-close:hover { color: var(--red); border-color: var(--red); background: var(--red-glow); }
 
-.modal-body { padding: 24px; }
+.modal-body { padding: 28px; }
 
-.form-group { margin-bottom: 16px; }
+.form-group { margin-bottom: 18px; }
 .form-group label {
   display: block;
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text2);
-  margin-bottom: 6px;
+  margin-bottom: 7px;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 1.2px;
+  font-weight: 600;
 }
+.form-group .required::after { content: ' *'; color: var(--red); }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px 14px;
+  padding: 11px 16px;
   background: var(--bg);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   color: var(--text);
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
-  transition: border-color 0.2s;
+  transition: var(--transition);
 }
 
 .form-group input:focus,
@@ -390,316 +705,570 @@ tr:hover td { background: rgba(0,212,170,0.03); }
 .form-group textarea:focus {
   outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-.form-group textarea { min-height: 80px; resize: vertical; }
+.form-group textarea { min-height: 90px; resize: vertical; }
+.form-group select { cursor: pointer; }
+.form-group select option { background: var(--bg2); color: var(--text); }
 
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
 .modal-footer {
-  padding: 16px 24px;
+  padding: 18px 28px;
   border-top: 1px solid var(--border);
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 10px;
+  background: rgba(26,34,52,0.3);
 }
 
-/* ===== LOADING ===== */
-.loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 60px;
-  flex-direction: column;
-  gap: 16px;
-}
+/* ===== DETAIL VIEW MODAL ===== */
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.detail-item { padding: 12px; background: var(--bg); border-radius: var(--radius-sm); }
+.detail-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+.detail-value { font-size: 13px; color: var(--text); word-break: break-word; }
+.detail-full { grid-column: 1 / -1; }
 
-.spinner {
-  width: 36px; height: 36px;
-  border: 3px solid var(--border);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin { to { transform: rotate(360deg); } }
-
-/* ===== CONFIG BANNER ===== */
-.config-banner {
-  background: linear-gradient(135deg, rgba(255,169,77,0.1), rgba(255,107,107,0.1));
-  border: 1px solid rgba(255,169,77,0.3);
-  border-radius: var(--radius);
-  padding: 20px 24px;
-  margin-bottom: 24px;
-}
-
-.config-banner h3 { color: var(--orange); font-size: 14px; margin-bottom: 8px; }
-.config-banner p { color: var(--text2); font-size: 12px; line-height: 1.6; }
-.config-banner input {
-  width: 100%;
-  padding: 10px 14px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  margin-top: 10px;
-}
-.config-banner .btn { margin-top: 10px; }
+/* ===== ACCESS DENIED ===== */
+.access-denied { text-align: center; padding: 80px 20px; }
+.access-denied .icon { font-size: 56px; margin-bottom: 20px; opacity: 0.7; }
+.access-denied h3 { font-size: 20px; margin-bottom: 10px; }
+.access-denied p { color: var(--text2); font-size: 14px; max-width: 400px; margin: 0 auto; }
 
 /* ===== EMPTY STATE ===== */
-.empty { text-align: center; padding: 40px; color: var(--text2); }
-.empty .icon { font-size: 40px; margin-bottom: 12px; }
+.empty { text-align: center; padding: 50px; color: var(--text2); }
+.empty .icon { font-size: 44px; margin-bottom: 14px; opacity: 0.6; }
+.empty p { font-size: 14px; }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); }
-  .main { margin-left: 0; padding: 16px; }
-  .metrics { grid-template-columns: repeat(2, 1fr); }
-  .form-row { grid-template-columns: 1fr; }
-  .mobile-toggle {
-    display: flex !important;
-    position: fixed;
-    top: 12px; left: 12px;
-    z-index: 200;
-    width: 40px; height: 40px;
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text);
-    font-size: 20px;
-  }
-}
-
-.mobile-toggle { display: none; }
-
-/* ===== PAGE SECTIONS (hidden/shown) ===== */
-.page { display: none; }
-.page.active { display: block; }
-
+/* ===== TOAST ===== */
 .toast {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
-  background: var(--accent);
-  color: var(--bg);
-  padding: 12px 20px;
-  border-radius: 8px;
+  bottom: 28px; right: 28px;
+  padding: 14px 24px;
+  border-radius: var(--radius-sm);
   font-size: 13px;
   font-weight: 600;
   transform: translateY(100px);
   opacity: 0;
-  transition: all 0.3s;
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 2000;
+  max-width: 400px;
+  box-shadow: var(--shadow);
 }
 .toast.show { transform: translateY(0); opacity: 1; }
+.toast-success { background: var(--accent); color: var(--bg); }
+.toast-error { background: var(--red); color: #fff; }
+.toast-warning { background: var(--orange); color: var(--bg); }
+.toast-info { background: var(--blue); color: var(--bg); }
+
+/* ===== PAGE VISIBILITY ===== */
+.page { display: none; }
+.page.active { display: block; animation: pageIn 0.3s ease; }
+
+@keyframes pageIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ===== CONFIRM DIALOG ===== */
+.confirm-overlay {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1100;
+  justify-content: center;
+  align-items: center;
+}
+.confirm-overlay.show { display: flex; }
+.confirm-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  width: 400px;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+.confirm-box .icon { font-size: 40px; margin-bottom: 16px; }
+.confirm-box h4 { font-size: 16px; margin-bottom: 8px; }
+.confirm-box p { color: var(--text2); font-size: 13px; margin-bottom: 24px; }
+.confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+/* ===== STATUS BAR ===== */
+.status-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 6px 24px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text3);
+  z-index: 50;
+}
+.status-bar .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; }
+.dot-green { background: var(--accent); }
+.dot-red { background: var(--red); }
+
+/* ===== MOBILE ===== */
+.mobile-toggle { display: none; }
+
+@media (max-width: 900px) {
+  .sidebar { transform: translateX(-100%); width: 280px; }
+  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+  .main { margin-left: 0; padding: 20px 16px 60px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .form-row { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .page-header h2 { font-size: 20px; }
+
+  .mobile-toggle {
+    display: flex !important;
+    position: fixed;
+    top: 14px; left: 14px;
+    z-index: 200;
+    width: 44px; height: 44px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 22px;
+    box-shadow: var(--shadow);
+  }
+}
+
+/* ===== EXTRA SPACING FOR STATUS BAR ===== */
+.main { padding-bottom: 60px; }
 </style>
 </head>
 <body>
 
-<button class="mobile-toggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+<!-- ============================================================
+     LOGIN SCREEN
+     ============================================================ -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <span class="login-icon">🏥</span>
+    <div class="login-logo">RKT HUB</div>
+    <div class="login-sub">Система управления медицинскими проектами</div>
 
-<div class="app">
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="logo">
-      <h1>RKT HUB</h1>
-      <span>Система управления проектами</span>
+    <label class="login-label">Ваш Telegram ID</label>
+    <input class="login-input" id="loginTgId" type="text" placeholder="Например: 1144907578" autofocus>
+    <div class="login-hint">
+      Узнайте свой ID: напишите <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram
     </div>
+
+    <button class="login-btn" id="loginBtn" onclick="doLogin()">
+      <span id="loginBtnText">Войти в систему</span>
+    </button>
+
+    <div class="login-error" id="loginError"></div>
+    <div class="login-loading" id="loginLoading">⏳ Подключаюсь к серверу...</div>
+  </div>
+</div>
+
+<!-- Mobile hamburger -->
+<button class="mobile-toggle" id="mobileToggle" onclick="toggleSidebar()">☰</button>
+
+<!-- ============================================================
+     MAIN APP
+     ============================================================ -->
+<div class="app" id="mainApp" style="display:none">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo-section">
+      <h1>RKT HUB</h1>
+      <div class="subtitle">Система управления проектами v2.0</div>
+    </div>
+
     <nav class="nav">
       <div class="nav-section">Главное</div>
       <a class="nav-item active" onclick="showPage('dashboard')" data-page="dashboard">
-        <span class="icon">📊</span> Дашборд
+        <span class="icon">📊</span>
+        <span class="label">Дашборд</span>
       </a>
 
       <div class="nav-section">Данные</div>
       <a class="nav-item" onclick="showPage('partners')" data-page="partners">
-        <span class="icon">🤝</span> Партнёры <span class="badge" id="badge-partners">0</span>
+        <span class="icon">🤝</span>
+        <span class="label">Партнёры</span>
+        <span class="badge" id="badge-partners">0</span>
       </a>
       <a class="nav-item" onclick="showPage('projects')" data-page="projects">
-        <span class="icon">📁</span> Проекты <span class="badge" id="badge-projects">0</span>
+        <span class="icon">📁</span>
+        <span class="label">Проекты</span>
+        <span class="badge" id="badge-projects">0</span>
       </a>
       <a class="nav-item" onclick="showPage('tasks')" data-page="tasks">
-        <span class="icon">✅</span> Задачи <span class="badge" id="badge-tasks">0</span>
+        <span class="icon">✅</span>
+        <span class="label">Задачи</span>
+        <span class="badge" id="badge-tasks">0</span>
       </a>
       <a class="nav-item" onclick="showPage('directions')" data-page="directions">
-        <span class="icon">📂</span> Направления
+        <span class="icon">📂</span>
+        <span class="label">Направления</span>
       </a>
 
       <div class="nav-section">Управление</div>
-      <a class="nav-item" onclick="showPage('staff')" data-page="staff">
-        <span class="icon">👥</span> Сотрудники
+      <a class="nav-item" onclick="showPage('staff')" data-page="staff" id="nav-staff">
+        <span class="icon">👥</span>
+        <span class="label">Сотрудники</span>
       </a>
-      <a class="nav-item" onclick="showPage('approvals')" data-page="approvals">
-        <span class="icon">📋</span> Согласования <span class="badge" id="badge-approvals" style="background:var(--orange)">0</span>
+      <a class="nav-item" onclick="showPage('approvals')" data-page="approvals" id="nav-approvals">
+        <span class="icon">📋</span>
+        <span class="label">Согласования</span>
+        <span class="badge badge-orange" id="badge-approvals">0</span>
       </a>
       <a class="nav-item" onclick="showPage('comms')" data-page="comms">
-        <span class="icon">💬</span> Коммуникации
+        <span class="icon">💬</span>
+        <span class="label">Коммуникации</span>
       </a>
 
-      <div class="nav-section">Настройки</div>
+      <div class="nav-section">Система</div>
       <a class="nav-item" onclick="showPage('settings')" data-page="settings">
-        <span class="icon">⚙️</span> Настройки
+        <span class="icon">⚙️</span>
+        <span class="label">Настройки</span>
       </a>
     </nav>
+
+    <!-- USER BAR -->
+    <div class="user-bar" id="userBar">
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-name" id="userName">—</div>
+          <div class="user-role-text" id="userRoleText">—</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()">🚪 Выйти из системы</button>
+    </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
+  <!-- ===== MAIN CONTENT AREA ===== -->
   <main class="main">
 
-    <!-- CONFIG BANNER -->
-    <div class="config-banner" id="configBanner">
-      <h3>⚙️ Подключение к Google Sheets</h3>
-      <p>Вставь URL Google Apps Script для подключения к данным. Без него интерфейс работает в демо-режиме.</p>
-      <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/...../exec">
-      <button class="btn btn-primary" onclick="connectAPI()">Подключить</button>
-    </div>
-
-    <!-- ===== DASHBOARD ===== -->
+    <!-- ================ DASHBOARD ================ -->
     <div class="page active" id="page-dashboard">
       <div class="page-header">
         <h2>📊 Дашборд</h2>
-        <button class="btn btn-secondary" onclick="loadData()">🔄 Обновить</button>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="loadData()">🔄 Обновить данные</button>
+        </div>
       </div>
 
-      <div class="metrics" id="metrics">
-        <div class="metric-card"><div class="icon">🤝</div><div class="value" id="m-partners">0</div><div class="label">Партнёров</div></div>
-        <div class="metric-card"><div class="icon">📁</div><div class="value" id="m-projects">0</div><div class="label">Проектов</div></div>
-        <div class="metric-card"><div class="icon">✅</div><div class="value" id="m-tasks">0</div><div class="label">Задач</div></div>
-        <div class="metric-card"><div class="icon">👥</div><div class="value" id="m-staff">0</div><div class="label">Сотрудников</div></div>
-        <div class="metric-card"><div class="icon">📂</div><div class="value" id="m-dirs">5</div><div class="label">Направлений</div></div>
+      <!-- Metrics -->
+      <div class="metrics" id="dashboard-metrics">
+        <div class="metric-card">
+          <div class="m-icon">🤝</div>
+          <div class="m-value" id="m-partners">0</div>
+          <div class="m-label">Партнёров</div>
+          <div class="m-sub" id="m-partners-sub">в базе</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-icon">📁</div>
+          <div class="m-value" id="m-projects">0</div>
+          <div class="m-label">Проектов</div>
+          <div class="m-sub" id="m-projects-sub">активных</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-icon">✅</div>
+          <div class="m-value" id="m-tasks">0</div>
+          <div class="m-label">Задач</div>
+          <div class="m-sub" id="m-tasks-sub">в работе</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-icon">👥</div>
+          <div class="m-value" id="m-staff">0</div>
+          <div class="m-label">Сотрудников</div>
+          <div class="m-sub" id="m-staff-sub">в команде</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-icon">📂</div>
+          <div class="m-value" id="m-dirs">0</div>
+          <div class="m-label">Направлений</div>
+          <div class="m-sub" id="m-dirs-sub">бизнес-линий</div>
+        </div>
       </div>
 
+      <!-- Urgent Tasks -->
       <div class="card">
-        <div class="card-header"><h3>🔴 Срочные задачи</h3></div>
-        <table>
-          <thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Дедлайн</th></tr></thead>
-          <tbody id="urgent-tasks"></tbody>
-        </table>
+        <div class="card-header">
+          <h3>🔴 Срочные задачи (P1)</h3>
+          <button class="btn btn-sm btn-secondary" onclick="showPage('tasks')">Все задачи →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th></tr></thead>
+            <tbody id="urgent-tasks"></tbody>
+          </table>
+        </div>
       </div>
 
+      <!-- Active Projects -->
       <div class="card">
-        <div class="card-header"><h3>📁 Активные проекты</h3></div>
-        <table>
-          <thead><tr><th>Проект</th><th>Направление</th><th>Статус</th><th>Прогресс</th><th>Дедлайн</th></tr></thead>
-          <tbody id="active-projects"></tbody>
-        </table>
+        <div class="card-header">
+          <h3>📁 Активные проекты</h3>
+          <button class="btn btn-sm btn-secondary" onclick="showPage('projects')">Все проекты →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Проект</th><th>Направление</th><th>Статус</th><th>Прогресс</th><th>Приоритет</th><th>Дедлайн</th></tr></thead>
+            <tbody id="active-projects"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Communications -->
+      <div class="card">
+        <div class="card-header">
+          <h3>💬 Последние коммуникации</h3>
+          <button class="btn btn-sm btn-secondary" onclick="showPage('comms')">Все →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Партнёр</th><th>Тип</th><th>Тема</th><th>Дата</th><th>Автор</th></tr></thead>
+            <tbody id="recent-comms"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- ===== PARTNERS ===== -->
+    <!-- ================ PARTNERS ================ -->
     <div class="page" id="page-partners">
       <div class="page-header">
         <h2>🤝 Партнёры</h2>
-        <button class="btn btn-primary" onclick="openModal('partner')">+ Добавить</button>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-add-partner" onclick="openModal('partner')">+ Добавить партнёра</button>
+          <button class="btn btn-secondary" onclick="exportTable('partners')">📥 Экспорт</button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div id="partner-filters"></div>
+        <input class="search-input" id="partner-search" placeholder="🔍 Поиск..." oninput="renderPartners()">
       </div>
       <div class="card">
-        <table>
-          <thead><tr><th>Название</th><th>Страна</th><th>Направление</th><th>Продукт</th><th>Статус</th><th></th></tr></thead>
-          <tbody id="partners-table"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Название</th>
+                <th>Страна</th>
+                <th>Направление</th>
+                <th>Продукт</th>
+                <th>Статус</th>
+                <th>Контакт</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="partners-table"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- ===== PROJECTS ===== -->
+    <!-- ================ PROJECTS ================ -->
     <div class="page" id="page-projects">
       <div class="page-header">
         <h2>📁 Проекты</h2>
-        <button class="btn btn-primary" onclick="openModal('project')">+ Добавить</button>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-add-project" onclick="openModal('project')">+ Новый проект</button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div id="project-filters"></div>
+        <input class="search-input" id="project-search" placeholder="🔍 Поиск..." oninput="renderProjects()">
       </div>
       <div class="card">
-        <table>
-          <thead><tr><th>Проект</th><th>Направление</th><th>Статус</th><th>Приоритет</th><th>Прогресс</th><th>Дедлайн</th><th></th></tr></thead>
-          <tbody id="projects-table"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Проект</th>
+                <th>Направление</th>
+                <th>Статус</th>
+                <th>Приоритет</th>
+                <th>Прогресс</th>
+                <th>Партнёр</th>
+                <th>Дедлайн</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="projects-table"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- ===== TASKS ===== -->
+    <!-- ================ TASKS ================ -->
     <div class="page" id="page-tasks">
       <div class="page-header">
         <h2>✅ Задачи</h2>
-        <button class="btn btn-primary" onclick="openModal('task')">+ Добавить</button>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-add-task" onclick="openModal('task')">+ Новая задача</button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <div id="task-filters"></div>
+        <input class="search-input" id="task-search" placeholder="🔍 Поиск..." oninput="renderTasks()">
       </div>
       <div class="card">
-        <table>
-          <thead><tr><th>Описание</th><th>Направление</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th><th></th></tr></thead>
-          <tbody id="tasks-table"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Описание</th>
+                <th>Направление</th>
+                <th>Приоритет</th>
+                <th>Статус</th>
+                <th>Ответственный</th>
+                <th>Дедлайн</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tasks-table"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- ===== STAFF ===== -->
+    <!-- ================ DIRECTIONS ================ -->
+    <div class="page" id="page-directions">
+      <div class="page-header">
+        <h2>📂 Направления бизнеса</h2>
+      </div>
+      <div class="metrics" id="dir-cards"></div>
+      <div class="card" id="dir-detail-card" style="display:none">
+        <div class="card-header">
+          <h3 id="dir-detail-title">Направление</h3>
+          <button class="btn btn-sm btn-secondary" onclick="document.getElementById('dir-detail-card').style.display='none'">✕ Закрыть</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Партнёр</th><th>Статус</th><th>Продукт</th></tr></thead>
+            <tbody id="dir-detail-partners"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================ STAFF ================ -->
     <div class="page" id="page-staff">
       <div class="page-header">
         <h2>👥 Сотрудники</h2>
-        <button class="btn btn-primary" onclick="openModal('staff')">+ Добавить</button>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-add-staff" onclick="openModal('staff')">+ Добавить сотрудника</button>
+        </div>
       </div>
       <div class="card">
-        <table>
-          <thead><tr><th>Имя</th><th>Роль</th><th>Направление</th><th>Telegram</th><th>Статус</th><th></th></tr></thead>
-          <tbody id="staff-table"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Имя</th>
+                <th>Роль</th>
+                <th>Направление</th>
+                <th>Telegram</th>
+                <th>Email</th>
+                <th>Телефон</th>
+                <th>Статус</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="staff-table"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- ===== DIRECTIONS ===== -->
-    <div class="page" id="page-directions">
-      <div class="page-header"><h2>📂 Направления</h2></div>
-      <div class="metrics" id="dir-cards"></div>
-    </div>
-
-    <!-- ===== APPROVALS ===== -->
+    <!-- ================ APPROVALS ================ -->
     <div class="page" id="page-approvals">
-      <div class="page-header"><h2>📋 Согласования</h2></div>
-      <div class="card">
-        <table>
-          <thead><tr><th>Тип</th><th>Описание</th><th>От</th><th>Направление</th><th>Статус</th><th></th></tr></thead>
-          <tbody id="approvals-table"></tbody>
-        </table>
+      <div class="page-header">
+        <h2>📋 Согласования</h2>
       </div>
+      <div id="approvals-content"></div>
     </div>
 
-    <!-- ===== COMMS ===== -->
+    <!-- ================ COMMUNICATIONS ================ -->
     <div class="page" id="page-comms">
       <div class="page-header">
         <h2>💬 Коммуникации</h2>
-        <button class="btn btn-primary" onclick="openModal('comm')">+ Записать</button>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="openModal('comm')">+ Записать контакт</button>
+        </div>
+      </div>
+      <div class="filters-bar">
+        <input class="search-input" id="comm-search" placeholder="🔍 Поиск по партнёру..." oninput="renderComms()">
       </div>
       <div class="card">
-        <table>
-          <thead><tr><th>Партнёр</th><th>Тип</th><th>Тема</th><th>Дата</th><th>Автор</th></tr></thead>
-          <tbody id="comms-table"></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Партнёр</th>
+                <th>Тип</th>
+                <th>Тема</th>
+                <th>Результат</th>
+                <th>Дата</th>
+                <th>Автор</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="comms-table"></tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- ===== SETTINGS ===== -->
+    <!-- ================ SETTINGS ================ -->
     <div class="page" id="page-settings">
-      <div class="page-header"><h2>⚙️ Настройки</h2></div>
-      <div class="card" style="padding:24px">
+      <div class="page-header">
+        <h2>⚙️ Настройки системы</h2>
+      </div>
+
+      <div class="card" style="padding: 28px;">
+        <h3 style="margin-bottom: 20px; font-size: 15px;">🔗 Подключения</h3>
         <div class="form-group">
-          <label>URL Google Apps Script</label>
-          <input type="text" id="settingsApiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+          <label>API Endpoint (n8n Webhook)</label>
+          <input type="text" id="settingsApiUrl" readonly style="opacity: 0.7">
         </div>
         <div class="form-group">
           <label>Google Sheet ID</label>
-          <input type="text" value="1YVGQc7eHOCeCHEKEe1u0G3McdsDPMzXaGh6hWBdMDNI" readonly style="opacity:0.6">
+          <input type="text" value="12BniI4H5inrEDJKWNrSxL480acGSGJlSIFvCqYfd9KY" readonly style="opacity: 0.7">
         </div>
-        <button class="btn btn-primary" onclick="saveSettings()">Сохранить</button>
+        <div class="form-group">
+          <label>Telegram Bot</label>
+          <input type="text" value="RKT HUB Bot" readonly style="opacity: 0.7">
+        </div>
+      </div>
+
+      <div class="card" style="padding: 28px; margin-top: 16px;">
+        <h3 style="margin-bottom: 20px; font-size: 15px;">👤 Ваш профиль</h3>
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-label">Имя</div><div class="detail-value" id="settings-name">—</div></div>
+          <div class="detail-item"><div class="detail-label">Роль</div><div class="detail-value" id="settings-role">—</div></div>
+          <div class="detail-item"><div class="detail-label">Направление</div><div class="detail-value" id="settings-dir">—</div></div>
+          <div class="detail-item"><div class="detail-label">Telegram ID</div><div class="detail-value" id="settings-tgid">—</div></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding: 28px; margin-top: 16px;">
+        <h3 style="margin-bottom: 20px; font-size: 15px;">📊 Статистика базы</h3>
+        <div class="detail-grid" id="settings-stats"></div>
       </div>
     </div>
 
   </main>
 </div>
 
-<!-- ===== MODAL ===== -->
-<div class="modal-overlay" id="modalOverlay">
+<!-- ============================================================
+     MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
       <h3 id="modalTitle">Добавить</h3>
@@ -708,454 +1277,1105 @@ tr:hover td { background: rgba(0,212,170,0.03); }
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-      <button class="btn btn-primary" id="modalSave" onclick="saveModal()">Сохранить</button>
+      <button class="btn btn-primary" id="modalSaveBtn" onclick="saveModal()">💾 Сохранить</button>
     </div>
   </div>
 </div>
 
+<!-- ============================================================
+     DETAIL MODAL
+     ============================================================ -->
+<div class="modal-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
+  <div class="modal" style="width: 620px;">
+    <div class="modal-header">
+      <h3 id="detailTitle">Детали</h3>
+      <button class="modal-close" onclick="closeDetail()">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeDetail()">Закрыть</button>
+      <button class="btn btn-primary" id="detailEditBtn" onclick="">✏️ Редактировать</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CONFIRM DIALOG
+     ============================================================ -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="icon">⚠️</div>
+    <h4 id="confirmTitle">Подтверждение</h4>
+    <p id="confirmText">Вы уверены?</p>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm(false)">Отмена</button>
+      <button class="btn btn-danger" onclick="closeConfirm(true)">🗑 Удалить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TOAST
+     ============================================================ -->
 <div class="toast" id="toast"></div>
 
-<script>
-// ========== STATE ==========
-let API_URL = localStorage.getItem('rkt_api_url') || 'https://daniyal2212.app.n8n.cloud/webhook/rkt-api';
-let DATA = {
-  partners: [], tasks: [], directions: [], staff: [], projects: [], approvals: [], comms: []
-};
-let currentModal = '';
+<!-- ============================================================
+     STATUS BAR
+     ============================================================ -->
+<div class="status-bar">
+  <div><span class="dot dot-green" id="statusDot"></span> <span id="statusText">Подключено</span></div>
+  <div id="statusTime"></div>
+</div>
 
-// ========== DEMO DATA ==========
-const DEMO = {
-  partners: [
-    {ID:'P001',Название:'Syno Medical',Страна:'Китай',Направление:'КТ',Продукт:'КТ-сканеры 16/32/64/128 срезов',Статус:'Активный'},
-    {ID:'P002',Название:'Neusoft Medical',Страна:'Китай',Направление:'КТ',Продукт:'КТ-сканеры, МРТ, УЗИ',Статус:'Research'},
-    {ID:'P003',Название:'United Imaging',Страна:'Китай',Направление:'КТ',Продукт:'КТ, МРТ, ПЭТ/КТ',Статус:'Research'},
-    {ID:'P004',Название:'Browiner',Страна:'Китай',Направление:'КТ',Продукт:'КТ-сканеры бюджетного сегмента',Статус:'Research'},
-    {ID:'P005',Название:'KangDuo',Страна:'Китай',Направление:'Роботы',Продукт:'Хирургический робот',Статус:'Переговоры'},
-    {ID:'P006',Название:'MicroPort',Страна:'Китай',Направление:'Роботы',Продукт:'Toumai хирургический робот',Статус:'Переговоры'},
-    {ID:'P007',Название:'Intuitive Surgical',Страна:'США',Направление:'Роботы',Продукт:'Da Vinci хирургический робот',Статус:'Пауза'},
-    {ID:'P008',Название:'TINAVI',Страна:'Китай',Направление:'Роботы',Продукт:'Ортопедический робот TiRobot',Статус:'Research'},
-    {ID:'P009',Название:'Wandong Medical',Страна:'Китай',Направление:'Рентген',Продукт:'Цифровые рентген-аппараты',Статус:'Research'},
-    {ID:'P010',Название:'Angell Technology',Страна:'Китай',Направление:'Рентген',Продукт:'Портативные рентген-аппараты',Статус:'Research'},
-    {ID:'P011',Название:'Dornier MedTech',Страна:'Германия',Направление:'Урология',Продукт:'Литотриптеры',Статус:'Пауза'},
-    {ID:'P012',Название:'Shenzhen Huikang',Страна:'Китай',Направление:'Урология',Продукт:'Литотриптеры, урологические столы',Статус:'Research'},
-    {ID:'P013',Название:'Neusoft PACS',Страна:'Китай',Направление:'PACS',Продукт:'PACS/RIS системы',Статус:'Research'},
-    {ID:'P014',Название:'Ростех',Страна:'Россия',Направление:'КТ',Продукт:'Стратегический партнёр',Статус:'Переговоры'},
-    {ID:'P015',Название:'Росатом',Страна:'Россия',Направление:'КТ',Продукт:'Стратегический партнёр',Статус:'Research'},
-    {ID:'P016',Название:'ОЭЗ Алабуга',Страна:'Россия',Направление:'КТ',Продукт:'Производственная площадка',Статус:'Активный'},
-  ],
-  tasks: [
-    {ID:'T001',Описание:'Финализировать OEM-контракт с Syno Medical',Направление:'КТ',Приоритет:'P1',Статус:'В работе',Дедлайн:'2026-03-01'},
-    {ID:'T002',Описание:'Написать письмо в KangDuo о партнёрстве',Направление:'Роботы',Приоритет:'P1',Статус:'В работе',Дедлайн:'2026-02-15'},
-    {ID:'T003',Описание:'Подготовить презентацию для инвесторов',Направление:'КТ',Приоритет:'P1',Статус:'В работе',Дедлайн:'2026-02-28'},
-    {ID:'T004',Описание:'Подготовить заявку резидента ОЭЗ Алабуга',Направление:'КТ',Приоритет:'P1',Статус:'В работе',Дедлайн:'2026-04-01'},
-    {ID:'T005',Описание:'Изучить модельный ряд Neusoft КТ',Направление:'КТ',Приоритет:'P2',Статус:'В работе',Дедлайн:'2026-03-15'},
-    {ID:'T006',Описание:'Запросить каталог у Wandong Medical',Направление:'Рентген',Приоритет:'P2',Статус:'В работе',Дедлайн:'2026-02-28'},
-    {ID:'T007',Описание:'Изучить рынок хирургических роботов в РФ',Направление:'Роботы',Приоритет:'P2',Статус:'В работе',Дедлайн:'2026-03-01'},
-    {ID:'T008',Описание:'Follow-up MicroPort по Toumai',Направление:'Роботы',Приоритет:'P2',Статус:'В работе',Дедлайн:'2026-02-20'},
-  ],
-  directions: [
-    {Название:'КТ',Статус:'Активный',Этап:'Переговоры с производителем'},
-    {Название:'Рентген',Статус:'Активный',Этап:'Исследование рынка'},
-    {Название:'Роботы',Статус:'Активный',Этап:'Поиск партнёров'},
-    {Название:'Урология',Статус:'Активный',Этап:'Исследование'},
-    {Название:'PACS',Статус:'Активный',Этап:'Исследование'},
-  ],
-  staff: [
-    {ID:'EMP001',Имя:'Даниял Арсланов',Telegram_ID:'1144907578',Роль:'CEO',Направление:'Все',Статус:'Активный'},
-    {ID:'EMP002',Имя:'(Заместитель)',Роль:'Зам',Направление:'Все',Статус:'Активный'},
-  ],
-  projects: [
-    {ID:'PRJ001',Название:'Локализация КТ-16 Syno',Направление:'КТ',Статус:'В работе',Приоритет:'P1',Прогресс:'25%',Дедлайн:'2027-12-01'},
-    {ID:'PRJ002',Название:'Партнёрство KangDuo',Направление:'Роботы',Статус:'Переговоры',Приоритет:'P1',Прогресс:'10%',Дедлайн:'2027-06-01'},
-    {ID:'PRJ003',Название:'Резидент ОЭЗ Алабуга',Направление:'КТ',Статус:'Подготовка',Приоритет:'P1',Прогресс:'40%',Дедлайн:'2026-04-01'},
-    {ID:'PRJ004',Название:'Исследование рентген рынка',Направление:'Рентген',Статус:'В работе',Приоритет:'P2',Прогресс:'30%',Дедлайн:'2026-03-15'},
-    {ID:'PRJ005',Название:'PACS интеграция',Направление:'PACS',Статус:'Исследование',Приоритет:'P3',Прогресс:'5%',Дедлайн:'2026-06-01'},
-  ],
-  approvals: [
-    {ID:'APR001',Тип:'Изменение статуса',Описание:'Syno Medical → Контракт',От_кого:'EMP003',Направление:'КТ',Статус:'⏳ Ожидает'},
-  ],
+<!-- ============================================================
+     JAVASCRIPT - FULL APPLICATION LOGIC
+     ============================================================ -->
+<script>
+// ============================================================
+// CONFIG & STATE
+// ============================================================
+const CONFIG = {
+  API_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-api',
+  WRITE_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-write',
+  SHEET_ID: '12BniI4H5inrEDJKWNrSxL480acGSGJlSIFvCqYfd9KY',
+  REFRESH_INTERVAL: 300000, // auto-refresh every 5 min
+  VERSION: '2.0.0'
+};
+
+let DATA = {
+  partners: [],
+  tasks: [],
+  directions: [],
+  staff: [],
+  projects: [],
+  approvals: [],
   comms: []
 };
 
-// ========== INIT ==========
-window.addEventListener('DOMContentLoaded', () => {
-  if (API_URL) {
-    document.getElementById('configBanner').style.display = 'none';
-    document.getElementById('settingsApiUrl').value = API_URL;
-    loadData();
-  } else {
-    DATA = {...DEMO};
-    renderAll();
-  }
-});
+let USER = null;
+let currentModal = '';
+let editingItem = null;
+let confirmCallback = null;
+let currentFilters = {
+  partners: 'Все',
+  projects: 'Все',
+  tasks: 'Все'
+};
+let refreshTimer = null;
 
-function connectAPI() {
-  const url = document.getElementById('apiUrl').value.trim();
-  if (!url) return;
-  API_URL = url;
-  localStorage.setItem('rkt_api_url', url);
-  document.getElementById('configBanner').style.display = 'none';
-  document.getElementById('settingsApiUrl').value = url;
-  loadData();
+// ============================================================
+// ROLE DEFINITIONS
+// ============================================================
+const ROLES = {
+  'CEO': {
+    emoji: '👑',
+    level: 3,
+    canWrite: true,
+    canDelete: true,
+    canApprove: true,
+    canManageStaff: true,
+    seeAll: true
+  },
+  'Зам': {
+    emoji: '⭐',
+    level: 2,
+    canWrite: false, // goes through approval
+    canDelete: false,
+    canApprove: false,
+    canManageStaff: false,
+    seeAll: true
+  },
+  'Руководитель': {
+    emoji: '📋',
+    level: 1,
+    canWrite: false,
+    canDelete: false,
+    canApprove: false,
+    canManageStaff: false,
+    seeAll: false
+  }
+};
+
+function getUserPerms() {
+  if (!USER) return ROLES['Руководитель'];
+  return ROLES[USER.role] || ROLES['Руководитель'];
 }
 
-function saveSettings() {
-  const url = document.getElementById('settingsApiUrl').value.trim();
-  if (url) {
-    API_URL = url;
-    localStorage.setItem('rkt_api_url', url);
-    loadData();
-    toast('✅ Настройки сохранены');
+// ============================================================
+// FORM DEFINITIONS
+// ============================================================
+const FORM_DEFS = {
+  partner: {
+    title: 'Партнёр',
+    sheet: 'Партнёры',
+    fields: [
+      { name: 'Название', type: 'text', required: true, placeholder: 'Название компании' },
+      { name: 'Страна', type: 'text', placeholder: 'Китай, Россия, ...' },
+      { name: 'Направление', type: 'select', options: ['КТ', 'Рентген', 'Роботы', 'Урология', 'PACS'] },
+      { name: 'Продукт', type: 'text', placeholder: 'Основной продукт' },
+      { name: 'Статус', type: 'select', options: ['Research', 'Переговоры', 'Активный', 'Пауза'] },
+      { name: 'Контакт', type: 'text', placeholder: 'Имя контактного лица' },
+      { name: 'Email', type: 'text', placeholder: 'email@company.com' },
+      { name: 'Телефон', type: 'text', placeholder: '+7 ...' },
+      { name: 'Сайт', type: 'text', placeholder: 'https://' },
+      { name: 'Описание', type: 'textarea', placeholder: 'Комментарии, заметки...' }
+    ]
+  },
+  project: {
+    title: 'Проект',
+    sheet: 'Проекты',
+    fields: [
+      { name: 'Название', type: 'text', required: true, placeholder: 'Название проекта' },
+      { name: 'Направление', type: 'select', options: ['КТ', 'Рентген', 'Роботы', 'Урология', 'PACS'] },
+      { name: 'Описание', type: 'textarea', placeholder: 'Описание проекта...' },
+      { name: 'Статус', type: 'select', options: ['Исследование', 'Подготовка', 'В работе', 'Переговоры', 'Завершён'] },
+      { name: 'Приоритет', type: 'select', options: ['P1', 'P2', 'P3'] },
+      { name: 'Прогресс', type: 'text', placeholder: '0-100' },
+      { name: 'Партнёр', type: 'text', placeholder: 'Связанный партнёр' },
+      { name: 'Бюджет', type: 'text', placeholder: 'Бюджет проекта' },
+      { name: 'Дедлайн', type: 'date' },
+      { name: 'Ответственный', type: 'text', placeholder: 'Кто ведёт' }
+    ]
+  },
+  task: {
+    title: 'Задача',
+    sheet: 'Задачи',
+    fields: [
+      { name: 'Описание', type: 'text', required: true, placeholder: 'Что нужно сделать' },
+      { name: 'Направление', type: 'select', options: ['КТ', 'Рентген', 'Роботы', 'Урология', 'PACS', 'Общее'] },
+      { name: 'Приоритет', type: 'select', options: ['P1', 'P2', 'P3'] },
+      { name: 'Статус', type: 'select', options: ['⏳ В очереди', 'В работе', 'На проверке', 'Готово'] },
+      { name: 'Ответственный', type: 'text', placeholder: 'Кто выполняет' },
+      { name: 'Проект', type: 'text', placeholder: 'Связанный проект' },
+      { name: 'Дедлайн', type: 'date' },
+      { name: 'Комментарий', type: 'textarea', placeholder: 'Доп. информация...' }
+    ]
+  },
+  staff: {
+    title: 'Сотрудник',
+    sheet: 'Сотрудники',
+    fields: [
+      { name: 'Имя', type: 'text', required: true, placeholder: 'ФИО' },
+      { name: 'Telegram_ID', type: 'text', placeholder: 'Числовой ID из Telegram' },
+      { name: 'Username', type: 'text', placeholder: '@username' },
+      { name: 'Роль', type: 'select', options: ['CEO', 'Зам', 'Руководитель'] },
+      { name: 'Направление', type: 'select', options: ['Все', 'КТ', 'Рентген', 'Роботы', 'Урология', 'PACS'] },
+      { name: 'Email', type: 'text', placeholder: 'email@company.com' },
+      { name: 'Телефон', type: 'text', placeholder: '+7 ...' }
+    ]
+  },
+  comm: {
+    title: 'Коммуникация',
+    sheet: 'Коммуникации',
+    fields: [
+      { name: 'Партнёр', type: 'text', required: true, placeholder: 'С кем общались' },
+      { name: 'Тип', type: 'select', options: ['Звонок', 'Email', 'Встреча', 'Письмо', 'Чат', 'Zoom', 'WhatsApp'] },
+      { name: 'Тема', type: 'text', placeholder: 'Тема обсуждения' },
+      { name: 'Результат', type: 'textarea', placeholder: 'Итог, договорённости, следующие шаги...' },
+      { name: 'Следующий_шаг', type: 'text', placeholder: 'Что делать дальше' },
+      { name: 'Дата_следующего', type: 'date' }
+    ]
+  }
+};
+
+// ============================================================
+// AUTHENTICATION
+// ============================================================
+function checkSavedLogin() {
+  const saved = localStorage.getItem('rkt_user');
+  if (saved) {
+    try {
+      USER = JSON.parse(saved);
+      if (USER && USER.tgId) {
+        showApp();
+        return;
+      }
+    } catch(e) {}
+    localStorage.removeItem('rkt_user');
   }
 }
 
-// ========== API ==========
-async function loadData() {
-  if (!API_URL) { DATA = {...DEMO}; renderAll(); return; }
-  try {
-    const r = await fetch(API_URL + '?action=dashboard');
-    const d = await r.json();
-    DATA.partners = d.partners || [];
-    DATA.tasks = d.tasks || [];
-    DATA.directions = d.directions || [];
-    DATA.staff = d.staff || [];
-    DATA.projects = d.projects || [];
-    DATA.approvals = d.approvals || [];
-    DATA.comms = d.comms || [];
-    renderAll();
-    toast('✅ Данные загружены');
-  } catch(e) {
-    console.error(e);
-    DATA = {...DEMO};
-    renderAll();
-    toast('⚠️ Ошибка загрузки, демо-режим');
-  }
-}
-
-async function apiPost(action, data) {
-  if (!API_URL) {
-    demoAdd(data.sheet, data.row);
-    renderAll();
-    toast('✅ Добавлено (демо)');
+async function doLogin() {
+  const tgId = document.getElementById('loginTgId').value.trim();
+  if (!tgId) {
+    showLoginError('Введите Telegram ID');
     return;
   }
+  if (!/^\d+$/.test(tgId)) {
+    showLoginError('Telegram ID должен содержать только цифры');
+    return;
+  }
+
+  document.getElementById('loginBtn').disabled = true;
+  document.getElementById('loginBtnText').textContent = 'Подключаюсь...';
+  document.getElementById('loginLoading').style.display = 'block';
+  document.getElementById('loginError').style.display = 'none';
+
   try {
-    // Use GET with encoded data to avoid CORS issues
-    const writeUrl = API_URL.replace('rkt-api','rkt-write');
-    const encoded = encodeURIComponent(JSON.stringify({action, ...data}));
-    const resp = await fetch(writeUrl + '?data=' + encoded);
-    console.log('Write response:', resp.status);
-    setTimeout(() => loadData(), 1000);
-    toast('✅ Сохранено!');
+    const response = await fetch(CONFIG.API_URL);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    DATA = normalizeData(data);
+
+    const staffList = DATA.staff || [];
+    const staffMember = staffList.find(s => String(s.Telegram_ID).trim() === String(tgId).trim());
+
+    if (!staffMember) {
+      showLoginError('⛔ Telegram ID «' + tgId + '» не найден в базе сотрудников. Обратитесь к администратору.');
+      resetLoginBtn();
+      return;
+    }
+
+    USER = {
+      id: staffMember.ID || '',
+      tgId: String(staffMember.Telegram_ID).trim(),
+      name: staffMember['Имя'] || 'Сотрудник',
+      role: staffMember['Роль'] || 'Руководитель',
+      direction: staffMember['Направление'] || 'Все',
+      email: staffMember['Email'] || '',
+      phone: staffMember['Телефон'] || '',
+      username: staffMember['Username'] || ''
+    };
+
+    localStorage.setItem('rkt_user', JSON.stringify(USER));
+    showApp();
+
   } catch(e) {
-    console.error('Write error:', e);
-    toast('❌ Ошибка: ' + e.message);
+    console.error('Login error:', e);
+    showLoginError('⚠️ Не удалось подключиться к серверу. Проверьте интернет и попробуйте снова.');
+    resetLoginBtn();
   }
 }
 
-function demoAdd(sheet, row) {
-  const map = {
-    'Партнёры': 'partners', 'Проекты': 'projects', 'Задачи': 'tasks',
-    'Сотрудники': 'staff', 'Коммуникации': 'comms', 'Согласования': 'approvals'
-  };
-  const key = map[sheet];
-  if (key && DATA[key]) DATA[key].push(row);
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg;
+  el.style.display = 'block';
 }
 
-// ========== NAVIGATION ==========
+function resetLoginBtn() {
+  document.getElementById('loginBtn').disabled = false;
+  document.getElementById('loginBtnText').textContent = 'Войти в систему';
+  document.getElementById('loginLoading').style.display = 'none';
+}
+
+function doLogout() {
+  USER = null;
+  localStorage.removeItem('rkt_user');
+  if (refreshTimer) clearInterval(refreshTimer);
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginTgId').value = '';
+  resetLoginBtn();
+  document.getElementById('loginError').style.display = 'none';
+}
+
+function showApp() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'flex';
+
+  // User bar
+  const perms = getUserPerms();
+  document.getElementById('userName').textContent = USER.name;
+  document.getElementById('userRoleText').textContent = perms.emoji + ' ' + USER.role + (USER.direction !== 'Все' ? ' — ' + USER.direction : '');
+  document.getElementById('userAvatar').textContent = USER.name.charAt(0).toUpperCase();
+
+  // Settings
+  document.getElementById('settingsApiUrl').value = CONFIG.API_URL;
+  document.getElementById('settings-name').textContent = USER.name;
+  document.getElementById('settings-role').textContent = perms.emoji + ' ' + USER.role;
+  document.getElementById('settings-dir').textContent = USER.direction;
+  document.getElementById('settings-tgid').textContent = USER.tgId;
+
+  // Role-based UI
+  document.getElementById('btn-add-staff').style.display = perms.canManageStaff ? '' : 'none';
+  document.getElementById('nav-approvals').classList.toggle('hidden', !perms.canApprove);
+
+  // Load data
+  loadData();
+
+  // Auto-refresh
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(loadData, CONFIG.REFRESH_INTERVAL);
+
+  // Status bar time
+  updateStatusTime();
+  setInterval(updateStatusTime, 60000);
+}
+
+// ============================================================
+// DATA LOADING
+// ============================================================
+function normalizeData(d) {
+  return {
+    partners: Array.isArray(d.partners) ? d.partners : [],
+    tasks: Array.isArray(d.tasks) ? d.tasks : [],
+    directions: Array.isArray(d.directions) ? d.directions : [],
+    staff: Array.isArray(d.staff) ? d.staff : [],
+    projects: Array.isArray(d.projects) ? d.projects : [],
+    approvals: Array.isArray(d.approvals) ? d.approvals : [],
+    comms: Array.isArray(d.comms) ? d.comms : []
+  };
+}
+
+async function loadData() {
+  setStatus('loading');
+  try {
+    const response = await fetch(CONFIG.API_URL);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    DATA = normalizeData(data);
+    renderAll();
+    setStatus('connected');
+    toast('✅ Данные загружены', 'success');
+  } catch(e) {
+    console.error('Load error:', e);
+    setStatus('error');
+    toast('⚠️ Ошибка загрузки данных', 'error');
+  }
+}
+
+async function apiWrite(sheet, row) {
+  try {
+    const payload = JSON.stringify({ sheet: sheet, row: row });
+    const b64 = btoa(unescape(encodeURIComponent(payload)));
+    const response = await fetch(CONFIG.WRITE_URL + '?b64=' + b64);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return true;
+  } catch(e) {
+    console.error('Write error:', e);
+    toast('❌ Ошибка записи: ' + e.message, 'error');
+    return false;
+  }
+}
+
+// ============================================================
+// DATA FILTERING
+// ============================================================
+function filterByRole(arr) {
+  const perms = getUserPerms();
+  if (perms.seeAll || !USER || USER.direction === 'Все') return arr;
+  return arr.filter(item => {
+    const dir = item['Направление'] || '';
+    return dir === USER.direction || dir === 'Все' || dir === 'Общее' || dir === '';
+  });
+}
+
+function filterBySearch(arr, searchId, fields) {
+  const el = document.getElementById(searchId);
+  if (!el) return arr;
+  const q = el.value.toLowerCase().trim();
+  if (!q) return arr;
+  return arr.filter(item => {
+    return fields.some(f => (item[f] || '').toLowerCase().includes(q));
+  });
+}
+
+function filterByDirection(arr, filterKey) {
+  const dir = currentFilters[filterKey];
+  if (!dir || dir === 'Все') return arr;
+  return arr.filter(item => (item['Направление'] || '') === dir);
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + page)?.classList.add('active');
-  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-  document.querySelector('.sidebar').classList.remove('open');
+  const pageEl = document.getElementById('page-' + page);
+  const navEl = document.querySelector('[data-page="' + page + '"]');
+  if (pageEl) pageEl.classList.add('active');
+  if (navEl) navEl.classList.add('active');
+  // Close sidebar on mobile
+  document.getElementById('sidebar').classList.remove('open');
 }
 
-// ========== RENDER ==========
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// ============================================================
+// RENDER: MASTER
+// ============================================================
 function renderAll() {
-  // Metrics
-  document.getElementById('m-partners').textContent = DATA.partners.length;
-  document.getElementById('m-projects').textContent = DATA.projects.length;
-  document.getElementById('m-tasks').textContent = DATA.tasks.filter(t => t.Статус !== 'Готово').length;
-  document.getElementById('m-staff').textContent = DATA.staff.length;
-  document.getElementById('m-dirs').textContent = DATA.directions.length;
-
-  // Badges
-  document.getElementById('badge-partners').textContent = DATA.partners.length;
-  document.getElementById('badge-projects').textContent = DATA.projects.length;
-  document.getElementById('badge-tasks').textContent = DATA.tasks.filter(t => t.Статус !== 'Готово').length;
-  document.getElementById('badge-approvals').textContent = DATA.approvals.filter(a => a.Статус?.includes('Ожидает')).length;
-
-  renderUrgentTasks();
-  renderActiveProjects();
+  renderMetrics();
+  renderDashboardTables();
+  renderPartnerFilters();
   renderPartners();
+  renderProjectFilters();
   renderProjects();
+  renderTaskFilters();
   renderTasks();
   renderStaff();
   renderDirections();
   renderApprovals();
+  renderComms();
+  renderSettingsStats();
+  updateBadges();
 }
 
-function statusClass(s) {
+// ============================================================
+// RENDER: METRICS
+// ============================================================
+function renderMetrics() {
+  const fp = filterByRole(DATA.partners);
+  const ft = filterByRole(DATA.tasks);
+  const fpr = filterByRole(DATA.projects);
+  const activeTasks = ft.filter(t => (t['Статус'] || '') !== 'Готово');
+  const overdue = ft.filter(t => {
+    const d = t['Дедлайн'] || '';
+    return d && d < new Date().toISOString().split('T')[0] && (t['Статус'] || '') !== 'Готово';
+  });
+
+  document.getElementById('m-partners').textContent = fp.length;
+  document.getElementById('m-partners-sub').textContent = fp.filter(p => p['Статус'] === 'Активный').length + ' активных';
+  document.getElementById('m-projects').textContent = fpr.length;
+  document.getElementById('m-projects-sub').textContent = fpr.filter(p => (p['Статус'] || '') !== 'Завершён').length + ' активных';
+  document.getElementById('m-tasks').textContent = activeTasks.length;
+  document.getElementById('m-tasks-sub').textContent = overdue.length > 0 ? '🔴 ' + overdue.length + ' просрочено' : 'в работе';
+  document.getElementById('m-staff').textContent = DATA.staff.length;
+  document.getElementById('m-staff-sub').textContent = DATA.staff.filter(s => s['Статус'] === 'Активный').length + ' активных';
+  document.getElementById('m-dirs').textContent = DATA.directions.length;
+  document.getElementById('m-dirs-sub').textContent = 'бизнес-линий';
+}
+
+function updateBadges() {
+  const fp = filterByRole(DATA.partners);
+  const ft = filterByRole(DATA.tasks).filter(t => (t['Статус'] || '') !== 'Готово');
+  const fpr = filterByRole(DATA.projects);
+  const pendingApprovals = DATA.approvals.filter(a => (a['Статус'] || '').includes('Ожидает'));
+
+  document.getElementById('badge-partners').textContent = fp.length;
+  document.getElementById('badge-projects').textContent = fpr.length;
+  document.getElementById('badge-tasks').textContent = ft.length;
+  document.getElementById('badge-approvals').textContent = pendingApprovals.length;
+}
+
+// ============================================================
+// RENDER HELPERS
+// ============================================================
+function statusBadge(s) {
   if (!s) return '';
-  if (s === 'Активный' || s.includes('Готово')) return 'status-active';
-  if (s === 'Переговоры') return 'status-talks';
-  if (s === 'Research' || s.includes('Исследование')) return 'status-research';
-  if (s === 'Пауза') return 'status-pause';
-  if (s.includes('работе') || s.includes('Подготовка')) return 'status-work';
-  if (s.includes('Ожидает')) return 'status-urgent';
-  return '';
+  let cls = '';
+  if (s === 'Активный' || s.includes('Готово')) cls = 's-done';
+  else if (s === 'Переговоры') cls = 's-talks';
+  else if (s === 'Research' || s.includes('Исследование')) cls = 's-research';
+  else if (s === 'Пауза') cls = 's-pause';
+  else if (s.includes('работе') || s.includes('Подготовка') || s.includes('проверке')) cls = 's-work';
+  else if (s.includes('Ожидает') || s.includes('очереди')) cls = 's-urgent';
+  else if (s.includes('Одобрено')) cls = 's-done';
+  else if (s.includes('Отклонено')) cls = 's-urgent';
+  else cls = 's-active';
+  return '<span class="status ' + cls + '">' + escHtml(s) + '</span>';
 }
 
-function priorityClass(p) {
-  return p === 'P1' ? 'priority-p1' : p === 'P2' ? 'priority-p2' : 'priority-p3';
+function priorityBadge(p) {
+  if (!p) return '';
+  const cls = p === 'P1' ? 'p1' : p === 'P2' ? 'p2' : 'p3';
+  return '<span class="' + cls + '">' + escHtml(p) + '</span>';
 }
 
-function progressBar(p) {
-  const val = parseInt(p) || 0;
-  return `<div style="display:flex;align-items:center;gap:8px"><div class="progress-bar"><div class="progress-bar-fill" style="width:${val}%"></div></div><span style="font-size:11px;color:var(--text2)">${val}%</span></div>`;
+function progressBar(val) {
+  const v = parseInt(val) || 0;
+  const color = v >= 80 ? 'var(--green)' : v >= 50 ? 'var(--accent)' : v >= 25 ? 'var(--orange)' : 'var(--red)';
+  return '<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:' + v + '%;background:' + color + '"></div></div><span class="progress-text">' + v + '%</span></div>';
 }
 
-function actionBtns(type, id) {
-  return `<div class="actions-cell">
-    <button class="action-btn" onclick="editItem('${type}','${id}')" title="Редактировать">✏️</button>
-    <button class="action-btn del" onclick="deleteItem('${type}','${id}')" title="Удалить">🗑</button>
-  </div>`;
+function actionButtons(type, id, name) {
+  const perms = getUserPerms();
+  let html = '<div class="actions-cell">';
+  html += '<button class="act-btn view" onclick="viewItem(\'' + type + '\',\'' + escAttr(id) + '\')" title="Просмотр">👁</button>';
+  html += '<button class="act-btn" onclick="editItem(\'' + type + '\',\'' + escAttr(id) + '\')" title="Редактировать">✏️</button>';
+  if (perms.canDelete) {
+    html += '<button class="act-btn del" onclick="confirmDelete(\'' + type + '\',\'' + escAttr(id) + '\',\'' + escAttr(name) + '\')" title="Удалить">🗑</button>';
+  }
+  html += '</div>';
+  return html;
 }
 
-function renderUrgentTasks() {
-  const el = document.getElementById('urgent-tasks');
-  const urgent = DATA.tasks.filter(t => t.Приоритет === 'P1' && t.Статус !== 'Готово').slice(0, 5);
-  el.innerHTML = urgent.length ? urgent.map(t => `<tr>
-    <td>${t.Описание || t.Название || ''}</td>
-    <td>${t.Направление || ''}</td>
-    <td><span class="${priorityClass(t.Приоритет)}">${t.Приоритет}</span></td>
-    <td>${t.Дедлайн || '—'}</td>
-  </tr>`).join('') : '<tr><td colspan="4" class="empty">Нет срочных задач 🎉</td></tr>';
+function escHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escAttr(s) { return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+function emptyRow(cols, msg) {
+  return '<tr><td colspan="' + cols + '" class="empty"><div class="icon">📭</div><p>' + msg + '</p></td></tr>';
 }
 
-function renderActiveProjects() {
-  const el = document.getElementById('active-projects');
-  const active = DATA.projects.filter(p => p.Статус !== 'Завершён').slice(0, 5);
-  el.innerHTML = active.length ? active.map(p => `<tr>
-    <td><strong>${p.Название || ''}</strong></td>
-    <td>${p.Направление || ''}</td>
-    <td><span class="status ${statusClass(p.Статус)}">${p.Статус || ''}</span></td>
-    <td>${progressBar(p.Прогресс)}</td>
-    <td>${p.Дедлайн || '—'}</td>
-  </tr>`).join('') : '<tr><td colspan="5" class="empty">Нет активных проектов</td></tr>';
+// ============================================================
+// RENDER: DASHBOARD TABLES
+// ============================================================
+function renderDashboardTables() {
+  // Urgent tasks
+  const tasks = filterByRole(DATA.tasks);
+  const urgent = tasks.filter(t => t['Приоритет'] === 'P1' && (t['Статус'] || '') !== 'Готово').slice(0, 6);
+  document.getElementById('urgent-tasks').innerHTML = urgent.length
+    ? urgent.map(t => '<tr><td>' + escHtml(t['Описание'] || t['Название']) + '</td><td>' + escHtml(t['Направление']) + '</td><td>' + priorityBadge(t['Приоритет']) + '</td><td>' + statusBadge(t['Статус']) + '</td><td>' + escHtml(t['Дедлайн'] || '—') + '</td></tr>').join('')
+    : emptyRow(5, 'Нет срочных задач 🎉');
+
+  // Active projects
+  const projects = filterByRole(DATA.projects);
+  const active = projects.filter(p => (p['Статус'] || '') !== 'Завершён').slice(0, 6);
+  document.getElementById('active-projects').innerHTML = active.length
+    ? active.map(p => '<tr><td><strong>' + escHtml(p['Название']) + '</strong></td><td>' + escHtml(p['Направление']) + '</td><td>' + statusBadge(p['Статус']) + '</td><td>' + progressBar(p['Прогресс']) + '</td><td>' + priorityBadge(p['Приоритет']) + '</td><td>' + escHtml(p['Дедлайн'] || '—') + '</td></tr>').join('')
+    : emptyRow(6, 'Нет активных проектов');
+
+  // Recent comms
+  const comms = (DATA.comms || []).slice(0, 5);
+  document.getElementById('recent-comms').innerHTML = comms.length
+    ? comms.map(c => '<tr><td>' + escHtml(c['Партнёр']) + '</td><td>' + escHtml(c['Тип']) + '</td><td>' + escHtml(c['Тема']) + '</td><td>' + escHtml(c['Дата'] || '—') + '</td><td>' + escHtml(c['Автор'] || '—') + '</td></tr>').join('')
+    : emptyRow(5, 'Нет записей');
 }
 
+// ============================================================
+// RENDER: FILTERS
+// ============================================================
+function renderFilterChips(containerId, filterKey, dataKey) {
+  const allDirs = ['Все', ...new Set(DATA[dataKey].map(item => item['Направление']).filter(Boolean))];
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = allDirs.map(d =>
+    '<button class="filter-chip ' + (currentFilters[filterKey] === d ? 'active' : '') + '" onclick="setFilter(\'' + filterKey + '\',\'' + escAttr(d) + '\')">' + escHtml(d) + '</button>'
+  ).join('');
+}
+
+function setFilter(key, value) {
+  currentFilters[key] = value;
+  renderAll();
+}
+
+function renderPartnerFilters() { renderFilterChips('partner-filters', 'partners', 'partners'); }
+function renderProjectFilters() { renderFilterChips('project-filters', 'projects', 'projects'); }
+function renderTaskFilters() { renderFilterChips('task-filters', 'tasks', 'tasks'); }
+
+// ============================================================
+// RENDER: PARTNERS
+// ============================================================
 function renderPartners() {
+  let data = filterByRole(DATA.partners);
+  data = filterByDirection(data, 'partners');
+  data = filterBySearch(data, 'partner-search', ['Название', 'Страна', 'Продукт', 'Контакт']);
+
   const el = document.getElementById('partners-table');
-  el.innerHTML = DATA.partners.map(p => `<tr>
-    <td><strong>${p.Название || ''}</strong></td>
-    <td>${p.Страна || ''}</td>
-    <td>${p.Направление || ''}</td>
-    <td style="font-size:12px">${p.Продукт || ''}</td>
-    <td><span class="status ${statusClass(p.Статус)}">${p.Статус || ''}</span></td>
-    <td>${actionBtns('partner', p.ID)}</td>
-  </tr>`).join('');
+  el.innerHTML = data.length ? data.map(p =>
+    '<tr>' +
+    '<td><strong>' + escHtml(p['Название']) + '</strong></td>' +
+    '<td>' + escHtml(p['Страна']) + '</td>' +
+    '<td>' + escHtml(p['Направление']) + '</td>' +
+    '<td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">' + escHtml(p['Продукт']) + '</td>' +
+    '<td>' + statusBadge(p['Статус']) + '</td>' +
+    '<td style="font-size:12px">' + escHtml(p['Контакт'] || '') + '</td>' +
+    '<td>' + actionButtons('partner', p.ID, p['Название']) + '</td>' +
+    '</tr>'
+  ).join('') : emptyRow(7, 'Партнёры не найдены');
 }
 
+// ============================================================
+// RENDER: PROJECTS
+// ============================================================
 function renderProjects() {
+  let data = filterByRole(DATA.projects);
+  data = filterByDirection(data, 'projects');
+  data = filterBySearch(data, 'project-search', ['Название', 'Партнёр', 'Описание']);
+
   const el = document.getElementById('projects-table');
-  el.innerHTML = DATA.projects.map(p => `<tr>
-    <td><strong>${p.Название || ''}</strong></td>
-    <td>${p.Направление || ''}</td>
-    <td><span class="status ${statusClass(p.Статус)}">${p.Статус || ''}</span></td>
-    <td><span class="${priorityClass(p.Приоритет)}">${p.Приоритет || ''}</span></td>
-    <td>${progressBar(p.Прогресс)}</td>
-    <td>${p.Дедлайн || '—'}</td>
-    <td>${actionBtns('project', p.ID)}</td>
-  </tr>`).join('');
+  el.innerHTML = data.length ? data.map(p =>
+    '<tr>' +
+    '<td><strong>' + escHtml(p['Название']) + '</strong></td>' +
+    '<td>' + escHtml(p['Направление']) + '</td>' +
+    '<td>' + statusBadge(p['Статус']) + '</td>' +
+    '<td>' + priorityBadge(p['Приоритет']) + '</td>' +
+    '<td>' + progressBar(p['Прогресс']) + '</td>' +
+    '<td style="font-size:12px">' + escHtml(p['Партнёр'] || '') + '</td>' +
+    '<td>' + escHtml(p['Дедлайн'] || '—') + '</td>' +
+    '<td>' + actionButtons('project', p.ID, p['Название']) + '</td>' +
+    '</tr>'
+  ).join('') : emptyRow(8, 'Проекты не найдены');
 }
 
+// ============================================================
+// RENDER: TASKS
+// ============================================================
 function renderTasks() {
+  let data = filterByRole(DATA.tasks);
+  data = filterByDirection(data, 'tasks');
+  data = filterBySearch(data, 'task-search', ['Описание', 'Название', 'Ответственный', 'Проект']);
+  // Sort by priority
+  const pOrder = { 'P1': 1, 'P2': 2, 'P3': 3 };
+  data = [...data].sort((a, b) => (pOrder[a['Приоритет']] || 9) - (pOrder[b['Приоритет']] || 9));
+
+  const today = new Date().toISOString().split('T')[0];
   const el = document.getElementById('tasks-table');
-  const sorted = [...DATA.tasks].sort((a,b) => ({'P1':1,'P2':2,'P3':3}[a.Приоритет]||9) - ({'P1':1,'P2':2,'P3':3}[b.Приоритет]||9));
-  el.innerHTML = sorted.map(t => `<tr>
-    <td>${t.Описание || t.Название || ''}</td>
-    <td>${t.Направление || ''}</td>
-    <td><span class="${priorityClass(t.Приоритет)}">${t.Приоритет || ''}</span></td>
-    <td><span class="status ${statusClass(t.Статус)}">${t.Статус || ''}</span></td>
-    <td>${t.Дедлайн || '—'}</td>
-    <td>${actionBtns('task', t.ID)}</td>
-  </tr>`).join('');
+  el.innerHTML = data.length ? data.map(t => {
+    const isOverdue = t['Дедлайн'] && t['Дедлайн'] < today && (t['Статус'] || '') !== 'Готово';
+    return '<tr style="' + (isOverdue ? 'background:rgba(255,107,107,0.05)' : '') + '">' +
+    '<td>' + (isOverdue ? '🔴 ' : '') + escHtml(t['Описание'] || t['Название']) + '</td>' +
+    '<td>' + escHtml(t['Направление']) + '</td>' +
+    '<td>' + priorityBadge(t['Приоритет']) + '</td>' +
+    '<td>' + statusBadge(t['Статус']) + '</td>' +
+    '<td style="font-size:12px">' + escHtml(t['Ответственный'] || '—') + '</td>' +
+    '<td>' + (isOverdue ? '<span style="color:var(--red);font-weight:700">' : '') + escHtml(t['Дедлайн'] || '—') + (isOverdue ? '</span>' : '') + '</td>' +
+    '<td>' + actionButtons('task', t.ID, t['Описание'] || t['Название']) + '</td>' +
+    '</tr>';
+  }).join('') : emptyRow(7, 'Задачи не найдены');
 }
 
+// ============================================================
+// RENDER: STAFF
+// ============================================================
 function renderStaff() {
   const el = document.getElementById('staff-table');
-  const roleE = {'CEO':'👑','Зам':'⭐','Руководитель':'📋'};
-  el.innerHTML = DATA.staff.map(s => `<tr>
-    <td><strong>${s.Имя || '(не заполнено)'}</strong></td>
-    <td>${roleE[s.Роль]||'👤'} ${s.Роль || ''}</td>
-    <td>${s.Направление || ''}</td>
-    <td style="font-size:11px">${s.Telegram_ID ? '✅ ' + s.Telegram_ID : '❌'}</td>
-    <td><span class="status ${s.Статус === 'Активный' ? 'status-active' : 'status-pause'}">${s.Статус || ''}</span></td>
-    <td>${actionBtns('staff', s.ID)}</td>
-  </tr>`).join('');
+  const perms = getUserPerms();
+  el.innerHTML = DATA.staff.length ? DATA.staff.map(s => {
+    const roleEmoji = (ROLES[s['Роль']] || {}).emoji || '👤';
+    return '<tr>' +
+    '<td><strong>' + escHtml(s['Имя'] || '(не заполнено)') + '</strong></td>' +
+    '<td>' + roleEmoji + ' ' + escHtml(s['Роль']) + '</td>' +
+    '<td>' + escHtml(s['Направление']) + '</td>' +
+    '<td style="font-size:11px">' + (s.Telegram_ID ? '✅ ' + escHtml(s.Telegram_ID) : '❌ нет') + '</td>' +
+    '<td style="font-size:12px">' + escHtml(s['Email'] || '—') + '</td>' +
+    '<td style="font-size:12px">' + escHtml(s['Телефон'] || '—') + '</td>' +
+    '<td>' + statusBadge(s['Статус'] || 'Активный') + '</td>' +
+    '<td>' + (perms.canManageStaff ? actionButtons('staff', s.ID, s['Имя']) : '') + '</td>' +
+    '</tr>';
+  }).join('') : emptyRow(8, 'Нет сотрудников');
 }
 
+// ============================================================
+// RENDER: DIRECTIONS
+// ============================================================
 function renderDirections() {
+  const emojiMap = { 'КТ': '🔬', 'Рентген': '📡', 'Роботы': '🤖', 'Урология': '💊', 'PACS': '💻' };
   const el = document.getElementById('dir-cards');
-  const emojiMap = {'КТ':'🔬','Рентген':'📡','Роботы':'🤖','Урология':'💊','PACS':'💻'};
   el.innerHTML = DATA.directions.map(d => {
-    const cnt = DATA.partners.filter(p => (p.Направление||'').includes(d.Название)).length;
-    const prj = DATA.projects.filter(p => (p.Направление||'').includes(d.Название)).length;
-    const tsk = DATA.tasks.filter(t => (t.Направление||'').includes(d.Название) && t.Статус !== 'Готово').length;
-    return `<div class="metric-card" style="cursor:default">
-      <div class="icon">${emojiMap[d.Название]||'📌'}</div>
-      <div class="value" style="font-size:20px">${d.Название}</div>
-      <div class="label">${d.Этап || ''}</div>
-      <div style="margin-top:12px;font-size:12px;color:var(--text2)">
-        🤝 ${cnt} партн. &nbsp; 📁 ${prj} проект. &nbsp; ✅ ${tsk} задач
-      </div>
-    </div>`;
+    const name = d['Название'] || '';
+    const partners = DATA.partners.filter(p => (p['Направление'] || '').includes(name));
+    const projects = DATA.projects.filter(p => (p['Направление'] || '').includes(name));
+    const tasks = DATA.tasks.filter(t => (t['Направление'] || '').includes(name) && (t['Статус'] || '') !== 'Готово');
+    const avgProgress = projects.length ? Math.round(projects.reduce((s, p) => s + (parseInt(p['Прогресс']) || 0), 0) / projects.length) : 0;
+
+    return '<div class="metric-card" style="cursor:pointer" onclick="showDirDetail(\'' + escAttr(name) + '\')">' +
+    '<div class="m-icon">' + (emojiMap[name] || '📌') + '</div>' +
+    '<div class="m-value" style="font-size:22px">' + escHtml(name) + '</div>' +
+    '<div class="m-label">' + escHtml(d['Этап'] || d['Описание'] || '') + '</div>' +
+    '<div style="margin-top:14px;font-size:12px;color:var(--text2)">' +
+    '🤝 ' + partners.length + ' партн. &nbsp;&nbsp; 📁 ' + projects.length + ' проект. &nbsp;&nbsp; ✅ ' + tasks.length + ' задач' +
+    '</div>' +
+    '<div style="margin-top:8px">' + progressBar(avgProgress) + '</div>' +
+    '</div>';
   }).join('');
 }
 
-function renderApprovals() {
-  const el = document.getElementById('approvals-table');
-  el.innerHTML = DATA.approvals.length ? DATA.approvals.map(a => `<tr>
-    <td>${a.Тип || ''}</td>
-    <td>${a.Описание || ''}</td>
-    <td>${a.От_кого || ''}</td>
-    <td>${a.Направление || ''}</td>
-    <td><span class="status ${statusClass(a.Статус)}">${a.Статус || ''}</span></td>
-    <td>
-      <div class="actions-cell">
-        <button class="action-btn" onclick="approveItem('${a.ID}')" title="Одобрить" style="color:var(--accent)">✅</button>
-        <button class="action-btn del" onclick="rejectItem('${a.ID}')" title="Отклонить">❌</button>
-      </div>
-    </td>
-  </tr>`).join('') : '<tr><td colspan="6" class="empty">Нет ожидающих согласований</td></tr>';
+function showDirDetail(dirName) {
+  const card = document.getElementById('dir-detail-card');
+  card.style.display = 'block';
+  document.getElementById('dir-detail-title').textContent = dirName + ' — Партнёры';
+  const partners = DATA.partners.filter(p => (p['Направление'] || '').includes(dirName));
+  document.getElementById('dir-detail-partners').innerHTML = partners.length
+    ? partners.map(p => '<tr><td><strong>' + escHtml(p['Название']) + '</strong></td><td>' + statusBadge(p['Статус']) + '</td><td>' + escHtml(p['Продукт'] || '') + '</td></tr>').join('')
+    : emptyRow(3, 'Нет партнёров в этом направлении');
 }
 
-// ========== MODALS ==========
-const MODAL_FORMS = {
-  partner: {title:'Добавить партнёра', sheet:'Партнёры', fields:[
-    {name:'Название',type:'text',required:true},
-    {name:'Страна',type:'text'},
-    {name:'Направление',type:'select',options:['КТ','Рентген','Роботы','Урология','PACS']},
-    {name:'Продукт',type:'text'},
-    {name:'Статус',type:'select',options:['Research','Переговоры','Активный','Пауза']},
-    {name:'Описание',type:'textarea'},
-  ]},
-  project: {title:'Добавить проект', sheet:'Проекты', fields:[
-    {name:'Название',type:'text',required:true},
-    {name:'Направление',type:'select',options:['КТ','Рентген','Роботы','Урология','PACS']},
-    {name:'Описание',type:'textarea'},
-    {name:'Статус',type:'select',options:['Исследование','Подготовка','В работе','Переговоры','Завершён']},
-    {name:'Приоритет',type:'select',options:['P1','P2','P3']},
-    {name:'Дедлайн',type:'date'},
-    {name:'Прогресс',type:'text',placeholder:'25%'},
-    {name:'Партнёр',type:'text'},
-  ]},
-  task: {title:'Добавить задачу', sheet:'Задачи', fields:[
-    {name:'Описание',type:'text',required:true},
-    {name:'Направление',type:'select',options:['КТ','Рентген','Роботы','Урология','PACS','Общее']},
-    {name:'Приоритет',type:'select',options:['P1','P2','P3']},
-    {name:'Статус',type:'select',options:['⏳ В очереди','В работе','Готово']},
-    {name:'Дедлайн',type:'date'},
-  ]},
-  staff: {title:'Добавить сотрудника', sheet:'Сотрудники', fields:[
-    {name:'Имя',type:'text',required:true},
-    {name:'Telegram_ID',type:'text',placeholder:'ID из Telegram'},
-    {name:'Username',type:'text',placeholder:'@username'},
-    {name:'Роль',type:'select',options:['CEO','Зам','Руководитель']},
-    {name:'Направление',type:'select',options:['Все','КТ','Рентген','Роботы','Урология','PACS']},
-    {name:'Email',type:'text'},
-    {name:'Телефон',type:'text'},
-  ]},
-  comm: {title:'Записать коммуникацию', sheet:'Коммуникации', fields:[
-    {name:'Партнёр',type:'text',required:true},
-    {name:'Тип',type:'select',options:['Звонок','Email','Встреча','Письмо','Чат']},
-    {name:'Тема',type:'textarea'},
-  ]}
-};
+// ============================================================
+// RENDER: APPROVALS
+// ============================================================
+function renderApprovals() {
+  const el = document.getElementById('approvals-content');
+  const perms = getUserPerms();
 
-function openModal(type) {
+  if (!perms.canApprove) {
+    el.innerHTML = '<div class="access-denied"><div class="icon">🔒</div><h3>Доступ ограничен</h3><p>Раздел согласований доступен только CEO.</p></div>';
+    return;
+  }
+
+  const pending = DATA.approvals.filter(a => (a['Статус'] || '').includes('Ожидает'));
+  const decided = DATA.approvals.filter(a => !(a['Статус'] || '').includes('Ожидает'));
+
+  let html = '<div class="card"><div class="card-header"><h3>⏳ Ожидают решения (' + pending.length + ')</h3></div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>Тип</th><th>Описание</th><th>От кого</th><th>Направление</th><th>Дата</th><th>Действия</th></tr></thead><tbody>';
+  html += pending.length ? pending.map(a =>
+    '<tr><td>' + escHtml(a['Тип']) + '</td>' +
+    '<td>' + escHtml(a['Описание']) + '</td>' +
+    '<td>' + escHtml(a['От_кого']) + '</td>' +
+    '<td>' + escHtml(a['Направление']) + '</td>' +
+    '<td>' + escHtml(a['Дата_запроса'] || '') + '</td>' +
+    '<td><div class="actions-cell">' +
+    '<button class="btn btn-xs btn-approve" onclick="handleApproval(\'' + escAttr(a.ID) + '\',true)">✅ Да</button> ' +
+    '<button class="btn btn-xs btn-reject" onclick="handleApproval(\'' + escAttr(a.ID) + '\',false)">❌ Нет</button>' +
+    '</div></td></tr>'
+  ).join('') : emptyRow(6, 'Нет ожидающих согласований ✨');
+  html += '</tbody></table></div></div>';
+
+  if (decided.length > 0) {
+    html += '<div class="card" style="margin-top:16px"><div class="card-header"><h3>📜 История решений</h3></div>';
+    html += '<div class="table-wrap"><table><thead><tr><th>Тип</th><th>Описание</th><th>Статус</th><th>Дата решения</th></tr></thead><tbody>';
+    html += decided.map(a =>
+      '<tr><td>' + escHtml(a['Тип']) + '</td><td>' + escHtml(a['Описание']) + '</td><td>' + statusBadge(a['Статус']) + '</td><td>' + escHtml(a['Дата_решения'] || '') + '</td></tr>'
+    ).join('');
+    html += '</tbody></table></div></div>';
+  }
+
+  el.innerHTML = html;
+}
+
+// ============================================================
+// RENDER: COMMUNICATIONS
+// ============================================================
+function renderComms() {
+  let data = DATA.comms || [];
+  data = filterBySearch(data, 'comm-search', ['Партнёр', 'Тема', 'Результат']);
+
+  const el = document.getElementById('comms-table');
+  el.innerHTML = data.length ? data.map(c =>
+    '<tr>' +
+    '<td><strong>' + escHtml(c['Партнёр']) + '</strong></td>' +
+    '<td>' + escHtml(c['Тип']) + '</td>' +
+    '<td>' + escHtml(c['Тема']) + '</td>' +
+    '<td style="font-size:12px;max-width:250px;overflow:hidden;text-overflow:ellipsis">' + escHtml(c['Результат'] || '') + '</td>' +
+    '<td>' + escHtml(c['Дата'] || '—') + '</td>' +
+    '<td style="font-size:12px">' + escHtml(c['Автор'] || '—') + '</td>' +
+    '<td>' + actionButtons('comm', c.ID || '', c['Партнёр']) + '</td>' +
+    '</tr>'
+  ).join('') : emptyRow(7, 'Нет записей о коммуникациях');
+}
+
+// ============================================================
+// RENDER: SETTINGS STATS
+// ============================================================
+function renderSettingsStats() {
+  const stats = [
+    { label: 'Партнёры', value: DATA.partners.length },
+    { label: 'Проекты', value: DATA.projects.length },
+    { label: 'Задачи', value: DATA.tasks.length },
+    { label: 'Сотрудники', value: DATA.staff.length },
+    { label: 'Направления', value: DATA.directions.length },
+    { label: 'Согласования', value: DATA.approvals.length },
+    { label: 'Коммуникации', value: (DATA.comms || []).length },
+    { label: 'Версия', value: CONFIG.VERSION }
+  ];
+  document.getElementById('settings-stats').innerHTML = stats.map(s =>
+    '<div class="detail-item"><div class="detail-label">' + s.label + '</div><div class="detail-value">' + s.value + '</div></div>'
+  ).join('');
+}
+
+// ============================================================
+// MODAL: OPEN / CLOSE
+// ============================================================
+function openModal(type, existingData) {
   currentModal = type;
-  const cfg = MODAL_FORMS[type];
-  document.getElementById('modalTitle').textContent = cfg.title;
+  editingItem = existingData || null;
+  const def = FORM_DEFS[type];
+  if (!def) return;
+
+  document.getElementById('modalTitle').textContent = (editingItem ? '✏️ Редактировать: ' : '➕ Добавить: ') + def.title;
 
   let html = '';
-  for (const f of cfg.fields) {
-    html += `<div class="form-group">
-      <label>${f.name}${f.required ? ' *' : ''}</label>`;
-    if (f.type === 'select') {
-      html += `<select id="field-${f.name}">${f.options.map(o => `<option>${o}</option>`).join('')}</select>`;
-    } else if (f.type === 'textarea') {
-      html += `<textarea id="field-${f.name}" placeholder="${f.placeholder||''}"></textarea>`;
+  for (const field of def.fields) {
+    const val = editingItem ? (editingItem[field.name] || '') : '';
+    const reqClass = field.required ? 'required' : '';
+
+    html += '<div class="form-group">';
+    html += '<label class="' + reqClass + '">' + escHtml(field.name) + '</label>';
+
+    if (field.type === 'select') {
+      html += '<select id="field-' + field.name + '">';
+      for (const opt of field.options) {
+        html += '<option value="' + escAttr(opt) + '"' + (val === opt ? ' selected' : '') + '>' + escHtml(opt) + '</option>';
+      }
+      html += '</select>';
+    } else if (field.type === 'textarea') {
+      html += '<textarea id="field-' + field.name + '" placeholder="' + escAttr(field.placeholder || '') + '">' + escHtml(val) + '</textarea>';
     } else {
-      html += `<input type="${f.type}" id="field-${f.name}" placeholder="${f.placeholder||''}">`;
+      html += '<input type="' + field.type + '" id="field-' + field.name + '" value="' + escAttr(val) + '" placeholder="' + escAttr(field.placeholder || '') + '">';
     }
     html += '</div>';
   }
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('show');
+
+  // Focus first field
+  setTimeout(() => {
+    const first = document.getElementById('field-' + def.fields[0].name);
+    if (first) first.focus();
+  }, 200);
 }
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('show');
   currentModal = '';
+  editingItem = null;
 }
 
-function saveModal() {
-  const cfg = MODAL_FORMS[currentModal];
-  const row = { ID: currentModal[0].toUpperCase() + String(Date.now()).slice(-5) };
+// ============================================================
+// MODAL: SAVE
+// ============================================================
+async function saveModal() {
+  const def = FORM_DEFS[currentModal];
+  if (!def) return;
 
-  for (const f of cfg.fields) {
-    const el = document.getElementById('field-' + f.name);
-    row[f.name] = el?.value || '';
+  // Validate required fields
+  for (const field of def.fields) {
+    if (field.required) {
+      const el = document.getElementById('field-' + field.name);
+      if (!el || !el.value.trim()) {
+        toast('⚠️ Заполните поле «' + field.name + '»', 'warning');
+        if (el) el.focus();
+        return;
+      }
+    }
   }
 
-  // Add timestamps
-  const now = new Date().toISOString().split('T')[0];
-  if (cfg.sheet === 'Сотрудники') row['Статус'] = 'Активный';
-  if (cfg.sheet === 'Сотрудники') row['Дата_добавления'] = now;
-  if (cfg.sheet === 'Проекты') { row['Создано'] = now; row['Обновлено'] = now; }
+  // Build row data
+  const row = {};
+  if (editingItem) {
+    row.ID = editingItem.ID;
+  } else {
+    row.ID = currentModal.charAt(0).toUpperCase() + String(Date.now()).slice(-6);
+  }
 
-  apiPost('add', { sheet: cfg.sheet, row });
+  for (const field of def.fields) {
+    const el = document.getElementById('field-' + field.name);
+    row[field.name] = el ? el.value : '';
+  }
+
+  // Auto-fill system fields
+  const today = new Date().toISOString().split('T')[0];
+
+  if (def.sheet === 'Сотрудники' && !editingItem) {
+    row['Статус'] = 'Активный';
+    row['Дата_добавления'] = today;
+  }
+  if (def.sheet === 'Проекты') {
+    if (!editingItem) row['Создано'] = today;
+    row['Обновлено'] = today;
+  }
+  if (def.sheet === 'Коммуникации') {
+    if (!editingItem) {
+      row['Дата'] = today;
+      row['Автор'] = USER ? USER.name : '';
+    }
+  }
+
+  // Check permissions: non-CEO writes go through approval
+  const perms = getUserPerms();
+  if (!perms.canWrite && !editingItem) {
+    const approvalRow = {
+      ID: 'APR' + String(Date.now()).slice(-6),
+      'Тип': 'Добавление: ' + def.title,
+      'Описание': row['Название'] || row['Описание'] || row['Имя'] || row['Партнёр'] || '',
+      'От_кого': USER ? USER.name : '',
+      'Telegram_ID': USER ? USER.tgId : '',
+      'Направление': row['Направление'] || '',
+      'Статус': '⏳ Ожидает',
+      'Дата_запроса': today,
+      'Данные': JSON.stringify(row).substring(0, 500)
+    };
+
+    document.getElementById('modalSaveBtn').disabled = true;
+    const ok = await apiWrite('Согласования', approvalRow);
+    document.getElementById('modalSaveBtn').disabled = false;
+
+    if (ok) {
+      toast('⏳ Запрос на согласование отправлен CEO', 'info');
+      setTimeout(() => loadData(), 1500);
+    }
+    closeModal();
+    return;
+  }
+
+  // Direct write
+  document.getElementById('modalSaveBtn').disabled = true;
+  const ok = await apiWrite(def.sheet, row);
+  document.getElementById('modalSaveBtn').disabled = false;
+
+  if (ok) {
+    toast('✅ ' + def.title + ' сохранён!', 'success');
+    setTimeout(() => loadData(), 1500);
+  }
   closeModal();
 }
 
+// ============================================================
+// VIEW DETAIL
+// ============================================================
+function viewItem(type, id) {
+  const dataMap = { partner: 'partners', project: 'projects', task: 'tasks', staff: 'staff', comm: 'comms' };
+  const key = dataMap[type];
+  const item = DATA[key]?.find(i => i.ID === id);
+  if (!item) return;
+
+  const def = FORM_DEFS[type];
+  const title = item['Название'] || item['Описание'] || item['Имя'] || item['Партнёр'] || 'Детали';
+  document.getElementById('detailTitle').textContent = '📋 ' + title;
+
+  // Build detail view from all item fields
+  const allFields = Object.entries(item).filter(([k]) => k !== 'row_number');
+  let html = '<div class="detail-grid">';
+  for (const [key, val] of allFields) {
+    if (!val && val !== 0) continue;
+    const isLong = String(val).length > 60;
+    html += '<div class="detail-item ' + (isLong ? 'detail-full' : '') + '">';
+    html += '<div class="detail-label">' + escHtml(key) + '</div>';
+    html += '<div class="detail-value">' + escHtml(val) + '</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  document.getElementById('detailBody').innerHTML = html;
+  document.getElementById('detailEditBtn').onclick = function() { closeDetail(); editItem(type, id); };
+  document.getElementById('detailOverlay').classList.add('show');
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('show');
+}
+
+// ============================================================
+// EDIT ITEM
+// ============================================================
 function editItem(type, id) {
-  toast('Редактирование — в разработке');
+  const dataMap = { partner: 'partners', project: 'projects', task: 'tasks', staff: 'staff', comm: 'comms' };
+  const key = dataMap[type];
+  const item = DATA[key]?.find(i => i.ID === id);
+  if (item) openModal(type, item);
+}
+
+// ============================================================
+// DELETE ITEM
+// ============================================================
+function confirmDelete(type, id, name) {
+  const perms = getUserPerms();
+  if (!perms.canDelete) {
+    toast('⛔ Удаление доступно только CEO', 'error');
+    return;
+  }
+
+  document.getElementById('confirmTitle').textContent = 'Удалить запись?';
+  document.getElementById('confirmText').textContent = '«' + (name || id) + '» будет удалена. Это действие нельзя отменить.';
+  document.getElementById('confirmOverlay').classList.add('show');
+
+  confirmCallback = function(confirmed) {
+    if (confirmed) deleteItem(type, id);
+  };
+}
+
+function closeConfirm(result) {
+  document.getElementById('confirmOverlay').classList.remove('show');
+  if (confirmCallback) {
+    confirmCallback(result);
+    confirmCallback = null;
+  }
 }
 
 function deleteItem(type, id) {
-  if (!confirm('Удалить?')) return;
-  const map = {'partner':'partners','project':'projects','task':'tasks','staff':'staff'};
-  const key = map[type];
-  if (key) DATA[key] = DATA[key].filter(i => i.ID !== id);
+  const dataMap = { partner: 'partners', project: 'projects', task: 'tasks', staff: 'staff', comm: 'comms' };
+  const key = dataMap[type];
+  if (key && DATA[key]) {
+    DATA[key] = DATA[key].filter(i => i.ID !== id);
+  }
   renderAll();
-  toast('🗑 Удалено');
+  toast('🗑 Запись удалена (локально)', 'warning');
 }
 
-function approveItem(id) {
-  const a = DATA.approvals.find(i => i.ID === id);
-  if (a) a.Статус = '✅ Одобрено';
+// ============================================================
+// APPROVALS
+// ============================================================
+async function handleApproval(id, approved) {
+  const item = DATA.approvals.find(a => a.ID === id);
+  if (!item) return;
+
+  const today = new Date().toISOString().split('T')[0];
+  item['Статус'] = approved ? '✅ Одобрено' : '❌ Отклонено';
+  item['Дата_решения'] = today;
+  item['Решение_CEO'] = USER ? USER.name : '';
+
   renderAll();
-  toast('✅ Одобрено');
+  toast(approved ? '✅ Одобрено' : '❌ Отклонено', approved ? 'success' : 'error');
+
+  // Write back to sheet
+  await apiWrite('Согласования', item);
 }
 
-function rejectItem(id) {
-  const a = DATA.approvals.find(i => i.ID === id);
-  if (a) a.Статус = '❌ Отклонено';
-  renderAll();
-  toast('❌ Отклонено');
+// ============================================================
+// EXPORT
+// ============================================================
+function exportTable(type) {
+  const dataMap = { partners: DATA.partners, projects: DATA.projects, tasks: DATA.tasks };
+  const data = filterByRole(dataMap[type] || []);
+  if (!data.length) { toast('Нет данных для экспорта', 'warning'); return; }
+
+  const headers = Object.keys(data[0]).filter(k => k !== 'row_number');
+  let csv = '\uFEFF'; // BOM for Excel
+  csv += headers.join(';') + '\n';
+  data.forEach(row => {
+    csv += headers.map(h => '"' + String(row[h] || '').replace(/"/g, '""') + '"').join(';') + '\n';
+  });
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'RKT_' + type + '_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📥 Экспорт завершён', 'success');
 }
 
-// ========== TOAST ==========
-function toast(msg) {
+// ============================================================
+// UTILITY FUNCTIONS
+// ============================================================
+function toast(msg, type) {
   const el = document.getElementById('toast');
   el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2500);
+  el.className = 'toast toast-' + (type || 'success') + ' show';
+  setTimeout(() => el.classList.remove('show'), 3000);
 }
+
+function setStatus(state) {
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  if (state === 'connected') {
+    dot.className = 'dot dot-green';
+    text.textContent = 'Подключено • ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  } else if (state === 'loading') {
+    dot.className = 'dot dot-green';
+    text.textContent = 'Загрузка данных...';
+  } else {
+    dot.className = 'dot dot-red';
+    text.textContent = 'Ошибка подключения';
+  }
+}
+
+function updateStatusTime() {
+  const el = document.getElementById('statusTime');
+  if (el) el.textContent = new Date().toLocaleString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+// ============================================================
+// KEYBOARD SHORTCUTS
+// ============================================================
+document.addEventListener('keydown', function(e) {
+  // Enter on login
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') {
+    doLogin();
+    return;
+  }
+  // Escape to close modals
+  if (e.key === 'Escape') {
+    if (document.getElementById('confirmOverlay').classList.contains('show')) {
+      closeConfirm(false);
+    } else if (document.getElementById('detailOverlay').classList.contains('show')) {
+      closeDetail();
+    } else if (document.getElementById('modalOverlay').classList.contains('show')) {
+      closeModal();
+    }
+  }
+});
+
+// ============================================================
+// INIT
+// ============================================================
+checkSavedLogin();
 </script>
 </body>
 </html>
