@@ -834,21 +834,22 @@ async function loadData() {
 
 async function apiPost(action, data) {
   if (!API_URL) {
-    // Demo mode: add to local data
     demoAdd(data.sheet, data.row);
     renderAll();
     toast('✅ Добавлено (демо)');
     return;
   }
   try {
-    await fetch(API_URL.replace('rkt-api','rkt-write'), {
-      method: 'POST',
-      body: JSON.stringify({action, ...data})
-    });
-    loadData();
-    toast('✅ Сохранено');
+    // Use GET with encoded data to avoid CORS issues
+    const writeUrl = API_URL.replace('rkt-api','rkt-write');
+    const encoded = encodeURIComponent(JSON.stringify({action, ...data}));
+    const resp = await fetch(writeUrl + '?data=' + encoded);
+    console.log('Write response:', resp.status);
+    setTimeout(() => loadData(), 1000);
+    toast('✅ Сохранено!');
   } catch(e) {
-    toast('❌ Ошибка');
+    console.error('Write error:', e);
+    toast('❌ Ошибка: ' + e.message);
   }
 }
 
