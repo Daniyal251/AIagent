@@ -841,7 +841,7 @@ async function apiPost(action, data) {
     return;
   }
   try {
-    await fetch(API_URL, {
+    await fetch(API_URL.replace('rkt-api','rkt-write'), {
       method: 'POST',
       body: JSON.stringify({action, ...data})
     });
