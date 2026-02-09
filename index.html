@@ -1572,6 +1572,8 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="tab" data-tab="staff" onclick="showPvTab('staff')">👥 Команда</div>
         <div class="tab" data-tab="timeline" onclick="showPvTab('timeline')">📅 План-график</div>
         <div class="tab" data-tab="comms" onclick="showPvTab('comms')">💬 Коммуникации</div>
+        <div class="tab tab-finance" data-tab="finance" onclick="showPvTab('finance')" style="display:none">💰 Финансы</div>
+        <div class="tab tab-salaries" data-tab="salaries" onclick="showPvTab('salaries')" style="display:none">👥 Зарплаты</div>
       </div>
       <div id="pv-content"></div>
     </div>
@@ -1924,7 +1926,108 @@ const PROJECTS = {
 };
 
 // ============================================================
-// ROLES & PERMISSIONS
+// SITES BUSINESS: PRICING & SALARY MODEL
+// ============================================================
+const SITE_PRICING = {
+  'Визитка':  { price: 5000,  emoji: '📄', desc: '1-3 страницы, базовый дизайн', devPay: 1500, managerPct: 15 },
+  'Лендинг':  { price: 10000, emoji: '🎯', desc: '1 продающая страница, анимации', devPay: 3000, managerPct: 15 },
+  'Каталог':  { price: 15000, emoji: '🛒', desc: '5+ страниц, каталог товаров', devPay: 5000, managerPct: 15 },
+  'Премиум':  { price: 25000, emoji: '⭐', desc: 'Индивидуальный дизайн, SEO, CRM', devPay: 8000, managerPct: 15 },
+  'Домен+хостинг': { price: 3000, emoji: '🌐', desc: 'Домен .ru + хостинг на год', devPay: 0, managerPct: 0 }
+};
+
+const SITE_PIPELINE = [
+  { step: 1, name: '📞 Поиск клиента',        role: 'Менеджер',   days: 0, auto: false },
+  { step: 2, name: '📋 Заполнение анкеты',     role: 'Менеджер',   days: 1, auto: false },
+  { step: 3, name: '🎨 Генерация сайта',       role: 'Разработчик', days: 2, auto: true },
+  { step: 4, name: '📤 Отправка примера',       role: 'Менеджер',   days: 3, auto: true },
+  { step: 5, name: '💬 Фидбек клиента',        role: 'Менеджер',   days: 5, auto: false },
+  { step: 6, name: '💳 Счёт + оплата домена',  role: 'Менеджер',   days: 7, auto: true },
+  { step: 7, name: '🔧 Установка на хостинг',  role: 'Разработчик', days: 10, auto: true },
+  { step: 8, name: '✅ Сдача + оплата',        role: 'Менеджер',   days: 14, auto: false },
+  { step: 9, name: '👑 Согласование CEO',      role: 'CEO',        days: 15, auto: true }
+];
+
+function getSiteStaffByRole(role) {
+  const staff = DATA.staff.filter(s => s['Статус']==='Активный' && s['Проект']==='Сайты');
+  const byRole = staff.filter(s => {
+    const r = (s['Роль']||'').toLowerCase();
+    if (role === 'Менеджер') return r === 'менеджер';
+    if (role === 'Разработчик') return r === 'разработчик' || r === 'инженер';
+    if (role === 'CEO') return r === 'ceo' || r === 'зам';
+    return false;
+  });
+  if (byRole.length) return byRole[0]['Имя'];
+  // Escalation: if no one in role, go up
+  const escalation = staff.find(s => ['CEO','Зам'].includes(s['Роль']));
+  return escalation ? escalation['Имя'] : (USER ? USER.name : 'Не назначен');
+}
+
+function calcSiteFinancials() {
+  const dirs = DATA.directions.filter(d => d['Проект'] === 'Сайты');
+  const tasks = DATA.tasks.filter(t => t['Проект'] === 'Сайты');
+  const staff = DATA.staff.filter(s => s['Проект'] === 'Сайты' && s['Статус'] === 'Активный');
+  
+  let totalRevenue = 0, totalDevCost = 0, totalManagerCost = 0;
+  const clientStats = [];
+  const staffEarnings = {};
+  
+  staff.forEach(s => { staffEarnings[s['Имя']] = { role: s['Роль'], earned: 0, sites: 0 }; });
+  
+  dirs.forEach(d => {
+    const type = d['Тип_сайта'] || 'Лендинг';
+    const pricing = SITE_PRICING[type] || SITE_PRICING['Лендинг'];
+    const status = d['Статус'] || '';
+    const isDone = status.includes('Готово') || status.includes('✅') || status.includes('Оплачен');
+    const isPaid = status.includes('Оплачен') || d['Оплачено'] === 'Да';
+    
+    const clientTasks = tasks.filter(t => t['Направление'] === d['Название']);
+    const doneTasks = clientTasks.filter(t => t['Статус'] === 'Готово' || t['Статус'] === '✅ Готово');
+    const progress = clientTasks.length ? Math.round(doneTasks.length / clientTasks.length * 100) : 0;
+    
+    const revenue = isPaid ? pricing.price : 0;
+    const plannedRevenue = pricing.price;
+    totalRevenue += revenue;
+    
+    if (isDone || isPaid) {
+      totalDevCost += pricing.devPay;
+      totalManagerCost += Math.round(pricing.price * pricing.managerPct / 100);
+      
+      // Track staff earnings
+      const dev = clientTasks.find(t => (t['Ответственный']||'') && t['Описание']?.includes('Генерация'));
+      const mgr = clientTasks.find(t => (t['Ответственный']||'') && t['Описание']?.includes('Поиск'));
+      if (dev && staffEarnings[dev['Ответственный']]) {
+        staffEarnings[dev['Ответственный']].earned += pricing.devPay;
+        staffEarnings[dev['Ответственный']].sites++;
+      }
+      if (mgr && staffEarnings[mgr['Ответственный']]) {
+        staffEarnings[mgr['Ответственный']].earned += Math.round(pricing.price * pricing.managerPct / 100);
+        staffEarnings[mgr['Ответственный']].sites++;
+      }
+    }
+    
+    clientStats.push({
+      name: d['Название'], type, pricing, status, progress,
+      revenue, plannedRevenue, isPaid, isDone,
+      tasksTotal: clientTasks.length, tasksDone: doneTasks.length
+    });
+  });
+  
+  return {
+    clients: clientStats,
+    totalRevenue,
+    plannedRevenue: dirs.length * 10000, // avg
+    totalDevCost,
+    totalManagerCost,
+    totalCost: totalDevCost + totalManagerCost,
+    profit: totalRevenue - totalDevCost - totalManagerCost,
+    staffEarnings,
+    staffCount: staff.length,
+    clientCount: dirs.length,
+    paidCount: clientStats.filter(c => c.isPaid).length,
+    inProgressCount: clientStats.filter(c => !c.isDone && !c.isPaid).length
+  };
+}
 // ============================================================
 const ROLES = {
   'CEO': {
@@ -2400,6 +2503,10 @@ function openSubproject(spName) {
   // Show site generator tab only for "Сайты" project
   const siteGenTab = document.querySelector('.tab-sitegen');
   if (siteGenTab) siteGenTab.style.display = (currentProject === 'sites') ? '' : 'none';
+  // Show Finance & Salaries tabs only for Sites project
+  document.querySelectorAll('.tab-finance, .tab-salaries').forEach(t => {
+    t.style.display = (currentProject === 'sites') ? '' : 'none';
+  });
   renderSubprojectView();
 }
 
@@ -2627,6 +2734,10 @@ function renderProjectView() {
     const pNames = pp.map(p => p['Название']).filter(Boolean);
     const dc = (DATA.comms||[]).filter(c => pNames.some(n => (c['Партнёр']||'').includes(n)));
     html += renderCommTable(dc);
+  } else if (currentPvTab === 'finance') {
+    html += renderSiteFinance();
+  } else if (currentPvTab === 'salaries') {
+    html += renderSiteSalaries();
   }
 
   content.innerHTML = html;
@@ -3403,7 +3514,358 @@ function getSiteGenData() {
   return siteGenCache[key];
 }
 
-function renderSiteGenerator() {
+// ============================================================
+// SITES BUSINESS: FINANCE DASHBOARD
+// ============================================================
+function renderSiteFinance() {
+  const fin = calcSiteFinancials();
+  const avgCheck = fin.clientCount ? Math.round(fin.plannedRevenue / fin.clientCount) : 10000;
+  const saved = JSON.parse(localStorage.getItem('rkt_site_plan') || '{}');
+  
+  let html = '';
+  
+  // ====== PLAN GENERATOR ======
+  html += '<div class="card" style="border-color:var(--accent);border-width:2px"><div class="card-header" style="background:rgba(110,86,207,0.08)"><h3>🎯 Генеральный план</h3>';
+  html += '<button class="btn btn-sm btn-primary" onclick="executeSitePlan()">🚀 Раскидать задачи</button></div>';
+  html += '<div class="card-body">';
+  
+  // Period & target
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px">';
+  html += '<div class="form-group"><label>📅 Период</label><select id="plan-period" onchange="recalcPlan()">';
+  ['Неделя','2 недели','Месяц'].forEach(p => {
+    html += '<option'+(saved.period===p?' selected':'')+'>'+p+'</option>';
+  });
+  html += '</select></div>';
+  html += '<div class="form-group"><label>🎯 Целевое кол-во сайтов</label><input type="number" id="plan-target" value="'+(saved.target||10)+'" min="1" max="500" onchange="recalcPlan()"></div>';
+  html += '<div class="form-group"><label>📄 Основной тип</label><select id="plan-type" onchange="recalcPlan()">';
+  for (const [name, p] of Object.entries(SITE_PRICING)) {
+    html += '<option value="'+name+'"'+(saved.type===name?' selected':'')+'>'+p.emoji+' '+name+' — '+fmtMoney(p.price)+'</option>';
+  }
+  html += '</select></div>';
+  html += '<div class="form-group"><label>📆 Старт плана</label><input type="date" id="plan-start" value="'+(saved.start||today())+'"></div>';
+  html += '</div>';
+  
+  // Auto-calculated distribution
+  const staff = DATA.staff.filter(s => s['Проект']==='Сайты' && s['Статус']==='Активный');
+  const devs = staff.filter(s => ['Разработчик','Инженер'].includes(s['Роль']));
+  const mgrs = staff.filter(s => s['Роль']==='Менеджер');
+  const target = parseInt(saved.target) || 10;
+  const siteType = saved.type || 'Лендинг';
+  const pricing = SITE_PRICING[siteType] || SITE_PRICING['Лендинг'];
+  
+  html += '<div style="background:var(--bg2);border-radius:var(--radius);padding:16px;margin-bottom:16px">';
+  html += '<div style="font-weight:700;margin-bottom:12px;font-size:15px">📊 Расчёт плана на <span id="plan-calc-target">'+target+'</span> сайтов</div>';
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">';
+  
+  const planRev = target * pricing.price;
+  const planDevCost = target * pricing.devPay;
+  const planMgrCost = target * Math.round(pricing.price * pricing.managerPct / 100);
+  const planProfit = planRev - planDevCost - planMgrCost;
+  
+  html += '<div style="text-align:center"><div style="font-size:22px;font-weight:700;color:var(--accent)">'+fmtMoney(planRev)+'</div><div style="font-size:11px;color:var(--text2)">Выручка (план)</div></div>';
+  html += '<div style="text-align:center"><div style="font-size:22px;font-weight:700;color:var(--orange)">'+fmtMoney(planDevCost + planMgrCost)+'</div><div style="font-size:11px;color:var(--text2)">ФОТ</div></div>';
+  html += '<div style="text-align:center"><div style="font-size:22px;font-weight:700;color:var(--green)">'+fmtMoney(planProfit)+'</div><div style="font-size:11px;color:var(--text2)">Прибыль</div></div>';
+  html += '</div></div>';
+  
+  // Staff distribution
+  html += '<div style="font-weight:600;margin-bottom:8px">👥 Распределение по сотрудникам:</div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>Сотрудник</th><th>Роль</th><th>Сайтов</th><th>Заработает</th><th>Нагрузка/день</th></tr></thead><tbody>';
+  
+  const periodDays = saved.period === '2 недели' ? 14 : (saved.period === 'Месяц' ? 30 : 7);
+  const allWorkers = [...devs, ...mgrs];
+  
+  if (allWorkers.length === 0) {
+    // No staff — all on CEO/Зам
+    const escalation = staff.find(s => ['CEO','Зам'].includes(s['Роль'])) || { 'Имя': USER?.name || 'CEO', 'Роль': 'CEO' };
+    html += '<tr><td><strong>'+esc(escalation['Имя'])+'</strong></td><td>👑 '+esc(escalation['Роль'])+'</td>';
+    html += '<td style="font-weight:700">'+target+'</td>';
+    html += '<td style="color:var(--accent);font-weight:600">'+fmtMoney(planProfit)+'</td>';
+    html += '<td>'+(target/periodDays).toFixed(1)+'/день</td></tr>';
+    html += '<tr><td colspan="5" style="text-align:center;color:var(--orange)">⚠️ Нет разработчиков и менеджеров — наймите команду!</td></tr>';
+  } else {
+    // Distribute equally among devs
+    const sitesPerDev = devs.length ? Math.ceil(target / devs.length) : target;
+    devs.forEach((d, i) => {
+      const myCount = i < devs.length - 1 ? sitesPerDev : Math.max(0, target - sitesPerDev * (devs.length - 1));
+      const earn = myCount * pricing.devPay;
+      html += '<tr><td><strong>'+esc(d['Имя'])+'</strong></td><td>💻 Разработчик</td>';
+      html += '<td style="font-weight:700">'+myCount+'</td>';
+      html += '<td style="color:var(--accent);font-weight:600">'+fmtMoney(earn)+'</td>';
+      html += '<td>'+(myCount/periodDays).toFixed(1)+'/день</td></tr>';
+    });
+    
+    // Distribute equally among managers
+    const sitesPerMgr = mgrs.length ? Math.ceil(target / mgrs.length) : target;
+    mgrs.forEach((m, i) => {
+      const myCount = i < mgrs.length - 1 ? sitesPerMgr : Math.max(0, target - sitesPerMgr * (mgrs.length - 1));
+      const earn = myCount * Math.round(pricing.price * pricing.managerPct / 100);
+      html += '<tr><td><strong>'+esc(m['Имя'])+'</strong></td><td>💼 Менеджер</td>';
+      html += '<td style="font-weight:700">'+myCount+'</td>';
+      html += '<td style="color:var(--accent);font-weight:600">'+fmtMoney(earn)+'</td>';
+      html += '<td>'+(myCount/periodDays).toFixed(1)+'/день</td></tr>';
+    });
+    
+    if (!devs.length) html += '<tr><td colspan="5" style="color:var(--orange)">⚠️ Нет разработчиков — задачи будут назначены на Зам/CEO</td></tr>';
+    if (!mgrs.length) html += '<tr><td colspan="5" style="color:var(--orange)">⚠️ Нет менеджеров — задачи поиска назначены на Зам/CEO</td></tr>';
+  }
+  
+  html += '</tbody></table></div>';
+  html += '</div></div>';
+  
+  // ====== EDITABLE PRICING ======
+  html += '<div class="card"><div class="card-header"><h3>💰 Прайс-лист</h3>';
+  html += '<button class="btn btn-sm btn-secondary" onclick="openPricingEditor()">✏️ Редактировать</button></div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>Тип сайта</th><th>Цена клиенту</th><th>Разработчику</th><th>Менеджеру (%)</th><th>Прибыль</th></tr></thead><tbody>';
+  for (const [name, p] of Object.entries(SITE_PRICING)) {
+    const mgrPay = Math.round(p.price * p.managerPct / 100);
+    const profit = p.price - p.devPay - mgrPay;
+    html += '<tr><td>'+p.emoji+' <strong>'+esc(name)+'</strong><br><span style="font-size:11px;color:var(--text2)">'+esc(p.desc)+'</span></td>';
+    html += '<td style="font-weight:700;color:var(--accent)">'+fmtMoney(p.price)+'</td>';
+    html += '<td>'+fmtMoney(p.devPay)+'</td>';
+    html += '<td>'+fmtMoney(mgrPay)+' ('+p.managerPct+'%)</td>';
+    html += '<td style="color:var(--green);font-weight:600">'+fmtMoney(profit)+'</td></tr>';
+  }
+  html += '</tbody></table></div></div>';
+  
+  // ====== SUMMARY METRICS ======
+  html += '<div class="metrics" style="margin-bottom:20px">';
+  html += '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">'+fin.clientCount+'</div><div class="m-label">Клиентов</div><div class="m-sub">'+fin.inProgressCount+' в работе / '+fin.paidCount+' оплачено</div></div>';
+  html += '<div class="metric-card"><div class="m-icon">💰</div><div class="m-value">'+fmtMoney(fin.totalRevenue)+'</div><div class="m-label">Факт выручка</div></div>';
+  html += '<div class="metric-card"><div class="m-icon">💸</div><div class="m-value">'+fmtMoney(fin.totalCost)+'</div><div class="m-label">Факт ФОТ</div></div>';
+  html += '<div class="metric-card"><div class="m-icon">'+(fin.profit>=0?'📈':'📉')+'</div><div class="m-value" style="color:'+(fin.profit>=0?'var(--green)':'var(--red)')+'">'+fmtMoney(fin.profit)+'</div><div class="m-label">Факт прибыль</div></div>';
+  html += '</div>';
+  
+  // ====== CLIENT PIPELINE ======
+  html += '<div class="card"><div class="card-header"><h3>📋 Клиенты — воронка</h3></div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Тип</th><th>Статус</th><th>Прогресс</th><th>Выручка</th><th>Оплата</th></tr></thead><tbody>';
+  if (fin.clients.length) {
+    fin.clients.forEach(c => {
+      const statusColor = c.isPaid ? 'var(--green)' : (c.isDone ? 'var(--orange)' : 'var(--blue)');
+      html += '<tr><td><strong>'+esc(c.name)+'</strong></td>';
+      html += '<td>'+(SITE_PRICING[c.type]?.emoji||'📄')+' '+esc(c.type)+'</td>';
+      html += '<td>'+statusBadge(c.status)+'</td>';
+      html += '<td>'+progBar(c.progress)+'</td>';
+      html += '<td>'+fmtMoney(c.plannedRevenue)+'</td>';
+      html += '<td style="color:'+statusColor+';font-weight:600">'+(c.isPaid?'✅ Оплачено':(c.isDone?'⏳ Ждём оплату':'🔄 В работе'))+'</td></tr>';
+    });
+  } else {
+    html += emptyRow(6, 'Нет клиентов');
+  }
+  html += '</tbody></table></div></div>';
+  
+  return html;
+}
+
+// ============================================================
+// PLAN: save, recalc, execute
+// ============================================================
+function recalcPlan() {
+  const plan = {
+    period: document.getElementById('plan-period')?.value || 'Неделя',
+    target: document.getElementById('plan-target')?.value || '10',
+    type: document.getElementById('plan-type')?.value || 'Лендинг',
+    start: document.getElementById('plan-start')?.value || today()
+  };
+  localStorage.setItem('rkt_site_plan', JSON.stringify(plan));
+  // Re-render finance tab
+  if (currentPvTab === 'finance') {
+    document.getElementById('pv-content').innerHTML = renderSiteFinance();
+  }
+}
+
+async function executeSitePlan() {
+  const target = parseInt(document.getElementById('plan-target')?.value) || 10;
+  const period = document.getElementById('plan-period')?.value || 'Неделя';
+  const siteType = document.getElementById('plan-type')?.value || 'Лендинг';
+  const startDate = document.getElementById('plan-start')?.value || today();
+  const periodDays = period === '2 недели' ? 14 : (period === 'Месяц' ? 30 : 7);
+  const pricing = SITE_PRICING[siteType] || SITE_PRICING['Лендинг'];
+  
+  if (!confirm('🚀 Создать '+target+' задач по поиску клиентов на «'+siteType+'» за «'+period+'»?\n\nЗадачи будут равномерно распределены между сотрудниками.\n\nВыручка (план): '+fmtMoney(target * pricing.price))) return;
+  
+  const staff = DATA.staff.filter(s => s['Проект']==='Сайты' && s['Статус']==='Активный');
+  const devs = staff.filter(s => ['Разработчик','Инженер'].includes(s['Роль']));
+  const mgrs = staff.filter(s => s['Роль']==='Менеджер');
+  
+  // Fallback assignments
+  const fallbackPerson = staff.find(s => ['CEO','Зам'].includes(s['Роль']))?.['Имя'] || (USER?.name || 'CEO');
+  const devNames = devs.length ? devs.map(d => d['Имя']) : [fallbackPerson];
+  const mgrNames = mgrs.length ? mgrs.map(m => m['Имя']) : [fallbackPerson];
+  
+  let created = 0;
+  const startD = new Date(startDate);
+  
+  for (let i = 0; i < target; i++) {
+    const dayOffset = Math.floor(i / Math.max(Math.ceil(target / periodDays), 1));
+    const dl = new Date(startD); dl.setDate(dl.getDate() + dayOffset);
+    const deadlineStr = dl.toISOString().split('T')[0];
+    
+    // Round-robin assignment
+    const mgrName = mgrNames[i % mgrNames.length];
+    const devName = devNames[i % devNames.length];
+    const clientLabel = 'Клиент #'+(fin_planCounter++)+' (план)';
+    
+    // Task 1: Manager — find client
+    await apiWrite('Задачи', {
+      ID: 'T'+String(Date.now()).slice(-6)+String(Math.random()).slice(2,4),
+      'Описание': '📞 Найти клиента на «'+siteType+'» — '+clientLabel,
+      'Направление': 'Общее',
+      'Проект': 'Сайты',
+      'Приоритет': 'P1',
+      'Статус': 'В работе',
+      'Ответственный': mgrName,
+      'Дедлайн': deadlineStr,
+      'Создано': today(),
+      'Комментарий': 'Генплан: '+target+' сайтов за '+period+'. Тип: '+siteType+'. Разработчик: '+devName
+    });
+    created++;
+    
+    // Small delay to avoid overwhelming
+    if (i % 10 === 9) await new Promise(r => setTimeout(r, 300));
+  }
+  
+  toast('✅ Создано '+created+' задач! Распределение:\n' + mgrNames.map(n => '💼 '+n+': '+Math.ceil(target/mgrNames.length)).join(', '), 'success');
+  
+  // Save plan
+  localStorage.setItem('rkt_site_plan', JSON.stringify({
+    period, target: String(target), type: siteType, start: startDate,
+    lastExecuted: today(), created
+  }));
+  
+  setTimeout(loadData, 2000);
+}
+let fin_planCounter = 1;
+// Init counter from existing tasks
+try { fin_planCounter = DATA.tasks.filter(t => (t['Описание']||'').includes('план')).length + 1; } catch(e) {}
+
+function openPricingEditor() {
+  let fieldsHtml = '<h3 style="margin-bottom:16px">✏️ Редактировать прайс-лист</h3>';
+  fieldsHtml += '<p style="font-size:12px;color:var(--text2);margin-bottom:16px">Изменения сохраняются в браузере и применяются ко всем расчётам.</p>';
+  
+  for (const [name, p] of Object.entries(SITE_PRICING)) {
+    fieldsHtml += '<div style="background:var(--bg2);border-radius:var(--radius);padding:12px;margin-bottom:8px">';
+    fieldsHtml += '<div style="font-weight:600;margin-bottom:8px">'+p.emoji+' '+name+'</div>';
+    fieldsHtml += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+    fieldsHtml += '<div class="form-group"><label style="font-size:11px">Цена клиенту</label><input type="number" id="price-'+name+'" value="'+p.price+'" min="0" step="500"></div>';
+    fieldsHtml += '<div class="form-group"><label style="font-size:11px">Разработчику</label><input type="number" id="devpay-'+name+'" value="'+p.devPay+'" min="0" step="500"></div>';
+    fieldsHtml += '<div class="form-group"><label style="font-size:11px">% менеджеру</label><input type="number" id="mgrpct-'+name+'" value="'+p.managerPct+'" min="0" max="50"></div>';
+    fieldsHtml += '</div></div>';
+  }
+  
+  fieldsHtml += '<div style="display:flex;gap:8px;margin-top:16px">';
+  fieldsHtml += '<button class="btn btn-primary" onclick="savePricing()" style="flex:1">💾 Сохранить</button>';
+  fieldsHtml += '<button class="btn btn-secondary" onclick="closeModal()">Отмена</button>';
+  fieldsHtml += '</div>';
+  
+  document.getElementById('modalTitle').textContent = '💰 Прайс-лист';
+  document.getElementById('modalBody').innerHTML = fieldsHtml;
+  document.getElementById('modalFooter').innerHTML = '';
+  document.getElementById('modalOverlay').classList.add('show');
+  currentModal = 'pricing';
+}
+
+function savePricing() {
+  for (const [name, p] of Object.entries(SITE_PRICING)) {
+    const price = parseInt(document.getElementById('price-'+name)?.value) || p.price;
+    const devPay = parseInt(document.getElementById('devpay-'+name)?.value) || p.devPay;
+    const mgrPct = parseInt(document.getElementById('mgrpct-'+name)?.value) || p.managerPct;
+    SITE_PRICING[name].price = price;
+    SITE_PRICING[name].devPay = devPay;
+    SITE_PRICING[name].managerPct = mgrPct;
+  }
+  // Persist to localStorage
+  localStorage.setItem('rkt_site_pricing', JSON.stringify(SITE_PRICING));
+  closeModal();
+  toast('✅ Прайс-лист обновлён!', 'success');
+  if (currentPvTab === 'finance') {
+    document.getElementById('pv-content').innerHTML = renderSiteFinance();
+  }
+}
+
+// Load saved pricing on startup
+try {
+  const savedPricing = JSON.parse(localStorage.getItem('rkt_site_pricing'));
+  if (savedPricing) {
+    for (const [name, p] of Object.entries(savedPricing)) {
+      if (SITE_PRICING[name]) Object.assign(SITE_PRICING[name], { price: p.price, devPay: p.devPay, managerPct: p.managerPct });
+    }
+  }
+} catch(e) {}
+
+function renderSiteSalaries() {
+  const fin = calcSiteFinancials();
+  const staff = DATA.staff.filter(s => s['Проект']==='Сайты' && s['Статус']==='Активный');
+  
+  let html = '';
+  
+  // Staff overview
+  html += '<div class="card"><div class="card-header"><h3>👥 Команда «Сайты» — Зарплаты</h3>';
+  html += '<button class="btn btn-sm btn-primary" onclick="openModal(\'staff\')">+ Сотрудник</button></div>';
+  html += '<div class="table-wrap"><table><thead><tr><th>Сотрудник</th><th>Роль</th><th>Модель оплаты</th><th>Сайтов сделано</th><th>Заработано</th><th>Статус</th></tr></thead><tbody>';
+  
+  if (staff.length) {
+    staff.forEach(s => {
+      const name = s['Имя'] || '?';
+      const role = s['Роль'] || '?';
+      const earnings = fin.staffEarnings[name] || { earned: 0, sites: 0 };
+      let payModel = '—';
+      if (['Менеджер'].includes(role)) payModel = '15% от сделки';
+      else if (['Разработчик','Инженер'].includes(role)) payModel = 'За сайт (1.5-8K₽)';
+      else if (['CEO','Зам'].includes(role)) payModel = 'Прибыль направления';
+      
+      const bg = role === 'CEO' ? 'var(--accent)' : role === 'Зам' ? 'var(--blue)' : role === 'Менеджер' ? 'var(--orange)' : 'var(--purple)';
+      html += '<tr><td><div style="display:flex;align-items:center;gap:8px">';
+      html += '<div style="width:32px;height:32px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;color:var(--bg);font-weight:700;font-size:13px">'+esc(name[0])+'</div>';
+      html += '<strong>'+esc(name)+'</strong></div></td>';
+      html += '<td>'+({CEO:'👑',Зам:'⭐',Менеджер:'💼',Разработчик:'💻',Инженер:'🔧'}[role]||'👤')+' '+esc(role)+'</td>';
+      html += '<td>'+payModel+'</td>';
+      html += '<td style="font-weight:600">'+earnings.sites+'</td>';
+      html += '<td style="font-weight:700;color:var(--accent)">'+fmtMoney(earnings.earned)+'</td>';
+      html += '<td>'+statusBadge(s['Статус'])+'</td></tr>';
+    });
+  } else {
+    html += emptyRow(6, 'Нет сотрудников в проекте «Сайты»');
+  }
+  html += '</tbody></table></div></div>';
+  
+  // Pipeline roles
+  html += '<div class="card"><div class="card-header"><h3>🔄 Конвейер — Роли в пайплайне</h3></div>';
+  html += '<div class="card-body"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">';
+  SITE_PIPELINE.forEach(p => {
+    const assigned = getSiteStaffByRole(p.role);
+    const roleColor = p.role === 'CEO' ? 'var(--accent)' : p.role === 'Менеджер' ? 'var(--orange)' : 'var(--purple)';
+    html += '<div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;border-left:3px solid '+roleColor+'">';
+    html += '<div style="font-size:12px;color:var(--text2)">Шаг '+p.step+'</div>';
+    html += '<div style="font-weight:600;font-size:13px;margin:4px 0">'+esc(p.name)+'</div>';
+    html += '<div style="font-size:11px;color:'+roleColor+'">'+esc(p.role)+' → '+esc(assigned)+'</div>';
+    if (p.auto) html += '<div style="font-size:10px;color:var(--green);margin-top:4px">⚡ Авто-назначение</div>';
+    html += '</div>';
+  });
+  html += '</div></div></div>';
+  
+  // Salary summary
+  const totalFot = Object.values(fin.staffEarnings).reduce((s, e) => s + e.earned, 0);
+  html += '<div class="card"><div class="card-header"><h3>💰 Итого ФОТ</h3></div>';
+  html += '<div class="card-body" style="text-align:center">';
+  html += '<div style="font-size:28px;font-weight:700;color:var(--accent)">'+fmtMoney(totalFot)+'</div>';
+  html += '<div style="color:var(--text2);margin-top:4px">Выплачено сотрудникам</div>';
+  html += '<div style="margin-top:12px;display:flex;gap:20px;justify-content:center">';
+  html += '<div>Выручка: <strong>'+fmtMoney(fin.totalRevenue)+'</strong></div>';
+  html += '<div>ФОТ: <strong style="color:var(--orange)">'+fmtMoney(totalFot)+'</strong></div>';
+  html += '<div>Прибыль: <strong style="color:var(--green)">'+fmtMoney(fin.totalRevenue - totalFot)+'</strong></div>';
+  html += '</div></div></div>';
+  
+  return html;
+}
+
+function fmtMoney(n) {
+  if (!n && n !== 0) return '—';
+  return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 }).format(n);
+}
+
+// ============================================================
+// SITE GENERATOR
+// ============================================================
   const siteGenData = getSiteGenData();
   if (siteGenStep === 'preview' && siteGenData.html) return renderSitePreview();
   if (siteGenStep === 'loading') return '<div class="card"><div class="card-body" style="text-align:center;padding:60px">' +
@@ -3995,8 +4457,24 @@ function addAiMessage(role, text) {
 // ============================================================
 // GLOBAL AI ASSISTANT PANEL
 // ============================================================
-let globalAiMessages = [];
+let globalAiMessages = JSON.parse(localStorage.getItem('rkt_ai_history') || '[]');
 let aiPanelOpen = false;
+
+function saveAiHistory() {
+  try { localStorage.setItem('rkt_ai_history', JSON.stringify(globalAiMessages.slice(-30))); } catch(e){}
+}
+
+function restoreAiHistory() {
+  const container = document.getElementById('ai-global-messages');
+  if (!container || !globalAiMessages.length) return;
+  globalAiMessages.forEach(m => {
+    const div = document.createElement('div');
+    div.className = 'ai-msg ' + (m.role === 'user' ? 'user' : 'assistant');
+    div.innerHTML = (m.content||'').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    container.appendChild(div);
+  });
+  container.scrollTop = container.scrollHeight;
+}
 
 function toggleAiPanel() {
   const panel = document.getElementById('aiGlobalPanel');
@@ -4005,6 +4483,9 @@ function toggleAiPanel() {
   if (aiPanelOpen) {
     panel.style.display = 'flex';
     fab.style.display = 'none';
+    // Restore history on first open
+    const container = document.getElementById('ai-global-messages');
+    if (container && container.children.length <= 1) restoreAiHistory();
     setTimeout(() => document.getElementById('ai-global-input').focus(), 100);
   } else {
     panel.style.display = 'none';
@@ -4050,6 +4531,7 @@ async function sendGlobalAi() {
   userDiv.textContent = msg;
   container.appendChild(userDiv);
   globalAiMessages.push({ role: 'user', content: msg });
+  saveAiHistory();
 
   // Typing indicator
   const typing = document.createElement('div');
@@ -4093,6 +4575,7 @@ async function sendGlobalAi() {
   aiDiv.innerHTML = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
   container.appendChild(aiDiv);
   globalAiMessages.push({ role: 'assistant', content: aiText });
+  saveAiHistory();
   container.scrollTop = container.scrollHeight;
   input.disabled = false;
   input.focus();
@@ -4253,6 +4736,13 @@ function openAddSubproject() {
   fieldsHtml += '<div class="form-group"><label>Описание</label><textarea id="field-subdesc" placeholder="Описание..."></textarea></div>';
 
   if (isSite) {
+    // Site type pricing selector
+    let typeOpts = '';
+    for (const [name, p] of Object.entries(SITE_PRICING)) {
+      typeOpts += '<option value="'+name+'">'+p.emoji+' '+name+' — '+fmtMoney(p.price)+' ('+p.desc+')</option>';
+    }
+    fieldsHtml += '<div class="form-section-title">💰 Тип и стоимость</div>';
+    fieldsHtml += '<div class="form-group"><label>Тип сайта</label><select id="field-subsitetype">'+typeOpts+'</select></div>';
     // Full site questionnaire
     fieldsHtml += '<div class="form-section-title">📋 Анкета для ИИ-генерации сайта</div>';
     fieldsHtml += '<div class="form-row">';
@@ -4346,11 +4836,13 @@ async function saveModal() {
       const budget = document.getElementById('field-subbudget')?.value || '';
       const deadline = document.getElementById('field-subdeadline')?.value || '';
       const content = document.getElementById('field-subcontent')?.value || '';
+      const siteType = document.getElementById('field-subsitetype')?.value || 'Лендинг';
+      const pricing = SITE_PRICING[siteType] || SITE_PRICING['Лендинг'];
 
       // Build questionnaire JSON for AI
       const questionnaire = JSON.stringify({
         bizname, biztype, client, phone, email, city,
-        style, colors, pages, wishes, domain, budget, deadline, content, url
+        style, colors, pages, wishes, domain, budget, deadline, content, url, siteType
       }).substring(0, 900);
 
       await apiWrite('Направления', {
@@ -4364,10 +4856,13 @@ async function saveModal() {
         'Телефон': phone,
         'Город': city,
         'Бизнес_тип': biztype,
+        'Тип_сайта': siteType,
+        'Цена': String(pricing.price),
         'Стиль': style,
         'Анкета': questionnaire,
-        'Бюджет': budget,
+        'Бюджет': budget || String(pricing.price),
         'Дедлайн': deadline,
+        'Статус': 'В работе',
         'Дата_создания': today()
       });
     }
@@ -4378,34 +4873,25 @@ async function saveModal() {
     if(currentProject) renderProjectView();
     toast('✅ Подпроект «'+name+'» добавлен!','success');
 
-    // Auto-create pipeline tasks for site projects
+    // Auto-create pipeline tasks for site projects with role-based assignment
     if (PROJECTS[currentProject] && PROJECTS[currentProject].canAddSub) {
-      const pipeline = [
-        { desc: '📋 Заполнить анкету для «'+name+'»', days: 1, priority: 'P1' },
-        { desc: '🎨 Сгенерировать пример сайта «'+name+'»', days: 2, priority: 'P1' },
-        { desc: '📤 Отправить пример клиенту «'+name+'»', days: 3, priority: 'P1' },
-        { desc: '💬 Получить фидбек от «'+name+'»', days: 5, priority: 'P2' },
-        { desc: '💳 Выставить счёт за домен «'+name+'»', days: 7, priority: 'P2' },
-        { desc: '🔧 Установить сайт «'+name+'» на хостинг', days: 10, priority: 'P2' },
-        { desc: '✅ Сдать проект «'+name+'», получить оплату', days: 14, priority: 'P3' }
-      ];
       const td = today();
-      for (const task of pipeline) {
-        const dl = new Date(); dl.setDate(dl.getDate() + task.days);
-        const deadlineStr = dl.toISOString().split('T')[0];
+      for (const step of SITE_PIPELINE) {
+        const assigned = getSiteStaffByRole(step.role);
+        const dl = new Date(); dl.setDate(dl.getDate() + step.days);
         apiWrite('Задачи', {
           ID: 'T'+String(Date.now()).slice(-6)+String(Math.random()).slice(2,4),
-          'Описание': task.desc,
+          'Описание': step.name + ' для «'+name+'»',
           'Направление': name,
           'Проект': PROJECTS[currentProject].name,
-          'Приоритет': task.priority,
-          'Статус': '⏳ В очереди',
-          'Ответственный': USER ? USER.name : '',
-          'Дедлайн': deadlineStr,
+          'Приоритет': step.step <= 3 ? 'P1' : (step.step <= 6 ? 'P2' : 'P3'),
+          'Статус': step.step === 1 ? 'В работе' : '⏳ В очереди',
+          'Ответственный': assigned,
+          'Дедлайн': dl.toISOString().split('T')[0],
           'Создано': td
         });
       }
-      toast('📋 Создано 7 задач для «'+name+'»', 'info');
+      toast('📋 Создано '+SITE_PIPELINE.length+' задач для «'+name+'» с назначениями', 'info');
     }
     return;
   }
@@ -4437,8 +4923,21 @@ async function saveModal() {
   const perms = getUserPerms();
   const writeAccess = canDirectWrite(def.sheet);
 
-  if (writeAccess === 'denied') {
+  // Allow CEO to write directly; for staff sheet, allow self-registration for guests
+  if (writeAccess === 'denied' && def.sheet !== 'Сотрудники') {
     toast('⛔ У вас нет доступа к «'+def.sheet+'»','error');
+    return;
+  }
+  // If denied for staff but user is not logged in, allow as approval request
+  if (writeAccess === 'denied' && def.sheet === 'Сотрудники') {
+    // Self-register: write directly (will be inactive until CEO approves)
+    row['Статус'] = 'Ожидает';
+    document.getElementById('modalSaveBtn').disabled = true;
+    const ok = await apiWrite('Сотрудники', row);
+    document.getElementById('modalSaveBtn').disabled = false;
+    if(ok) toast('⏳ Заявка на сотрудника отправлена. CEO должен активировать.','info');
+    closeModal();
+    setTimeout(loadData, 1500);
     return;
   }
 
@@ -4471,8 +4970,68 @@ async function saveModal() {
   const ok = await apiWrite(def.sheet, row);
   document.getElementById('modalSaveBtn').disabled = false;
   if(ok) toast('✅ '+def.title+' сохранён!','success');
+  
+  // Auto-delegation: if task in site pipeline is marked done, create next step
+  if (def.sheet === 'Задачи' && (row['Статус'] === 'Готово' || row['Статус'] === '✅ Готово') && row['Проект'] === 'Сайты') {
+    await autoDelegate(row);
+  }
+  
   closeModal();
   setTimeout(loadData, 1500);
+}
+
+// ============================================================
+// AUTO-DELEGATION: When a pipeline task is done, create next step
+// ============================================================
+async function autoDelegate(completedTask) {
+  const desc = completedTask['Описание'] || completedTask['Название'] || '';
+  const direction = completedTask['Направление'] || '';
+  
+  // Find which pipeline step was completed
+  let currentStep = -1;
+  SITE_PIPELINE.forEach((p, i) => {
+    const keywords = p.name.replace(/[^\wа-яё]/gi, ' ').toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    if (keywords.some(k => desc.toLowerCase().includes(k))) currentStep = i;
+  });
+  
+  if (currentStep < 0 || currentStep >= SITE_PIPELINE.length - 1) return;
+  
+  const nextStep = SITE_PIPELINE[currentStep + 1];
+  const assigned = getSiteStaffByRole(nextStep.role);
+  
+  const dl = new Date();
+  dl.setDate(dl.getDate() + (nextStep.days - SITE_PIPELINE[currentStep].days));
+  
+  const nextTask = {
+    ID: 'T' + String(Date.now()).slice(-6) + String(Math.random()).slice(2,4),
+    'Описание': nextStep.name + ' для «' + direction + '»',
+    'Направление': direction,
+    'Проект': 'Сайты',
+    'Приоритет': currentStep < 3 ? 'P1' : 'P2',
+    'Статус': '⏳ В очереди',
+    'Ответственный': assigned,
+    'Дедлайн': dl.toISOString().split('T')[0],
+    'Создано': today()
+  };
+  
+  await apiWrite('Задачи', nextTask);
+  toast('🔄 Делегировано: ' + nextStep.name + ' → ' + assigned, 'info');
+  
+  // If next step needs CEO approval (step 9), create approval
+  if (nextStep.role === 'CEO') {
+    await apiWrite('Согласования', {
+      ID: 'APR' + String(Date.now()).slice(-6),
+      'Тип': 'Согласование сдачи',
+      'Описание': 'Сдача проекта «' + direction + '»',
+      'От_кого': completedTask['Ответственный'] || '',
+      'Направление': direction,
+      'Проект': 'Сайты',
+      'Лист': 'Задачи',
+      'Статус': '⏳ Ожидает',
+      'Дата_запроса': today()
+    });
+    toast('👑 Запрос на согласование CEO отправлен', 'info');
+  }
 }
 
 // ============================================================
