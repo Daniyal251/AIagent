@@ -3883,6 +3883,7 @@ function fmtMoney(n) {
 // ============================================================
 // SITE GENERATOR
 // ============================================================
+function renderSiteGenerator() {
   const siteGenData = getSiteGenData();
   if (siteGenStep === 'preview' && siteGenData.html) return renderSitePreview();
   if (siteGenStep === 'loading') return '<div class="card"><div class="card-body" style="text-align:center;padding:60px">' +
