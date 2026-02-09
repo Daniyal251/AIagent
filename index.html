@@ -1718,7 +1718,7 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="form-group"><label>API URL</label><input type="text" id="settingsApiUrl" onchange="updateConfig('API_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
         <div class="form-group"><label>AI URL</label><input type="text" id="settingsAiUrl" onchange="updateConfig('AI_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
         <div class="form-group"><label>Write URL</label><input type="text" id="settingsWriteUrl" onchange="updateConfig('WRITE_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
-        <div class="form-group"><label>📋 Google Sheet ID</label><input type="text" id="settingsSheetId" onchange="updateConfig('SHEET_ID',this.value)" placeholder="1InIED-0vPinQY6tmigikYVHTlS-uSFJ27YNjmJ9hnyc" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--accent);width:100%;font-family:monospace;font-size:12px;font-weight:600"></div>
+        <div class="form-group"><label>📋 Google Sheet ID</label><input type="text" id="settingsSheetId" onchange="updateConfig('SHEET_ID',this.value)" placeholder="1Te4CsdcN1rvpznHNyPa24MuH5ZSx45DUUDREWO5mtoE" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--accent);width:100%;font-family:monospace;font-size:12px;font-weight:600"></div>
         <p style="font-size:11px;color:var(--text3);margin-top:-8px">Скопируйте ID из URL таблицы: docs.google.com/spreadsheets/d/<b style="color:var(--accent)">ВОТ_ЭТОТ_ID</b>/edit</p>
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="btn btn-primary" onclick="saveSettings()">💾 Сохранить</button>
@@ -1824,7 +1824,7 @@ const CONFIG = {
   API_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-api',
   WRITE_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-write',
   AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
-  SHEET_ID: '1InIED-0vPinQY6tmigikYVHTlS-uSFJ27YNjmJ9hnyc',
+  SHEET_ID: '1Te4CsdcN1rvpznHNyPa24MuH5ZSx45DUUDREWO5mtoE',
   REFRESH: 300000,
   VERSION: '5.1.0'
 };
@@ -2070,7 +2070,8 @@ async function doLogin() {
   document.getElementById('loginError').style.display = 'none';
 
   try {
-    const r = await fetch(CONFIG.API_URL + (CONFIG.SHEET_ID ? '?sheetId=' + encodeURIComponent(CONFIG.SHEET_ID) : ''));
+    const url = CONFIG.SHEET_ID ? CONFIG.API_URL + '?sheetId=' + encodeURIComponent(CONFIG.SHEET_ID) : CONFIG.API_URL;
+    const r = await fetch(url);
     if (!r.ok) throw new Error('HTTP '+r.status);
     DATA = normData(await r.json());
 
@@ -2146,7 +2147,7 @@ function normData(d) {
 async function loadData() {
   setStatus('loading');
   try {
-    const r = await fetch(CONFIG.API_URL + (CONFIG.SHEET_ID ? '?sheetId=' + encodeURIComponent(CONFIG.SHEET_ID) : ''));
+    const r = await fetch(CONFIG.API_URL);
     if(!r.ok) throw new Error('HTTP '+r.status);
     DATA = normData(await r.json());
     renderAll();
@@ -3014,16 +3015,27 @@ async function testConnection() {
   const el = document.getElementById('settings-status');
   el.innerHTML = '⏳ Проверяю...';
   try {
-    const r = await fetch(CONFIG.API_URL + (CONFIG.SHEET_ID ? '?sheetId=' + encodeURIComponent(CONFIG.SHEET_ID) : ''));
+    const url = CONFIG.API_URL;
+    if (!url || !url.startsWith('http')) throw new Error('Невалидный URL');
+    const ctrl = new AbortController();
+    const tmr = setTimeout(() => ctrl.abort(), 10000);
+    const fullUrl = CONFIG.SHEET_ID ? url + '?sheetId=' + encodeURIComponent(CONFIG.SHEET_ID) : url;
+    const r = await fetch(fullUrl, { signal: ctrl.signal });
+    clearTimeout(tmr);
     if (r.ok) {
       const data = await r.json();
-      const count = (data.partners||[]).length + (data.tasks||[]).length;
-      el.innerHTML = '<span style="color:var(--green)">✅ Подключено! Получено ' + count + ' записей</span>';
+      const p = (data.partners||[]).length;
+      const t = (data.tasks||[]).length;
+      const s = (data.staff||[]).length;
+      el.innerHTML = '<span style="color:var(--green)">✅ Подключено! Партнёров: '+p+', Задач: '+t+', Сотрудников: '+s+'</span>';
     } else {
-      el.innerHTML = '<span style="color:var(--red)">❌ Ответ: HTTP ' + r.status + '</span>';
+      el.innerHTML = '<span style="color:var(--red)">❌ HTTP ' + r.status + ' — проверьте что workflow активирован в n8n</span>';
     }
   } catch(e) {
-    el.innerHTML = '<span style="color:var(--red)">❌ ' + e.message + '</span>';
+    const msg = e.name === 'AbortError' ? 'Таймаут — сервер не отвечает' :
+      e.message.includes('pattern') ? 'Webhook не активирован в n8n. Активируйте workflow и повторите.' :
+      e.message.includes('Failed to fetch') ? 'Сервер недоступен. Проверьте URL и что workflow активирован.' : e.message;
+    el.innerHTML = '<span style="color:var(--red)">❌ ' + msg + '</span>';
   }
 }
 
