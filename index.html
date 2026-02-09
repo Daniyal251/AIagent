@@ -1145,6 +1145,9 @@ tbody tr:last-child td { border-bottom: none; }
   box-shadow: var(--shadow-lg);
   animation: slideUp 0.25s ease;
 }
+.modal.wide { width: 720px; }
+.form-section-title { font-size: 13px; font-weight: 700; color: var(--accent); margin: 18px 0 10px; padding-top: 14px; border-top: 1px solid var(--border); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(30px); }
@@ -1356,6 +1359,9 @@ tbody tr:last-child td { border-bottom: none; }
   .detail-grid { grid-template-columns: 1fr; }
   .page-header h2 { font-size: 20px; }
   .task-detail-body .detail-grid { grid-template-columns: 1fr; }
+  .form-row { grid-template-columns: 1fr; }
+  .modal.wide { width: 95vw; }
+  #aiGlobalPanel { width: calc(100vw - 32px) !important; right: 16px !important; bottom: 16px !important; height: 70vh !important; }
 
   .mobile-toggle {
     display: flex !important;
@@ -1404,7 +1410,7 @@ tbody tr:last-child td { border-bottom: none; }
   <aside class="sidebar" id="sidebar">
     <div class="logo-section">
       <h1>RKT HUB</h1>
-      <div class="subtitle">v3.0 • Проекты и ИИ</div>
+      <div class="subtitle">v4.0 • Проекты + ИИ</div>
     </div>
 
     <nav class="nav">
@@ -1414,6 +1420,10 @@ tbody tr:last-child td { border-bottom: none; }
       </a>
       <a class="nav-item" onclick="showPage('dashboard')" data-page="dashboard">
         <span class="icon">📊</span><span class="label">Дашборд ГД</span>
+      </a>
+      <a class="nav-item" onclick="toggleAiPanel()" data-page="ai" style="border:1px solid rgba(177,151,252,0.2)">
+        <span class="icon">🤖</span><span class="label">ИИ-ассистент</span>
+        <span class="badge" style="background:var(--purple)">AI</span>
       </a>
 
       <div class="nav-section">Данные</div>
@@ -1464,6 +1474,7 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="page-header">
         <h2>🏠 Мои проекты</h2>
         <div class="actions">
+          <button class="btn" onclick="toggleAiPanel()" style="background:linear-gradient(135deg,var(--purple),#7950f2);color:#fff">🤖 ИИ-ассистент</button>
           <button class="btn btn-secondary" onclick="loadData()">🔄 Обновить</button>
         </div>
       </div>
@@ -1543,6 +1554,18 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
       </div>
       <div class="metrics" id="dash-metrics"></div>
+      <div class="card" style="border:1px solid rgba(177,151,252,0.2);background:linear-gradient(135deg,rgba(177,151,252,0.03),rgba(121,80,242,0.01))">
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
+          <h3>🤖 ИИ-ассистент</h3>
+          <button class="btn btn-sm" onclick="toggleAiPanel()" style="background:linear-gradient(135deg,var(--purple),#7950f2);color:#fff;border:none;font-size:11px">Открыть чат →</button>
+        </div>
+        <div style="padding:0 20px 16px;display:flex;gap:8px;flex-wrap:wrap">
+          <button onclick="toggleAiPanel();setTimeout(()=>globalAiQuick('Составь отчёт по всем проектам'),300)" style="padding:8px 16px;border-radius:20px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.06);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s">📊 Отчёт по проектам</button>
+          <button onclick="toggleAiPanel();setTimeout(()=>globalAiQuick('Какие задачи просрочены?'),300)" style="padding:8px 16px;border-radius:20px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.06);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s">🔴 Просроченные</button>
+          <button onclick="toggleAiPanel();setTimeout(()=>globalAiQuick('Подготовь план на неделю'),300)" style="padding:8px 16px;border-radius:20px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.06);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s">📋 План на неделю</button>
+          <button onclick="toggleAiPanel();setTimeout(()=>globalAiQuick('Проанализируй риски проектов'),300)" style="padding:8px 16px;border-radius:20px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.06);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer;transition:all .2s">⚠️ Риски</button>
+        </div>
+      </div>
       <div class="card">
         <div class="card-header"><h3>🔴 Просроченные задачи</h3></div>
         <div class="table-wrap"><table><thead><tr><th>Задача</th><th>Проект</th><th>Приоритет</th><th>Дедлайн</th><th>Ответственный</th><th></th></tr></thead><tbody id="dash-overdue"></tbody></table></div>
@@ -1603,10 +1626,7 @@ tbody tr:last-child td { border-bottom: none; }
           <button class="btn btn-primary" id="btn-add-staff" onclick="openModal('staff')">+ Сотрудник</button>
         </div>
       </div>
-      <div class="card"><div class="table-wrap"><table>
-        <thead><tr><th>Имя</th><th>Роль</th><th>Направление</th><th>Telegram</th><th>Email</th><th>Статус</th><th></th></tr></thead>
-        <tbody id="staff-table"></tbody>
-      </table></div></div>
+      <div id="staff-content"></div>
     </div>
 
     <!-- ======== APPROVALS ======== -->
@@ -1660,7 +1680,7 @@ tbody tr:last-child td { border-bottom: none; }
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
+  <div class="modal" id="modalBox">
     <div class="modal-header">
       <h3 id="modalTitle">Добавить</h3>
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -1698,6 +1718,29 @@ tbody tr:last-child td { border-bottom: none; }
       <button class="btn btn-secondary" onclick="closeConfirm(false)">Отмена</button>
       <button class="btn btn-danger" onclick="closeConfirm(true)">🗑 Удалить</button>
     </div>
+  </div>
+</div>
+
+<button id="aiFab" onclick="toggleAiPanel()" style="position:fixed;bottom:40px;right:28px;width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#b197fc,#7950f2);border:none;color:#fff;font-size:28px;cursor:pointer;z-index:500;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 24px rgba(177,151,252,0.4);transition:all .3s">🤖</button>
+
+<div id="aiGlobalPanel" style="position:fixed;bottom:40px;right:28px;width:440px;max-width:calc(100vw - 56px);height:600px;max-height:calc(100vh - 80px);background:var(--bg2);border:1px solid var(--purple);border-radius:16px;z-index:600;display:none;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 40px rgba(177,151,252,0.1)">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:linear-gradient(135deg,rgba(177,151,252,0.12),rgba(121,80,242,0.06));border-bottom:1px solid rgba(177,151,252,0.2);border-radius:16px 16px 0 0">
+    <h4 style="font-size:15px;font-weight:700;color:var(--purple);display:flex;align-items:center;gap:10px">🤖 ИИ-ассистент RKT HUB</h4>
+    <button onclick="toggleAiPanel()" style="width:30px;height:30px;border-radius:50%;border:1px solid rgba(177,151,252,0.3);background:transparent;color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">✕</button>
+  </div>
+  <div style="padding:10px 16px;border-bottom:1px solid rgba(177,151,252,0.1);display:flex;gap:6px;flex-wrap:wrap">
+    <button onclick="globalAiQuick('Какие задачи просрочены?')" style="padding:5px 12px;border-radius:16px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.05);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer">🔴 Просрочено</button>
+    <button onclick="globalAiQuick('Составь отчёт по проектам')" style="padding:5px 12px;border-radius:16px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.05);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer">📊 Отчёт</button>
+    <button onclick="globalAiQuick('Напиши деловое письмо')" style="padding:5px 12px;border-radius:16px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.05);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer">📧 Письмо</button>
+    <button onclick="globalAiQuick('Какие задачи самые приоритетные?')" style="padding:5px 12px;border-radius:16px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.05);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer">⭐ Приоритеты</button>
+    <button onclick="globalAiQuick('Подготовь план на неделю')" style="padding:5px 12px;border-radius:16px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.05);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer">📋 План</button>
+  </div>
+  <div id="ai-global-messages" style="flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
+    <div class="ai-msg system">Привет! Я ИИ-ассистент RKT HUB. Могу помочь с задачами, письмами, анализом и планированием по всем вашим проектам. Спрашивайте!</div>
+  </div>
+  <div style="display:flex;gap:8px;padding:14px 16px;border-top:1px solid rgba(177,151,252,0.15);background:rgba(26,34,52,0.5);border-radius:0 0 16px 16px">
+    <input id="ai-global-input" placeholder="Спросите что угодно..." onkeydown="if(event.key==='Enter')sendGlobalAi()" style="flex:1;padding:10px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
+    <button id="ai-global-send" onclick="sendGlobalAi()" style="padding:10px 18px;background:linear-gradient(135deg,var(--purple),#7950f2);color:#fff;border:none;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;cursor:pointer">➤</button>
   </div>
 </div>
 
@@ -1774,7 +1817,7 @@ const PROJECTS = {
 // ============================================================
 const ROLES = {
   'CEO':          { emoji: '👑', level: 3, canWrite: true, canDelete: true, canApprove: true, canManageStaff: true, seeAll: true },
-  'Зам':          { emoji: '⭐', level: 2, canWrite: false, canDelete: false, canApprove: false, canManageStaff: false, seeAll: true },
+  'Зам':          { emoji: '⭐', level: 2, canWrite: true, canDelete: false, canApprove: false, canManageStaff: false, seeAll: true },
   'Руководитель': { emoji: '📋', level: 1, canWrite: false, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false }
 };
 
@@ -2504,10 +2547,38 @@ function renderTasks() {
 
 function renderStaff() {
   const p = getUserPerms();
-  document.getElementById('staff-table').innerHTML = DATA.staff.length ? DATA.staff.map(s => {
-    const re = (ROLES[s['Роль']]||{}).emoji||'👤';
-    return '<tr><td><strong>'+esc(s['Имя']||'—')+'</strong></td><td>'+re+' '+esc(s['Роль'])+'</td><td>'+esc(s['Направление'])+'</td><td style="font-size:11px">'+(s.Telegram_ID?'✅ '+esc(s.Telegram_ID):'❌ нет')+'</td><td>'+esc(s['Email']||'—')+'</td><td>'+statusBadge(s['Статус']||'Активный')+'</td><td>'+(p.canManageStaff?actBtns('staff',s.ID,s['Имя']):'')+'</td></tr>';
-  }).join('') : emptyRow(7,'Нет сотрудников');
+  const roleColors = { CEO: 'linear-gradient(135deg,#00d4aa,#4dabf7)', 'Зам': 'linear-gradient(135deg,#b197fc,#7950f2)', 'Руководитель': 'linear-gradient(135deg,#ffa94d,#fd7e14)' };
+  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">';
+  if (DATA.staff.length) {
+    DATA.staff.forEach(s => {
+      const re = (ROLES[s['Роль']]||{}).emoji||'👤';
+      const bg = roleColors[s['Роль']] || 'linear-gradient(135deg,var(--text3),var(--text2))';
+      h += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s">';
+      h += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">';
+      h += '<div style="width:48px;height:48px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--bg)">'+esc((s['Имя']||'?').charAt(0).toUpperCase())+'</div>';
+      h += '<div><div style="font-weight:700;font-size:14px">'+esc(s['Имя']||'—')+'</div><div style="font-size:11px;color:var(--text2)">'+re+' '+esc(s['Роль']||'—')+'</div></div>';
+      h += '</div>';
+      h += '<div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text2)">';
+      h += '<span>📂 '+esc(s['Направление']||'Все')+'</span>';
+      if(s['Telegram_ID']) h += '<span>📱 TG: '+esc(s['Telegram_ID'])+'</span>';
+      if(s['Username']) h += '<span>👤 '+esc(s['Username'])+'</span>';
+      if(s['Email']) h += '<span>✉️ '+esc(s['Email'])+'</span>';
+      if(s['Телефон']) h += '<span>📞 '+esc(s['Телефон'])+'</span>';
+      h += '<span>'+statusBadge(s['Статус']||'Активный')+'</span>';
+      h += '</div>';
+      if(p.canManageStaff) {
+        h += '<div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">';
+        h += '<button class="btn btn-sm btn-secondary" onclick="editItem(\'staff\',\''+escA(s.ID)+'\')">✏️ Редакт.</button>';
+        h += '<button class="btn btn-sm btn-danger" onclick="confirmDelete(\'staff\',\''+escA(s.ID)+'\',\''+escA(s['Имя'])+'\')">🗑</button>';
+        h += '</div>';
+      }
+      h += '</div>';
+    });
+  } else {
+    h += '<div class="empty" style="grid-column:1/-1"><div class="icon">👥</div><p>Нет сотрудников</p></div>';
+  }
+  h += '</div>';
+  document.getElementById('staff-content').innerHTML = h;
 }
 
 function renderApprovals() {
@@ -2767,15 +2838,155 @@ function addAiMessage(role, text) {
   const container = document.getElementById('ai-messages');
   const div = document.createElement('div');
   div.className = 'ai-msg ' + role;
-  // Simple markdown-like formatting
   div.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
   container.appendChild(div);
   container.scrollTop = container.scrollHeight;
 }
 
 // ============================================================
-// MODALS: OPEN / CLOSE / SAVE
+// GLOBAL AI ASSISTANT PANEL
 // ============================================================
+let globalAiMessages = [];
+let aiPanelOpen = false;
+
+function toggleAiPanel() {
+  const panel = document.getElementById('aiGlobalPanel');
+  const fab = document.getElementById('aiFab');
+  aiPanelOpen = !aiPanelOpen;
+  if (aiPanelOpen) {
+    panel.style.display = 'flex';
+    fab.style.display = 'none';
+    setTimeout(() => document.getElementById('ai-global-input').focus(), 100);
+  } else {
+    panel.style.display = 'none';
+    fab.style.display = 'flex';
+  }
+}
+
+function getDataContext() {
+  const ctx = { projects: {}, staff_count: DATA.staff.length, total_tasks: 0, overdue: [], upcoming: [] };
+  const now = new Date();
+  for (const [key, proj] of Object.entries(PROJECTS)) {
+    const tasks = DATA.tasks.filter(t => {
+      for (const sub of Object.keys(proj.subprojects)) {
+        if (t['Направление'] === sub || t['Проект'] === proj.name) return true;
+      }
+      return false;
+    });
+    ctx.projects[proj.name] = { subprojects: Object.keys(proj.subprojects).length, tasks: tasks.length };
+    ctx.total_tasks += tasks.length;
+    tasks.forEach(t => {
+      if (t['Дедлайн'] && t['Статус'] !== 'Завершено') {
+        const dl = new Date(t['Дедлайн']);
+        if (dl < now) ctx.overdue.push({ task: t['Название'], deadline: t['Дедлайн'], direction: t['Направление'] });
+        else if (dl - now < 7*86400000) ctx.upcoming.push({ task: t['Название'], deadline: t['Дедлайн'], direction: t['Направление'] });
+      }
+    });
+  }
+  ctx.partners_count = DATA.partners.length;
+  ctx.comms_count = DATA.comms.length;
+  return ctx;
+}
+
+async function sendGlobalAi() {
+  const input = document.getElementById('ai-global-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const container = document.getElementById('ai-global-messages');
+  const userDiv = document.createElement('div');
+  userDiv.className = 'ai-msg user';
+  userDiv.textContent = msg;
+  container.appendChild(userDiv);
+  globalAiMessages.push({ role: 'user', content: msg });
+
+  // Typing indicator
+  const typing = document.createElement('div');
+  typing.className = 'ai-msg system';
+  typing.innerHTML = '⏳ Думаю...';
+  typing.id = 'ai-typing';
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+
+  const dataCtx = getDataContext();
+  const systemPrompt = `Ты — ИИ-ассистент системы управления проектами RKT HUB.
+Компания: РКТ (Русские Компьютерные Технологии) — локализация медицинского оборудования (КТ-сканеры) в России.
+Генеральный Директор: Данияль. Текущие проекты: РКТ (КТ, Рентген, Роботы, Урология, PACS, УЗИ) и Сайты (веб-разработка для клиентов).
+
+Текущий контекст данных:
+${JSON.stringify(dataCtx, null, 1)}
+
+Отвечай кратко, по делу, на русском. Используй эмодзи. Если просят отчёт — структурируй. Если просят письмо — пиши формально.`;
+
+  try {
+    const response = await fetch(CONFIG.AI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: msg,
+        context: systemPrompt,
+        history: globalAiMessages.slice(-10)
+      })
+    });
+    const data = await response.json();
+    const aiText = data.response || data.text || data.message || 'Нет ответа от ИИ';
+    
+    typing.remove();
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'ai-msg assistant';
+    aiDiv.innerHTML = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    container.appendChild(aiDiv);
+    globalAiMessages.push({ role: 'assistant', content: aiText });
+  } catch(e) {
+    typing.remove();
+    const fallback = generateGlobalFallback(msg, dataCtx);
+    const aiDiv = document.createElement('div');
+    aiDiv.className = 'ai-msg assistant';
+    aiDiv.innerHTML = fallback.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+    container.appendChild(aiDiv);
+    globalAiMessages.push({ role: 'assistant', content: fallback });
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+function globalAiQuick(question) {
+  document.getElementById('ai-global-input').value = question;
+  sendGlobalAi();
+}
+
+function generateGlobalFallback(msg, ctx) {
+  const ml = msg.toLowerCase();
+  if (ml.includes('просроч') || ml.includes('overdue')) {
+    if (ctx.overdue.length === 0) return '✅ Отлично! Просроченных задач нет.';
+    let r = '🔴 **Просроченные задачи ('+ctx.overdue.length+'):**\n';
+    ctx.overdue.forEach(t => r += '• '+t.task+' (дедлайн: '+t.deadline+', '+t.direction+')\n');
+    return r;
+  }
+  if (ml.includes('отчёт') || ml.includes('отчет') || ml.includes('report')) {
+    let r = '📊 **Сводка по проектам RKT HUB:**\n';
+    for (const [name, info] of Object.entries(ctx.projects)) {
+      r += '• **'+name+'**: '+info.subprojects+' направлений, '+info.tasks+' задач\n';
+    }
+    r += '\n👥 Сотрудников: '+ctx.staff_count+'\n🤝 Партнёров: '+ctx.partners_count+'\n📨 Коммуникаций: '+ctx.comms_count;
+    r += '\n🔴 Просрочено: '+ctx.overdue.length+'\n⚠️ Ближайшие дедлайны: '+ctx.upcoming.length;
+    return r;
+  }
+  if (ml.includes('приоритет') || ml.includes('priority')) {
+    if (ctx.overdue.length > 0) return '⭐ **Главные приоритеты:**\n1. Закрыть просроченные задачи ('+ctx.overdue.length+' шт)\n2. Проверить задачи с дедлайном на этой неделе ('+ctx.upcoming.length+' шт)\n3. Обновить статусы по всем направлениям';
+    return '⭐ Просроченных нет. Рекомендую сфокусироваться на ближайших дедлайнах ('+ctx.upcoming.length+' задач) и обновить прогресс по проектам.';
+  }
+  if (ml.includes('план') || ml.includes('план на неделю')) {
+    return '📋 **Рекомендуемый план на неделю:**\n• Пн: Проверка статусов всех задач, обновление приоритетов\n• Вт-Ср: Работа по ключевым направлениям КТ и Сайтов\n• Чт: Встречи с партнёрами, коммуникации\n• Пт: Подведение итогов, планирование следующей недели\n\n📌 Всего задач: '+ctx.total_tasks+' | Просрочено: '+ctx.overdue.length;
+  }
+  if (ml.includes('письм') || ml.includes('email')) {
+    return '📧 Конечно! Напишите, кому и о чём письмо, и я подготовлю текст.\n\nНапример: «Напиши письмо партнёру Syno Medical о статусе поставки» или «Письмо клиенту о готовности сайта».';
+  }
+  if (ml.includes('риск')) {
+    return '⚠️ **Основные риски:**\n1. Просроченные задачи ('+ctx.overdue.length+') — могут задержать проект\n2. Зависимость от внешних партнёров\n3. Сроки по клиентским сайтам\n\n💡 Рекомендация: провести ревью просроченных задач и обновить сроки.';
+  }
+  return '🤖 Я ИИ-ассистент RKT HUB. Сейчас в системе '+ctx.total_tasks+' задач, '+ctx.staff_count+' сотрудников и '+ctx.partners_count+' партнёров.\n\nМогу помочь с:\n• 📊 Отчёты по проектам\n• 🔴 Просроченные задачи\n• ⭐ Приоритеты\n• 📧 Составление писем\n• 📋 Планирование\n• ⚠️ Анализ рисков\n\nЗадайте вопрос!';
+}
 function openModal(type, existingData) {
   if (type === 'newproject') {
     openAddProjectModal();
@@ -2834,15 +3045,50 @@ function openAddSubproject() {
   const proj = PROJECTS[currentProject];
   document.getElementById('modalTitle').textContent = '➕ Добавить подпроект в «'+proj.name+'»';
 
+  // Check if this is a site-type project (canAddSub=true means site project)
+  const isSite = proj.canAddSub;
+  if (isSite) {
+    document.getElementById('modalBox').classList.add('wide');
+  } else {
+    document.getElementById('modalBox').classList.remove('wide');
+  }
+
   let fieldsHtml = '<div class="form-group"><label class="required">Название</label><input type="text" id="field-subname" placeholder="Название подпроекта"></div>';
   fieldsHtml += '<div class="form-group"><label>Emoji</label><input type="text" id="field-subemoji" placeholder="📌" value="📌"></div>';
   fieldsHtml += '<div class="form-group"><label>Описание</label><textarea id="field-subdesc" placeholder="Описание..."></textarea></div>';
 
-  // For sites: extra fields
-  if (proj.canAddSub) {
-    fieldsHtml += '<div class="form-group"><label>Ссылка на сайт</label><input type="text" id="field-suburl" placeholder="https://..."></div>';
-    fieldsHtml += '<div class="form-group"><label>Клиент</label><input type="text" id="field-subclient" placeholder="Имя заказчика"></div>';
-    fieldsHtml += '<div class="form-group"><label>Телефон</label><input type="text" id="field-subphone" placeholder="+7..."></div>';
+  if (isSite) {
+    // Full site questionnaire
+    fieldsHtml += '<div class="form-section-title">📋 Анкета для ИИ-генерации сайта</div>';
+    fieldsHtml += '<div class="form-row">';
+    fieldsHtml += '<div class="form-group"><label>Название бизнеса</label><input type="text" id="field-subbizname" placeholder="Как называется бизнес"></div>';
+    fieldsHtml += '<div class="form-group"><label>Тип бизнеса</label><select id="field-subbiztype"><option>Ресторан / Кафе</option><option>Салон красоты</option><option>Медицина</option><option>Услуги</option><option>Магазин</option><option>Производство</option><option>Другое</option></select></div>';
+    fieldsHtml += '</div>';
+    fieldsHtml += '<div class="form-row">';
+    fieldsHtml += '<div class="form-group"><label>Клиент (ФИО)</label><input type="text" id="field-subclient" placeholder="Имя заказчика"></div>';
+    fieldsHtml += '<div class="form-group"><label>Телефон клиента</label><input type="text" id="field-subphone" placeholder="+7..."></div>';
+    fieldsHtml += '</div>';
+    fieldsHtml += '<div class="form-row">';
+    fieldsHtml += '<div class="form-group"><label>Email клиента</label><input type="text" id="field-subemail" placeholder="email@..."></div>';
+    fieldsHtml += '<div class="form-group"><label>Город</label><input type="text" id="field-subcity" placeholder="Город бизнеса"></div>';
+    fieldsHtml += '</div>';
+    fieldsHtml += '<div class="form-section-title">🎨 Дизайн и содержание</div>';
+    fieldsHtml += '<div class="form-row">';
+    fieldsHtml += '<div class="form-group"><label>Стиль сайта</label><select id="field-substyle"><option>Современный минимализм</option><option>Тёмная тема</option><option>Светлая и яркая</option><option>Ретро / Винтаж</option><option>Премиум / Люкс</option><option>Детский / Весёлый</option></select></div>';
+    fieldsHtml += '<div class="form-group"><label>Основные цвета</label><input type="text" id="field-subcolors" placeholder="Например: красный и золотой"></div>';
+    fieldsHtml += '</div>';
+    fieldsHtml += '<div class="form-group"><label>Что должно быть на сайте</label><textarea id="field-subpages" placeholder="Главная, Меню, О нас, Контакты, Доставка..."></textarea></div>';
+    fieldsHtml += '<div class="form-group"><label>Особые пожелания</label><textarea id="field-subwishes" placeholder="Что важно для клиента? Онлайн-заказ, бронирование, галерея, отзывы..."></textarea></div>';
+    fieldsHtml += '<div class="form-section-title">🔧 Техническое</div>';
+    fieldsHtml += '<div class="form-row">';
+    fieldsHtml += '<div class="form-group"><label>Домен (если есть)</label><input type="text" id="field-subdomain" placeholder="example.ru"></div>';
+    fieldsHtml += '<div class="form-group"><label>Бюджет</label><input type="text" id="field-subbudget" placeholder="Бюджет на разработку"></div>';
+    fieldsHtml += '</div>';
+    fieldsHtml += '<div class="form-row">';
+    fieldsHtml += '<div class="form-group"><label>Дедлайн</label><input type="date" id="field-subdeadline"></div>';
+    fieldsHtml += '<div class="form-group"><label>Ссылка на текущий сайт</label><input type="text" id="field-suburl" placeholder="https://..."></div>';
+    fieldsHtml += '</div>';
+    fieldsHtml += '<div class="form-group"><label>Контент готов?</label><select id="field-subcontent"><option>Нет, нужно написать</option><option>Частично готов</option><option>Полностью готов</option></select></div>';
   }
 
   document.getElementById('modalBody').innerHTML = fieldsHtml;
@@ -2851,6 +3097,7 @@ function openAddSubproject() {
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('show');
+  document.getElementById('modalBox').classList.remove('wide');
   currentModal = '';
   editingItem = null;
 }
@@ -2887,12 +3134,30 @@ async function saveModal() {
 
     proj.subprojects[name] = { emoji: emoji, color: proj.color, desc: desc };
 
-    // If site project, save extra fields as a direction record
+    // If site project, save extra questionnaire fields
     if (proj.canAddSub) {
       const url = document.getElementById('field-suburl')?.value || '';
       const client = document.getElementById('field-subclient')?.value || '';
       const phone = document.getElementById('field-subphone')?.value || '';
-      // Write to Directions sheet
+      const bizname = document.getElementById('field-subbizname')?.value || '';
+      const biztype = document.getElementById('field-subbiztype')?.value || '';
+      const email = document.getElementById('field-subemail')?.value || '';
+      const city = document.getElementById('field-subcity')?.value || '';
+      const style = document.getElementById('field-substyle')?.value || '';
+      const colors = document.getElementById('field-subcolors')?.value || '';
+      const pages = document.getElementById('field-subpages')?.value || '';
+      const wishes = document.getElementById('field-subwishes')?.value || '';
+      const domain = document.getElementById('field-subdomain')?.value || '';
+      const budget = document.getElementById('field-subbudget')?.value || '';
+      const deadline = document.getElementById('field-subdeadline')?.value || '';
+      const content = document.getElementById('field-subcontent')?.value || '';
+
+      // Build questionnaire JSON for AI
+      const questionnaire = JSON.stringify({
+        bizname, biztype, client, phone, email, city,
+        style, colors, pages, wishes, domain, budget, deadline, content, url
+      }).substring(0, 900);
+
       await apiWrite('Направления', {
         ID: 'DIR'+String(Date.now()).slice(-6),
         'Название': name,
@@ -2902,10 +3167,17 @@ async function saveModal() {
         'Ссылка': url,
         'Клиент': client,
         'Телефон': phone,
+        'Город': city,
+        'Бизнес_тип': biztype,
+        'Стиль': style,
+        'Анкета': questionnaire,
+        'Бюджет': budget,
+        'Дедлайн': deadline,
         'Дата_создания': today()
       });
     }
 
+    document.getElementById('modalBox').classList.remove('wide');
     closeModal();
     renderAll();
     if(currentProject) renderProjectView();
