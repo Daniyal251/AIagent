@@ -1993,12 +1993,20 @@ function canDirectWrite(sheet) {
 // ============================================================
 // FORM DEFINITIONS
 // ============================================================
-function getDirectionOptions() {
-  // Gather all subproject names across all projects
+function getDirectionOptions(forProject) {
   let opts = [];
-  Object.values(PROJECTS).forEach(p => {
-    Object.keys(p.subprojects).forEach(sp => { if (!opts.includes(sp)) opts.push(sp); });
-  });
+  if (forProject && forProject !== 'Все') {
+    // Find project by name and return only its subprojects
+    const proj = Object.values(PROJECTS).find(p => p.name === forProject);
+    if (proj) {
+      Object.keys(proj.subprojects).forEach(sp => opts.push(sp));
+    }
+  } else {
+    // All subprojects
+    Object.values(PROJECTS).forEach(p => {
+      Object.keys(p.subprojects).forEach(sp => { if (!opts.includes(sp)) opts.push(sp); });
+    });
+  }
   opts.push('Общее');
   return opts;
 }
@@ -2052,8 +2060,8 @@ const FORM_DEFS = {
     fields: [
       { name: 'Имя', type: 'text', required: true, placeholder: 'ФИО' },
       { name: 'Роль', type: 'select', options: ['CEO', 'Зам', 'Руководитель', 'Менеджер', 'Инженер', 'Разработчик', 'Сотрудник'] },
-      { name: 'Проект', type: 'select', options: () => ['Все', ...Object.values(PROJECTS).map(p=>p.name)] },
-      { name: 'Направление', type: 'select', options: () => ['Все', ...getDirectionOptions()] },
+      { name: 'Проект', type: 'select', options: () => ['Все', ...Object.values(PROJECTS).map(p=>p.name)], onchange: 'updateDirectionOptions(this.value)' },
+      { name: 'Направление', type: 'select', id: 'field-direction', options: () => ['Все', ...getDirectionOptions()] },
       { name: 'Telegram_ID', type: 'text', placeholder: 'Числовой Telegram ID' },
       { name: 'Email', type: 'text', placeholder: 'email' },
       { name: 'Телефон', type: 'text', placeholder: '+7...' },
@@ -2724,7 +2732,12 @@ function renderSubprojectView() {
     html += spr.length ? spr.map(p => '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+statusBadge(p['Статус'])+'</td><td>'+prBadge(p['Приоритет'])+'</td><td>'+progBar(p['Прогресс'])+'</td><td>'+esc(p['Партнёр']||'')+'</td><td>'+esc(p['Бюджет']||'—')+'</td><td>'+esc(p['Дедлайн']||'—')+'</td><td>'+actBtns('project',p.ID,p['Название'])+'</td></tr>').join('') : emptyRow(8,'Нет проектов');
     html += '</tbody></table></div></div>';
   } else if (currentSpTab==='comms') { html += renderCommTable(sc); 
-  } else if (currentSpTab==='sitegen') { html += renderSiteGenerator(); 
+  } else if (currentSpTab==='sitegen') {
+    // Check cache before rendering
+    const sgCheck = getSiteGenData();
+    if (sgCheck.html) siteGenStep = 'preview';
+    else if (siteGenStep !== 'loading') siteGenStep = 'form';
+    html += renderSiteGenerator(); 
   } else if (currentSpTab==='files') { html += renderFilesSection(); }
 
   content.innerHTML = html;
@@ -3325,6 +3338,14 @@ function renderSettings() {
 
 function updateConfig(key, value) { CONFIG[key] = value.trim(); }
 
+// Dynamic direction filter when Project changes in form
+function updateDirectionOptions(projName) {
+  const sel = document.getElementById('field-Направление');
+  if (!sel) return;
+  const dirs = ['Все', ...getDirectionOptions(projName === 'Все' ? null : projName)];
+  sel.innerHTML = dirs.map(d => '<option value="'+escA(d)+'">'+esc(d)+'</option>').join('');
+}
+
 function saveSettings() {
   localStorage.setItem('rkt_config', JSON.stringify({
     API_URL: CONFIG.API_URL, AI_URL: CONFIG.AI_URL, WRITE_URL: CONFIG.WRITE_URL, SHEET_ID: CONFIG.SHEET_ID
@@ -3373,10 +3394,17 @@ async function testConnection() {
 // ============================================================
 // SITE GENERATOR — анкета + превью сайта через Claude
 // ============================================================
-let siteGenData = {};
+let siteGenCache = {}; // Per-subproject site data cache
 let siteGenStep = 'form'; // form | loading | preview
 
+function getSiteGenData() {
+  const key = currentSubproject || '_default';
+  if (!siteGenCache[key]) siteGenCache[key] = {};
+  return siteGenCache[key];
+}
+
 function renderSiteGenerator() {
+  const siteGenData = getSiteGenData();
   if (siteGenStep === 'preview' && siteGenData.html) return renderSitePreview();
   if (siteGenStep === 'loading') return '<div class="card"><div class="card-body" style="text-align:center;padding:60px">' +
     '<div class="spinner" style="margin:0 auto 20px"></div><h3 style="margin-bottom:10px">🤖 Claude генерирует сайт...</h3>' +
@@ -3443,7 +3471,7 @@ function renderSiteGenerator() {
 
 function renderSitePreview() {
   return '<div class="card"><div class="card-header" style="display:flex;justify-content:space-between;align-items:center">' +
-    '<h3>🌐 Превью сайта: ' + esc(siteGenData.name || currentSubproject) + '</h3>' +
+    '<h3>🌐 Превью сайта: ' + esc(getSiteGenData().name || currentSubproject) + '</h3>' +
     '<div style="display:flex;gap:8px">' +
     '<button class="btn btn-sm" onclick="downloadSiteHtml()">💾 Скачать HTML</button>' +
     '<button class="btn btn-sm" onclick="copySiteHtml()">📋 Копировать код</button>' +
@@ -3454,7 +3482,7 @@ function renderSitePreview() {
     '<div class="card" style="margin-top:12px"><div class="card-header"><h3>📝 Исходный код</h3>' +
     '<button class="btn btn-sm" onclick="toggleSiteCode()">Показать/скрыть</button></div>' +
     '<div id="site-code-block" style="display:none;padding:16px;max-height:400px;overflow:auto">' +
-    '<pre style="white-space:pre-wrap;font-size:12px;color:var(--text2)">' + esc(siteGenData.html || '') + '</pre></div></div>';
+    '<pre style="white-space:pre-wrap;font-size:12px;color:var(--text2)">' + esc(getSiteGenData().html || '') + '</pre></div></div>';
 }
 
 function fillSiteDemo() {
@@ -3476,7 +3504,8 @@ async function generateSite() {
   const desc = document.getElementById('sg-desc')?.value?.trim();
   if (!name || !type || !desc) { toast('Заполните обязательные поля (*)','error'); return; }
 
-  siteGenData = {
+  const sgd = getSiteGenData();
+  Object.assign(sgd, {
     name, type, desc,
     city: document.getElementById('sg-city')?.value?.trim() || '',
     address: document.getElementById('sg-address')?.value?.trim() || '',
@@ -3488,12 +3517,12 @@ async function generateSite() {
     theme: document.getElementById('sg-theme')?.value || 'auto',
     style: document.getElementById('sg-style')?.value || 'modern',
     extra: document.getElementById('sg-extra')?.value?.trim() || ''
-  };
+  });
   siteGenStep = 'loading';
   renderSubprojectView();
 
   try {
-    const prompt = buildSitePrompt(siteGenData);
+    const prompt = buildSitePrompt(sgd);
     const ctrl = new AbortController();
     const tmr = setTimeout(() => ctrl.abort(), 120000);
     
@@ -3523,7 +3552,7 @@ async function generateSite() {
       if (startIdx !== -1) html = html.substring(startIdx);
     }
 
-    siteGenData.html = html;
+    sgd.html = html;
     siteGenStep = 'preview';
     renderSubprojectView();
     
@@ -3531,8 +3560,8 @@ async function generateSite() {
     setTimeout(() => {
       const iframe = document.getElementById('site-preview-iframe');
       if (iframe) {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open(); doc.write(html); doc.close();
+        const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iDoc.open(); iDoc.write(html); iDoc.close();
         // Auto-resize iframe
         setTimeout(() => {
           try { iframe.style.height = Math.max(700, doc.body.scrollHeight + 50) + 'px'; } catch(e){}
@@ -3588,18 +3617,20 @@ function buildSitePrompt(d) {
 }
 
 function downloadSiteHtml() {
-  if (!siteGenData.html) return;
-  const blob = new Blob([siteGenData.html], {type:'text/html'});
+  const sgDl = getSiteGenData();
+  if (!sgDl.html) return;
+  const blob = new Blob([sgDl.html], {type:'text/html'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = (siteGenData.name || 'site').replace(/\s/g,'_') + '.html';
+  a.download = (sgDl.name || 'site').replace(/\s/g,'_') + '.html';
   a.click(); URL.revokeObjectURL(a.href);
   toast('HTML скачан!','success');
 }
 
 function copySiteHtml() {
-  if (!siteGenData.html) return;
-  navigator.clipboard.writeText(siteGenData.html).then(() => toast('Код скопирован!','success')).catch(() => toast('Ошибка копирования','error'));
+  const sgCp = getSiteGenData();
+  if (!sgCp.html) return;
+  navigator.clipboard.writeText(sgCp.html).then(() => toast('Код скопирован!','success')).catch(() => toast('Ошибка копирования','error'));
 }
 
 function toggleSiteCode() {
@@ -3608,6 +3639,23 @@ function toggleSiteCode() {
 }
 
 function initSiteGenerator() {
+  // Reset to form if no cached data for this subproject
+  const sgInit = getSiteGenData();
+  if (!sgInit.html) siteGenStep = 'form';
+  else {
+    siteGenStep = 'preview';
+    // Reload cached HTML into iframe
+    setTimeout(() => {
+      const iframe = document.getElementById('site-preview-iframe');
+      if (iframe && sgInit.html) {
+        const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iDoc.open(); iDoc.write(sgInit.html); iDoc.close();
+        setTimeout(() => {
+          try { iframe.style.height = Math.max(700, iDoc.body.scrollHeight + 50) + 'px'; } catch(e){}
+        }, 500);
+      }
+    }, 200);
+  }
   // Auto-fill name from subproject if empty
   const nameEl = document.getElementById('sg-name');
   if (nameEl && !nameEl.value) nameEl.value = currentSubproject || '';
@@ -4158,7 +4206,8 @@ function openModal(type, existingData) {
     const opts = typeof field.options === 'function' ? field.options() : field.options;
 
     if (field.type==='select') {
-      html += '<select id="field-'+field.name+'">';
+      const changeAttr = field.onchange ? ' onchange="'+field.onchange+'"' : '';
+      html += '<select id="field-'+field.name+'"'+changeAttr+'>';
       for (const o of (opts||[])) html += '<option value="'+escA(o)+'"'+(val===o?' selected':'')+'>'+esc(o)+'</option>';
       html += '</select>';
     } else if (field.type==='textarea') {
