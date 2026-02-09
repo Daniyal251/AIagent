@@ -2088,11 +2088,22 @@ async function loadData() {
 
 async function apiWrite(sheet, row) {
   try {
-    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify({sheet,row}))));
-    const r = await fetch(CONFIG.WRITE_URL+'?b64='+b64);
-    if(!r.ok) throw new Error('HTTP '+r.status);
+    // POST body (for updated API)
+    const r = await fetch(CONFIG.WRITE_URL, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ sheet, data: row })
+    });
+    if(!r.ok) throw new Error('POST HTTP '+r.status);
     return true;
-  } catch(e) { toast('❌ Ошибка записи: '+e.message,'error'); return false; }
+  } catch(e) {
+    // Fallback: GET with base64 (legacy)
+    try {
+      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify({sheet,row}))));
+      const r2 = await fetch(CONFIG.WRITE_URL+'?b64='+b64);
+      if(!r2.ok) throw new Error('GET HTTP '+r2.status);
+      return true;
+    } catch(e2) { toast('❌ Ошибка записи: '+e2.message,'error'); return false; }
+  }
 }
 
 // ============================================================
@@ -2770,44 +2781,40 @@ async function callAI(userMsg, context) {
   container.scrollTop = container.scrollHeight;
 
   const sendBtn = document.getElementById('ai-send-btn');
-  sendBtn.disabled = true;
+  if(sendBtn) sendBtn.disabled = true;
 
+  let aiResponse = '';
   try {
-    // Try calling AI endpoint
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
     const response = await fetch(CONFIG.AI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: userMsg,
         context: context,
-        history: aiMessages.slice(-10),
-        user: USER ? USER.name : ''
-      })
+        history: aiMessages.filter(m=>m.role==='user'||m.role==='assistant').slice(-10),
+        user: USER ? USER['Имя'] : ''
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
 
-    let aiResponse = '';
     if (response.ok) {
       const data = await response.json();
-      aiResponse = data.response || data.text || data.message || 'Ответ получен.';
-    } else {
-      // Fallback: generate local response
-      aiResponse = generateLocalAIResponse(userMsg, context);
+      aiResponse = data.response || data.text || data.message || '';
+      if (!aiResponse && data.content) { try { aiResponse = data.content[0].text; } catch(e) {} }
     }
-
-    // Remove loading, add response
-    const loadEl = document.getElementById(loadingId);
-    if(loadEl) loadEl.remove();
-    addAiMessage('assistant', aiResponse);
-
+    if (!aiResponse) throw new Error('Empty response');
   } catch(e) {
-    // Fallback to local response
-    const loadEl = document.getElementById(loadingId);
-    if(loadEl) loadEl.remove();
-    const fallback = generateLocalAIResponse(userMsg, context);
-    addAiMessage('assistant', fallback);
+    console.warn('Task AI fallback:', e.message);
+    aiResponse = generateLocalAIResponse(userMsg, context);
   }
 
-  sendBtn.disabled = false;
+  const loadEl = document.getElementById(loadingId);
+  if(loadEl) loadEl.remove();
+  addAiMessage('assistant', aiResponse);
+  if(sendBtn) sendBtn.disabled = false;
 }
 
 function generateLocalAIResponse(msg, context) {
@@ -2893,6 +2900,7 @@ async function sendGlobalAi() {
   const msg = input.value.trim();
   if (!msg) return;
   input.value = '';
+  input.disabled = true;
 
   const container = document.getElementById('ai-global-messages');
   const userDiv = document.createElement('div');
@@ -2910,44 +2918,41 @@ async function sendGlobalAi() {
   container.scrollTop = container.scrollHeight;
 
   const dataCtx = getDataContext();
-  const systemPrompt = `Ты — ИИ-ассистент системы управления проектами RKT HUB.
-Компания: РКТ (Русские Компьютерные Технологии) — локализация медицинского оборудования (КТ-сканеры) в России.
-Генеральный Директор: Данияль. Текущие проекты: РКТ (КТ, Рентген, Роботы, Урология, PACS, УЗИ) и Сайты (веб-разработка для клиентов).
-
-Текущий контекст данных:
-${JSON.stringify(dataCtx, null, 1)}
-
-Отвечай кратко, по делу, на русском. Используй эмодзи. Если просят отчёт — структурируй. Если просят письмо — пиши формально.`;
+  let aiText = '';
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
     const response = await fetch(CONFIG.AI_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: msg,
-        context: systemPrompt,
-        history: globalAiMessages.slice(-10)
-      })
+        context: '',
+        history: globalAiMessages.filter(m=>m.role==='user'||m.role==='assistant').slice(-10)
+      }),
+      signal: controller.signal
     });
+    clearTimeout(timeout);
+    if (!response.ok) throw new Error('HTTP ' + response.status);
     const data = await response.json();
-    const aiText = data.response || data.text || data.message || 'Нет ответа от ИИ';
-    
-    typing.remove();
-    const aiDiv = document.createElement('div');
-    aiDiv.className = 'ai-msg assistant';
-    aiDiv.innerHTML = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-    container.appendChild(aiDiv);
-    globalAiMessages.push({ role: 'assistant', content: aiText });
+    aiText = data.response || data.text || data.message || '';
+    if (!aiText && data.content) { try { aiText = data.content[0].text; } catch(e) {} }
+    if (!aiText) throw new Error('Empty response');
   } catch(e) {
-    typing.remove();
-    const fallback = generateGlobalFallback(msg, dataCtx);
-    const aiDiv = document.createElement('div');
-    aiDiv.className = 'ai-msg assistant';
-    aiDiv.innerHTML = fallback.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-    container.appendChild(aiDiv);
-    globalAiMessages.push({ role: 'assistant', content: fallback });
+    console.warn('AI API error, using local fallback:', e.message);
+    aiText = generateGlobalFallback(msg, dataCtx);
   }
+
+  typing.remove();
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'ai-msg assistant';
+  aiDiv.innerHTML = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  container.appendChild(aiDiv);
+  globalAiMessages.push({ role: 'assistant', content: aiText });
   container.scrollTop = container.scrollHeight;
+  input.disabled = false;
+  input.focus();
 }
 
 function globalAiQuick(question) {
@@ -2957,36 +2962,82 @@ function globalAiQuick(question) {
 
 function generateGlobalFallback(msg, ctx) {
   const ml = msg.toLowerCase();
+  const td = today();
+
+  // Direction-specific queries: "что по КТ?", "статус роботов", etc.
+  const dirKeywords = {
+    'кт':['КТ','кт','томограф','ct'], 'рентген':['Рентген','рентген','xray'],
+    'робот':['Роботы','робот','хирург'], 'уролог':['Урология','уролог'],
+    'pacs':['PACS','pacs','архив'], 'узи':['УЗИ','узи','ультразвук'],
+    'сайт':['Сайты','сайт','web','веб'], 'пышки':['Пышки','пышки','пончик'],
+    'брежнев':['Брежнев','брежнев'], 'кератин':['Кератин','кератин','агрыз']
+  };
+  for (const [key, words] of Object.entries(dirKeywords)) {
+    if (words.some(w => ml.includes(w.toLowerCase()))) {
+      const allDirs = getDirectionOptions();
+      const matchDir = allDirs.find(d => words.some(w => d.toLowerCase().includes(w.toLowerCase()))) || words[0];
+      const dirPartners = DATA.partners.filter(p => (p['Направление']||'').toLowerCase().includes(key));
+      const dirTasks = DATA.tasks.filter(t => (t['Направление']||'').toLowerCase().includes(key));
+      const openTasks = dirTasks.filter(t => t['Статус'] !== 'Завершено' && t['Статус'] !== 'Готово' && t['Статус'] !== '✅ Готово');
+      const overdueT = openTasks.filter(t => t['Дедлайн'] && t['Дедлайн'] < td);
+      let r = '📂 **'+matchDir+':**\n\n';
+      r += '🤝 Партнёров: '+dirPartners.length+'\n';
+      if (dirPartners.length) dirPartners.forEach(p => r += '  • '+(p['Название']||'?')+' ('+(p['Страна']||'?')+') — '+(p['Статус']||'?')+'\n');
+      r += '\n✅ Задач: '+dirTasks.length+' (открытых: '+openTasks.length;
+      if (overdueT.length) r += ', 🔴 просрочено: '+overdueT.length;
+      r += ')\n';
+      if (openTasks.length) openTasks.slice(0,5).forEach(t => r += '  • '+(t['Название']||t['Описание']||'—')+' — '+(t['Приоритет']||'?')+', дедлайн: '+(t['Дедлайн']||'—')+'\n');
+      return r;
+    }
+  }
+
   if (ml.includes('просроч') || ml.includes('overdue')) {
     if (ctx.overdue.length === 0) return '✅ Отлично! Просроченных задач нет.';
     let r = '🔴 **Просроченные задачи ('+ctx.overdue.length+'):**\n';
-    ctx.overdue.forEach(t => r += '• '+t.task+' (дедлайн: '+t.deadline+', '+t.direction+')\n');
+    ctx.overdue.forEach(t => r += '• '+t.task+' — дедлайн: '+t.deadline+', '+t.direction+'\n');
+    r += '\n💡 Разобрать просроченные, обновить дедлайны.';
     return r;
   }
   if (ml.includes('отчёт') || ml.includes('отчет') || ml.includes('report')) {
-    let r = '📊 **Сводка по проектам RKT HUB:**\n';
-    for (const [name, info] of Object.entries(ctx.projects)) {
-      r += '• **'+name+'**: '+info.subprojects+' направлений, '+info.tasks+' задач\n';
-    }
-    r += '\n👥 Сотрудников: '+ctx.staff_count+'\n🤝 Партнёров: '+ctx.partners_count+'\n📨 Коммуникаций: '+ctx.comms_count;
-    r += '\n🔴 Просрочено: '+ctx.overdue.length+'\n⚠️ Ближайшие дедлайны: '+ctx.upcoming.length;
+    let r = '📊 **Сводка RKT HUB:**\n\n';
+    for (const [name, info] of Object.entries(ctx.projects)) r += '• **'+name+'**: '+info.subprojects+' направлений, '+info.tasks+' задач\n';
+    r += '\n👥 Сотрудников: '+ctx.staff_count+'\n🤝 Партнёров: '+ctx.partners_count;
+    r += '\n🔴 Просрочено: '+ctx.overdue.length+'\n⚠️ Ближайшие: '+ctx.upcoming.length;
+    if (ctx.overdue.length) { r += '\n\n**Просроченные:**\n'; ctx.overdue.slice(0,5).forEach(t => r += '• '+t.task+' ('+t.deadline+')\n'); }
     return r;
   }
   if (ml.includes('приоритет') || ml.includes('priority')) {
-    if (ctx.overdue.length > 0) return '⭐ **Главные приоритеты:**\n1. Закрыть просроченные задачи ('+ctx.overdue.length+' шт)\n2. Проверить задачи с дедлайном на этой неделе ('+ctx.upcoming.length+' шт)\n3. Обновить статусы по всем направлениям';
-    return '⭐ Просроченных нет. Рекомендую сфокусироваться на ближайших дедлайнах ('+ctx.upcoming.length+' задач) и обновить прогресс по проектам.';
+    let r = '⭐ **Приоритеты:**\n';
+    if (ctx.overdue.length) { r += '1. 🔴 Просроченные ('+ctx.overdue.length+'):\n'; ctx.overdue.forEach(t => r += '   • '+t.task+'\n'); }
+    if (ctx.upcoming.length) r += '2. ⏰ Ближайшие: '+ctx.upcoming.map(t=>t.task).join(', ')+'\n';
+    r += '3. 📂 Обновить статусы по направлениям';
+    return r;
   }
-  if (ml.includes('план') || ml.includes('план на неделю')) {
-    return '📋 **Рекомендуемый план на неделю:**\n• Пн: Проверка статусов всех задач, обновление приоритетов\n• Вт-Ср: Работа по ключевым направлениям КТ и Сайтов\n• Чт: Встречи с партнёрами, коммуникации\n• Пт: Подведение итогов, планирование следующей недели\n\n📌 Всего задач: '+ctx.total_tasks+' | Просрочено: '+ctx.overdue.length;
+  if (ml.includes('план')) {
+    return '📋 **План на неделю:**\n• Пн: Ревью статусов\n• Вт-Ср: Ключевые задачи\n• Чт: Встречи с партнёрами\n• Пт: Итоги\n\n📌 Задач: '+ctx.total_tasks+' | Просрочено: '+ctx.overdue.length+' | Команда: '+ctx.staff_count;
   }
   if (ml.includes('письм') || ml.includes('email')) {
-    return '📧 Конечно! Напишите, кому и о чём письмо, и я подготовлю текст.\n\nНапример: «Напиши письмо партнёру Syno Medical о статусе поставки» или «Письмо клиенту о готовности сайта».';
+    return '📧 Напишите кому и о чём. Примеры:\n• «Письмо партнёру Syno Medical о статусе поставки»\n• «Письмо клиенту о готовности сайта»';
   }
   if (ml.includes('риск')) {
-    return '⚠️ **Основные риски:**\n1. Просроченные задачи ('+ctx.overdue.length+') — могут задержать проект\n2. Зависимость от внешних партнёров\n3. Сроки по клиентским сайтам\n\n💡 Рекомендация: провести ревью просроченных задач и обновить сроки.';
+    let r = '⚠️ **Риски:**\n';
+    if (ctx.overdue.length) r += '1. 🔴 Просроченные ('+ctx.overdue.length+')\n';
+    r += '2. Зависимость от партнёров\n3. Сроки по клиентским проектам';
+    return r;
   }
-  return '🤖 Я ИИ-ассистент RKT HUB. Сейчас в системе '+ctx.total_tasks+' задач, '+ctx.staff_count+' сотрудников и '+ctx.partners_count+' партнёров.\n\nМогу помочь с:\n• 📊 Отчёты по проектам\n• 🔴 Просроченные задачи\n• ⭐ Приоритеты\n• 📧 Составление писем\n• 📋 Планирование\n• ⚠️ Анализ рисков\n\nЗадайте вопрос!';
+  if (ml.includes('команд') || ml.includes('сотрудник') || ml.includes('кто в')) {
+    let r = '👥 **Команда ('+DATA.staff.length+'):**\n';
+    DATA.staff.forEach(s => r += '• '+(ROLES[s['Роль']]?.emoji||'👤')+' '+(s['Имя']||'?')+' — '+(s['Роль']||'?')+', '+(s['Направление']||'Все')+'\n');
+    return r;
+  }
+  if (ml.includes('партнёр') || ml.includes('партнер')) {
+    let r = '🤝 **Партнёры ('+DATA.partners.length+'):**\n';
+    DATA.partners.forEach(p => r += '• '+(p['Название']||'?')+' ('+(p['Страна']||'?')+') — '+(p['Направление']||'?')+', '+(p['Статус']||'?')+'\n');
+    return r;
+  }
+  return '🤖 В системе '+ctx.total_tasks+' задач, '+ctx.staff_count+' сотрудников, '+ctx.partners_count+' партнёров.\n\n💡 Спросите:\n• **По направлению:** «что по КТ?», «статус роботов»\n• **Задачи:** «просрочено», «приоритеты»\n• **Отчёт:** «отчёт», «план на неделю»\n• **Команда:** «кто в команде?»\n• **Письмо:** «напиши письмо партнёру X»';
 }
+
 function openModal(type, existingData) {
   if (type === 'newproject') {
     openAddProjectModal();
