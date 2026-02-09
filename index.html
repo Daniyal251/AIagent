@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RKT HUB — Панель управления</title>
+<title>RKT HUB — Управление проектами</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏥</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -32,7 +32,6 @@
   --text3: #5a6a7a;
   --border: #243044;
   --border2: #2d3f56;
-  --glass: rgba(17, 24, 39, 0.85);
   --radius: 12px;
   --radius-sm: 8px;
   --radius-lg: 16px;
@@ -43,15 +42,8 @@
 }
 
 /* ===== RESET ===== */
-*, *::before, *::after {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 
 body {
   font-family: 'JetBrains Mono', monospace;
@@ -62,14 +54,11 @@ body {
   line-height: 1.5;
 }
 
-/* Background gradient */
 body::before {
   content: '';
   position: fixed;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
   background:
     radial-gradient(ellipse at 20% 50%, rgba(0, 212, 170, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(75, 171, 247, 0.04) 0%, transparent 50%),
@@ -78,16 +67,9 @@ body::before {
   pointer-events: none;
 }
 
-a {
-  color: var(--accent);
-  text-decoration: none;
-}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
 
-a:hover {
-  text-decoration: underline;
-}
-
-/* ===== SCROLLBAR ===== */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
@@ -140,12 +122,7 @@ a:hover {
   50% { background-position: 100% 50%; }
 }
 
-.login-icon {
-  font-size: 72px;
-  margin-bottom: 20px;
-  display: block;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-}
+.login-icon { font-size: 72px; margin-bottom: 20px; display: block; }
 
 .login-logo {
   font-family: 'Unbounded', sans-serif;
@@ -157,11 +134,7 @@ a:hover {
   margin-bottom: 6px;
 }
 
-.login-sub {
-  color: var(--text2);
-  font-size: 13px;
-  margin-bottom: 36px;
-}
+.login-sub { color: var(--text2); font-size: 13px; margin-bottom: 36px; }
 
 .login-label {
   display: block;
@@ -195,23 +168,10 @@ a:hover {
   box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
-.login-input::placeholder {
-  color: var(--text3);
-  font-size: 13px;
-  letter-spacing: 0;
-}
+.login-input::placeholder { color: var(--text3); font-size: 13px; letter-spacing: 0; }
 
-.login-hint {
-  font-size: 11px;
-  color: var(--text2);
-  margin-bottom: 28px;
-  line-height: 1.8;
-}
-
-.login-hint a {
-  color: var(--accent);
-  font-weight: 600;
-}
+.login-hint { font-size: 11px; color: var(--text2); margin-bottom: 28px; line-height: 1.8; }
+.login-hint a { color: var(--accent); font-weight: 600; }
 
 .login-btn {
   width: 100%;
@@ -229,21 +189,9 @@ a:hover {
   text-transform: uppercase;
 }
 
-.login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 212, 170, 0.3);
-}
-
-.login-btn:active {
-  transform: translateY(0);
-}
-
-.login-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
+.login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 212, 170, 0.3); }
+.login-btn:active { transform: translateY(0); }
+.login-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
 .login-error {
   color: var(--red);
@@ -253,13 +201,6 @@ a:hover {
   padding: 10px;
   background: var(--red-glow);
   border-radius: var(--radius-sm);
-}
-
-.login-loading {
-  margin-top: 16px;
-  color: var(--text2);
-  font-size: 13px;
-  display: none;
 }
 
 /* ============================================================
@@ -277,7 +218,6 @@ a:hover {
   width: var(--sidebar-w);
   background: var(--bg2);
   border-right: 1px solid var(--border);
-  padding: 0;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -301,16 +241,9 @@ a:hover {
   -webkit-text-fill-color: transparent;
 }
 
-.logo-section .subtitle {
-  font-size: 11px;
-  color: var(--text2);
-  margin-top: 4px;
-}
+.logo-section .subtitle { font-size: 11px; color: var(--text2); margin-top: 4px; }
 
-.nav {
-  flex: 1;
-  padding: 12px;
-}
+.nav { flex: 1; padding: 12px; }
 
 .nav-section {
   font-size: 10px;
@@ -336,38 +269,20 @@ a:hover {
   position: relative;
 }
 
-.nav-item:hover {
-  background: var(--bg3);
-  color: var(--text);
-  text-decoration: none;
-}
-
-.nav-item.active {
-  background: var(--accent-glow);
-  color: var(--accent);
-}
+.nav-item:hover { background: var(--bg3); color: var(--text); text-decoration: none; }
+.nav-item.active { background: var(--accent-glow); color: var(--accent); }
 
 .nav-item.active::before {
   content: '';
   position: absolute;
-  left: 0;
-  top: 25%;
-  bottom: 25%;
+  left: 0; top: 25%; bottom: 25%;
   width: 3px;
   background: var(--accent);
   border-radius: 0 3px 3px 0;
 }
 
-.nav-item .icon {
-  font-size: 18px;
-  width: 26px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.nav-item .label {
-  flex: 1;
-}
+.nav-item .icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
+.nav-item .label { flex: 1; }
 
 .nav-item .badge {
   background: var(--accent);
@@ -380,13 +295,9 @@ a:hover {
   text-align: center;
 }
 
-.nav-item .badge-orange {
-  background: var(--orange);
-}
-
-.nav-item.hidden {
-  display: none;
-}
+.nav-item .badge-orange { background: var(--orange); }
+.nav-item .badge-red { background: var(--red); }
+.nav-item.hidden { display: none; }
 
 /* User bar */
 .user-bar {
@@ -395,37 +306,18 @@ a:hover {
   background: var(--bg3);
 }
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-}
+.user-info { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 40px; height: 40px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), var(--blue));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--bg);
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; color: var(--bg); flex-shrink: 0;
 }
 
-.user-name {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.user-role-text {
-  font-size: 11px;
-  color: var(--text2);
-}
+.user-name { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.user-role-text { font-size: 11px; color: var(--text2); }
 
 .logout-btn {
   width: 100%;
@@ -444,18 +336,14 @@ a:hover {
   gap: 6px;
 }
 
-.logout-btn:hover {
-  border-color: var(--red);
-  color: var(--red);
-  background: var(--red-glow);
-}
+.logout-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-glow); }
 
 /* ===== MAIN ===== */
 .main {
   flex: 1;
   margin-left: var(--sidebar-w);
   padding: 32px 36px 60px;
-  max-width: 1300px;
+  max-width: 1400px;
   min-height: 100vh;
 }
 
@@ -478,11 +366,7 @@ a:hover {
   gap: 12px;
 }
 
-.page-header .actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
+.page-header .actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 /* ===== BREADCRUMB ===== */
 .breadcrumb {
@@ -494,25 +378,10 @@ a:hover {
   color: var(--text2);
 }
 
-.breadcrumb a {
-  cursor: pointer;
-  color: var(--text2);
-  transition: var(--transition);
-}
-
-.breadcrumb a:hover {
-  color: var(--accent);
-  text-decoration: none;
-}
-
-.breadcrumb .sep {
-  color: var(--text3);
-}
-
-.breadcrumb .current {
-  color: var(--text);
-  font-weight: 600;
-}
+.breadcrumb a { cursor: pointer; color: var(--text2); transition: var(--transition); }
+.breadcrumb a:hover { color: var(--accent); text-decoration: none; }
+.breadcrumb .sep { color: var(--text3); }
+.breadcrumb .current { color: var(--text); font-weight: 600; }
 
 /* ===== BUTTONS ===== */
 .btn {
@@ -535,10 +404,7 @@ a:hover {
   color: var(--bg);
 }
 
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3);
-}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0, 212, 170, 0.3); }
 
 .btn-secondary {
   background: var(--bg3);
@@ -546,10 +412,7 @@ a:hover {
   border: 1px solid var(--border);
 }
 
-.btn-secondary:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
+.btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
 .btn-danger {
   background: var(--red-glow);
@@ -557,31 +420,29 @@ a:hover {
   border: 1px solid rgba(255, 107, 107, 0.3);
 }
 
-.btn-danger:hover {
-  background: rgba(255, 107, 107, 0.25);
-}
+.btn-danger:hover { background: rgba(255, 107, 107, 0.25); }
 
 .btn-sm { padding: 6px 14px; font-size: 11px; }
 .btn-xs { padding: 4px 10px; font-size: 10px; }
+.btn-approve { background: var(--accent-glow); color: var(--accent); border: 1px solid rgba(0, 212, 170, 0.3); }
+.btn-reject { background: var(--red-glow); color: var(--red); border: 1px solid rgba(255, 107, 107, 0.3); }
 
-.btn-approve {
-  background: var(--accent-glow);
-  color: var(--accent);
-  border: 1px solid rgba(0, 212, 170, 0.3);
+.btn-ai {
+  background: linear-gradient(135deg, var(--purple), #7950f2);
+  color: #fff;
 }
 
-.btn-reject {
-  background: var(--red-glow);
-  color: var(--red);
-  border: 1px solid rgba(255, 107, 107, 0.3);
+.btn-ai:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px var(--purple-glow);
 }
 
 /* ============================================================
-   PROJECT GRID (HOME SCREEN)
+   PROJECT GRID — Main screen
    ============================================================ */
 .project-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 20px;
   margin-bottom: 28px;
 }
@@ -590,7 +451,6 @@ a:hover {
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 0;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -609,31 +469,23 @@ a:hover {
   height: 4px;
 }
 
-.project-card.ct .project-card-top { background: linear-gradient(90deg, #00d4aa, #00b894); }
-.project-card.xray .project-card-top { background: linear-gradient(90deg, #4dabf7, #228be6); }
-.project-card.robots .project-card-top { background: linear-gradient(90deg, #b197fc, #7950f2); }
-.project-card.urology .project-card-top { background: linear-gradient(90deg, #ffa94d, #fd7e14); }
-.project-card.pacs .project-card-top { background: linear-gradient(90deg, #f06595, #d6336c); }
-.project-card.uzi .project-card-top { background: linear-gradient(90deg, #51cf66, #37b24d); }
-.project-card.general .project-card-top { background: linear-gradient(90deg, #8899aa, #5a6a7a); }
-
 .project-card-header {
-  padding: 26px 26px 16px;
+  padding: 28px 28px 16px;
   position: relative;
 }
 
 .project-card-header .emoji {
-  font-size: 48px;
-  margin-bottom: 12px;
+  font-size: 52px;
+  margin-bottom: 14px;
   display: block;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
 }
 
 .project-card-header h3 {
   font-family: 'Unbounded', sans-serif;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .project-card-header .desc {
@@ -643,31 +495,24 @@ a:hover {
 }
 
 .project-card-stats {
-  padding: 0 26px 10px;
+  padding: 0 28px 12px;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
 }
 
-.pcs {
-  text-align: center;
-  padding: 10px 0;
-}
+.pcs { text-align: center; padding: 10px 0; }
 
 .pcs .v {
   font-family: 'Unbounded', sans-serif;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
 }
 
-.pcs .l {
-  font-size: 10px;
-  color: var(--text2);
-  margin-top: 2px;
-}
+.pcs .l { font-size: 10px; color: var(--text2); margin-top: 2px; }
 
 .project-card-progress {
-  padding: 0 26px 22px;
+  padding: 0 28px 24px;
 }
 
 .project-card-progress .bar {
@@ -693,15 +538,119 @@ a:hover {
 
 .status-tag {
   position: absolute;
-  top: 16px;
-  right: 16px;
+  top: 18px; right: 18px;
   font-size: 10px;
   padding: 4px 10px;
   border-radius: 12px;
   font-weight: 600;
 }
 
-/* ===== METRICS CARDS ===== */
+/* Add new project card */
+.project-card.add-card {
+  border: 2px dashed var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 260px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.project-card.add-card:hover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+.project-card.add-card .add-icon {
+  font-size: 48px;
+  opacity: 0.5;
+}
+
+.project-card.add-card .add-text {
+  font-size: 14px;
+  color: var(--text2);
+  font-weight: 600;
+}
+
+/* ===== SUBPROJECT GRID ===== */
+.subproject-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.subproject-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.subproject-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 212, 170, 0.1);
+}
+
+.subproject-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.subproject-card .sp-emoji { font-size: 36px; margin-bottom: 10px; display: block; }
+
+.subproject-card h4 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.subproject-card .sp-desc {
+  font-size: 11px;
+  color: var(--text2);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.subproject-card .sp-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--text2);
+}
+
+.subproject-card .sp-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.subproject-card.add-sub {
+  border: 2px dashed var(--border);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 160px;
+}
+
+.subproject-card.add-sub:hover {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+}
+
+/* ===== METRICS ===== */
 .metrics {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -736,30 +685,14 @@ a:hover {
 .metric-card:nth-child(2)::after { background: linear-gradient(90deg, var(--blue), #228be6); }
 .metric-card:nth-child(3)::after { background: linear-gradient(90deg, var(--orange), #fd7e14); }
 .metric-card:nth-child(4)::after { background: linear-gradient(90deg, var(--purple), #7950f2); }
-.metric-card:nth-child(5)::after { background: linear-gradient(90deg, var(--yellow), #fab005); }
+.metric-card:nth-child(5)::after { background: linear-gradient(90deg, var(--green), #37b24d); }
 
 .metric-card .m-icon { font-size: 30px; margin-bottom: 10px; }
+.metric-card .m-value { font-family: 'Unbounded', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; }
+.metric-card .m-label { font-size: 12px; color: var(--text2); margin-top: 6px; }
+.metric-card .m-sub { font-size: 10px; color: var(--text3); margin-top: 4px; }
 
-.metric-card .m-value {
-  font-family: 'Unbounded', sans-serif;
-  font-size: 32px;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.metric-card .m-label {
-  font-size: 12px;
-  color: var(--text2);
-  margin-top: 6px;
-}
-
-.metric-card .m-sub {
-  font-size: 10px;
-  color: var(--text3);
-  margin-top: 4px;
-}
-
-/* ===== CARDS ===== */
+/* ===== CARDS & TABLES ===== */
 .card {
   background: var(--bg2);
   border: 1px solid var(--border);
@@ -785,14 +718,9 @@ a:hover {
   gap: 8px;
 }
 
-/* ===== TABLE ===== */
 .table-wrap { overflow-x: auto; }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 13px;
-}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
 
 thead th {
   text-align: left;
@@ -816,19 +744,11 @@ tbody td {
   vertical-align: middle;
 }
 
-tbody tr {
-  transition: background 0.15s;
-}
+tbody tr { transition: background 0.15s; }
+tbody tr:hover td { background: rgba(0, 212, 170, 0.03); }
+tbody tr:last-child td { border-bottom: none; }
 
-tbody tr:hover td {
-  background: rgba(0, 212, 170, 0.03);
-}
-
-tbody tr:last-child td {
-  border-bottom: none;
-}
-
-/* ===== STATUS BADGES ===== */
+/* ===== STATUS & BADGES ===== */
 .status {
   display: inline-flex;
   align-items: center;
@@ -848,17 +768,14 @@ tbody tr:last-child td {
 .s-work { background: var(--purple-glow); color: var(--purple); }
 .s-done { background: rgba(81, 207, 102, 0.15); color: var(--green); }
 
-/* ===== PRIORITY ===== */
 .p1 { color: var(--red); font-weight: 700; }
 .p2 { color: var(--orange); font-weight: 600; }
 .p3 { color: var(--text2); }
 
-/* ===== PROGRESS BAR ===== */
 .progress-wrap { display: flex; align-items: center; gap: 10px; }
 
 .progress-bar {
-  width: 90px;
-  height: 7px;
+  width: 90px; height: 7px;
   background: var(--bg);
   border-radius: 4px;
   overflow: hidden;
@@ -867,26 +784,17 @@ tbody tr:last-child td {
 .progress-fill {
   height: 100%;
   border-radius: 4px;
-  background: linear-gradient(90deg, var(--accent), var(--accent2));
   transition: width 0.5s ease;
 }
 
-.progress-text {
-  font-size: 11px;
-  color: var(--text2);
-  font-weight: 600;
-  min-width: 30px;
-}
+.progress-text { font-size: 11px; color: var(--text2); font-weight: 600; min-width: 30px; }
 
 /* ===== ACTION BUTTONS ===== */
 .actions-cell { display: flex; gap: 5px; }
 
 .act-btn {
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: transparent;
@@ -896,23 +804,10 @@ tbody tr:last-child td {
   transition: var(--transition);
 }
 
-.act-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-  background: var(--accent-glow);
-}
-
-.act-btn.del:hover {
-  border-color: var(--red);
-  color: var(--red);
-  background: var(--red-glow);
-}
-
-.act-btn.view:hover {
-  border-color: var(--blue);
-  color: var(--blue);
-  background: var(--blue-glow);
-}
+.act-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
+.act-btn.del:hover { border-color: var(--red); color: var(--red); background: var(--red-glow); }
+.act-btn.view:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-glow); }
+.act-btn.ai:hover { border-color: var(--purple); color: var(--purple); background: var(--purple-glow); }
 
 /* ===== FILTERS ===== */
 .filters-bar {
@@ -935,17 +830,8 @@ tbody tr:last-child td {
   transition: var(--transition);
 }
 
-.filter-chip:hover {
-  border-color: var(--accent);
-  color: var(--text);
-}
-
-.filter-chip.active {
-  background: var(--accent-glow);
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 600;
-}
+.filter-chip:hover { border-color: var(--accent); color: var(--text); }
+.filter-chip.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); font-weight: 600; }
 
 .search-input {
   padding: 8px 16px;
@@ -959,12 +845,7 @@ tbody tr:last-child td {
   transition: var(--transition);
 }
 
-.search-input:focus {
-  outline: none;
-  border-color: var(--accent);
-  width: 280px;
-}
-
+.search-input:focus { outline: none; border-color: var(--accent); width: 280px; }
 .search-input::placeholder { color: var(--text3); }
 
 /* ===== TABS ===== */
@@ -988,12 +869,256 @@ tbody tr:last-child td {
 }
 
 .tab:hover { color: var(--text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
-.tab.active {
-  color: var(--accent);
-  border-bottom-color: var(--accent);
-  font-weight: 600;
+/* ============================================================
+   AI CHAT PANEL — Inside task view
+   ============================================================ */
+.ai-panel {
+  background: var(--bg2);
+  border: 1px solid var(--purple);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 20px;
 }
+
+.ai-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, rgba(177, 151, 252, 0.1), rgba(121, 80, 242, 0.05));
+  border-bottom: 1px solid rgba(177, 151, 252, 0.2);
+}
+
+.ai-panel-header h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--purple);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-chat-messages {
+  padding: 16px 20px;
+  max-height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ai-msg {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  line-height: 1.6;
+  max-width: 90%;
+  animation: fadeInMsg 0.3s ease;
+}
+
+@keyframes fadeInMsg {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-msg.assistant {
+  background: rgba(177, 151, 252, 0.08);
+  border: 1px solid rgba(177, 151, 252, 0.15);
+  color: var(--text);
+  align-self: flex-start;
+}
+
+.ai-msg.user {
+  background: var(--accent-glow);
+  border: 1px solid rgba(0, 212, 170, 0.2);
+  color: var(--text);
+  align-self: flex-end;
+}
+
+.ai-msg.system {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  text-align: center;
+  align-self: center;
+}
+
+.ai-suggestions {
+  padding: 12px 20px;
+  border-top: 1px solid rgba(177, 151, 252, 0.15);
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ai-suggestion-btn {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(177, 151, 252, 0.3);
+  background: rgba(177, 151, 252, 0.05);
+  color: var(--purple);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.ai-suggestion-btn:hover {
+  background: rgba(177, 151, 252, 0.15);
+  border-color: var(--purple);
+}
+
+.ai-input-area {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid rgba(177, 151, 252, 0.15);
+  background: rgba(26, 34, 52, 0.5);
+}
+
+.ai-input {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  transition: var(--transition);
+}
+
+.ai-input:focus {
+  outline: none;
+  border-color: var(--purple);
+  box-shadow: 0 0 0 3px var(--purple-glow);
+}
+
+.ai-input::placeholder { color: var(--text3); }
+
+.ai-send-btn {
+  padding: 10px 18px;
+  background: linear-gradient(135deg, var(--purple), #7950f2);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.ai-send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px var(--purple-glow); }
+.ai-send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* Loading dots animation */
+.ai-loading { display: flex; gap: 4px; padding: 8px 0; }
+.ai-loading span {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--purple);
+  animation: aiDots 1.4s infinite both;
+}
+.ai-loading span:nth-child(2) { animation-delay: 0.2s; }
+.ai-loading span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes aiDots {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================================
+   TASK DETAIL VIEW
+   ============================================================ */
+.task-detail {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.task-detail-header {
+  padding: 28px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(26, 34, 52, 0.5);
+}
+
+.task-detail-header h3 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.task-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--text2);
+}
+
+.task-meta .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--bg);
+  border-radius: 20px;
+}
+
+.task-detail-body {
+  padding: 28px;
+}
+
+.task-detail-body .detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.task-steps {
+  margin-top: 20px;
+}
+
+.task-steps h4 {
+  font-size: 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(36, 48, 68, 0.4);
+}
+
+.task-step:last-child { border-bottom: none; }
+
+.task-step .step-check {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.task-step .step-check:hover { border-color: var(--accent); }
+.task-step .step-check.done { border-color: var(--green); background: var(--green); color: var(--bg); }
+.task-step .step-text { font-size: 13px; line-height: 1.5; }
+.task-step .step-text.done { text-decoration: line-through; color: var(--text3); }
 
 /* ===== MODAL ===== */
 .modal-overlay {
@@ -1005,12 +1130,9 @@ tbody tr:last-child td {
   z-index: 1000;
   justify-content: center;
   align-items: center;
-  animation: fadeIn 0.2s ease;
 }
 
 .modal-overlay.show { display: flex; }
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .modal {
   background: var(--bg2);
@@ -1045,25 +1167,18 @@ tbody tr:last-child td {
 }
 
 .modal-close {
-  width: 34px;
-  height: 34px;
+  width: 34px; height: 34px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text2);
   cursor: pointer;
   font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
   transition: var(--transition);
 }
 
-.modal-close:hover {
-  color: var(--red);
-  border-color: var(--red);
-  background: var(--red-glow);
-}
+.modal-close:hover { color: var(--red); border-color: var(--red); background: var(--red-glow); }
 
 .modal-body { padding: 28px; }
 
@@ -1079,10 +1194,7 @@ tbody tr:last-child td {
   font-weight: 600;
 }
 
-.form-group .required::after {
-  content: ' *';
-  color: var(--red);
-}
+.form-group .required::after { content: ' *'; color: var(--red); }
 
 .form-group input,
 .form-group select,
@@ -1109,7 +1221,6 @@ tbody tr:last-child td {
 .form-group textarea { min-height: 90px; resize: vertical; }
 .form-group select { cursor: pointer; }
 .form-group select option { background: var(--bg2); color: var(--text); }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
 .modal-footer {
   padding: 18px 28px;
@@ -1120,7 +1231,7 @@ tbody tr:last-child td {
   background: rgba(26, 34, 52, 0.3);
 }
 
-/* ===== DETAIL VIEW ===== */
+/* Detail grid for modals */
 .detail-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1141,15 +1252,8 @@ tbody tr:last-child td {
   margin-bottom: 4px;
 }
 
-.detail-value {
-  font-size: 13px;
-  color: var(--text);
-  word-break: break-word;
-}
-
-.detail-full {
-  grid-column: 1 / -1;
-}
+.detail-value { font-size: 13px; color: var(--text); word-break: break-word; }
+.detail-full { grid-column: 1 / -1; }
 
 /* ===== CONFIRM DIALOG ===== */
 .confirm-overlay {
@@ -1183,8 +1287,7 @@ tbody tr:last-child td {
 /* ===== TOAST ===== */
 .toast {
   position: fixed;
-  bottom: 28px;
-  right: 28px;
+  bottom: 28px; right: 28px;
   padding: 14px 24px;
   border-radius: var(--radius-sm);
   font-size: 13px;
@@ -1212,13 +1315,7 @@ tbody tr:last-child td {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== EMPTY STATE ===== */
-.empty {
-  text-align: center;
-  padding: 50px;
-  color: var(--text2);
-}
-
+.empty { text-align: center; padding: 50px; color: var(--text2); }
 .empty .icon { font-size: 44px; margin-bottom: 14px; opacity: 0.6; }
 .empty p { font-size: 14px; }
 
@@ -1238,8 +1335,7 @@ tbody tr:last-child td {
 
 .status-bar .dot {
   display: inline-block;
-  width: 7px;
-  height: 7px;
+  width: 7px; height: 7px;
   border-radius: 50%;
   margin-right: 6px;
 }
@@ -1251,51 +1347,26 @@ tbody tr:last-child td {
 .mobile-toggle { display: none; }
 
 @media (max-width: 900px) {
-  .sidebar {
-    transform: translateX(-100%);
-    width: 280px;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: var(--shadow-lg);
-  }
-
-  .main {
-    margin-left: 0;
-    padding: 20px 16px 60px;
-  }
-
-  .metrics {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .project-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .form-row,
-  .detail-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .page-header h2 {
-    font-size: 20px;
-  }
+  .sidebar { transform: translateX(-100%); width: 280px; }
+  .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
+  .main { margin-left: 0; padding: 20px 16px 60px; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .project-grid { grid-template-columns: 1fr; }
+  .subproject-grid { grid-template-columns: 1fr; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .page-header h2 { font-size: 20px; }
+  .task-detail-body .detail-grid { grid-template-columns: 1fr; }
 
   .mobile-toggle {
     display: flex !important;
     position: fixed;
-    top: 14px;
-    left: 14px;
+    top: 14px; left: 14px;
     z-index: 200;
-    width: 44px;
-    height: 44px;
+    width: 44px; height: 44px;
     background: var(--bg2);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    align-items: center;
-    justify-content: center;
+    align-items: center; justify-content: center;
     cursor: pointer;
     color: var(--text);
     font-size: 22px;
@@ -1306,91 +1377,73 @@ tbody tr:last-child td {
 </head>
 <body>
 
-<!-- ============================================================
-     LOGIN SCREEN
-     ============================================================ -->
+<!-- LOGIN SCREEN -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <span class="login-icon">🏥</span>
     <div class="login-logo">RKT HUB</div>
-    <div class="login-sub">Система управления медицинскими проектами</div>
-
+    <div class="login-sub">Система управления проектами</div>
     <label class="login-label">Ваш Telegram ID</label>
     <input class="login-input" id="loginTgId" type="text" placeholder="Например: 1144907578" autofocus>
     <div class="login-hint">
       Узнайте свой ID: напишите <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram
     </div>
-
     <button class="login-btn" id="loginBtn" onclick="doLogin()">
       <span id="loginBtnText">Войти в систему</span>
     </button>
-
     <div class="login-error" id="loginError"></div>
-    <div class="login-loading" id="loginLoading">⏳ Подключаюсь к серверу...</div>
   </div>
 </div>
 
-<!-- Mobile hamburger -->
 <button class="mobile-toggle" id="mobileToggle" onclick="toggleSidebar()">☰</button>
 
-<!-- ============================================================
-     MAIN APP
-     ============================================================ -->
+<!-- MAIN APP -->
 <div class="app" id="mainApp" style="display:none">
 
-  <!-- ===== SIDEBAR ===== -->
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="logo-section">
       <h1>RKT HUB</h1>
-      <div class="subtitle">v2.1 • Управление проектами</div>
+      <div class="subtitle">v3.0 • Проекты и ИИ</div>
     </div>
 
     <nav class="nav">
       <div class="nav-section">Главное</div>
       <a class="nav-item active" onclick="showPage('home')" data-page="home">
-        <span class="icon">🏠</span>
-        <span class="label">Проекты</span>
+        <span class="icon">🏠</span><span class="label">Проекты</span>
       </a>
       <a class="nav-item" onclick="showPage('dashboard')" data-page="dashboard">
-        <span class="icon">📊</span>
-        <span class="label">Дашборд</span>
+        <span class="icon">📊</span><span class="label">Дашборд ГД</span>
       </a>
 
       <div class="nav-section">Данные</div>
       <a class="nav-item" onclick="showPage('partners')" data-page="partners">
-        <span class="icon">🤝</span>
-        <span class="label">Партнёры</span>
+        <span class="icon">🤝</span><span class="label">Партнёры</span>
         <span class="badge" id="badge-partners">0</span>
       </a>
       <a class="nav-item" onclick="showPage('tasks')" data-page="tasks">
-        <span class="icon">✅</span>
-        <span class="label">Задачи</span>
+        <span class="icon">✅</span><span class="label">Задачи</span>
         <span class="badge" id="badge-tasks">0</span>
+      </a>
+      <a class="nav-item" onclick="showPage('comms')" data-page="comms">
+        <span class="icon">💬</span><span class="label">Коммуникации</span>
       </a>
 
       <div class="nav-section">Управление</div>
       <a class="nav-item" onclick="showPage('staff')" data-page="staff" id="nav-staff">
-        <span class="icon">👥</span>
-        <span class="label">Сотрудники</span>
+        <span class="icon">👥</span><span class="label">Сотрудники</span>
       </a>
       <a class="nav-item" onclick="showPage('approvals')" data-page="approvals" id="nav-approvals">
-        <span class="icon">📋</span>
-        <span class="label">Согласования</span>
+        <span class="icon">📋</span><span class="label">Согласования</span>
         <span class="badge badge-orange" id="badge-approvals">0</span>
-      </a>
-      <a class="nav-item" onclick="showPage('comms')" data-page="comms">
-        <span class="icon">💬</span>
-        <span class="label">Коммуникации</span>
       </a>
 
       <div class="nav-section">Система</div>
       <a class="nav-item" onclick="showPage('settings')" data-page="settings">
-        <span class="icon">⚙️</span>
-        <span class="label">Настройки</span>
+        <span class="icon">⚙️</span><span class="label">Настройки</span>
       </a>
     </nav>
 
-    <!-- USER BAR -->
     <div class="user-bar" id="userBar">
       <div class="user-info">
         <div class="user-avatar" id="userAvatar">?</div>
@@ -1399,280 +1452,196 @@ tbody tr:last-child td {
           <div class="user-role-text" id="userRoleText">—</div>
         </div>
       </div>
-      <button class="logout-btn" onclick="doLogout()">🚪 Выйти из системы</button>
+      <button class="logout-btn" onclick="doLogout()">🚪 Выйти</button>
     </div>
   </aside>
 
-  <!-- ===== MAIN CONTENT ===== -->
+  <!-- MAIN CONTENT -->
   <main class="main">
 
-    <!-- ================ HOME: PROJECT SELECTION ================ -->
+    <!-- ======== HOME: TOP-LEVEL PROJECTS ======== -->
     <div class="page active" id="page-home">
       <div class="page-header">
-        <h2>🏠 Выберите проект</h2>
-        <div class="actions">
-          <button class="btn btn-secondary" onclick="loadData()">🔄 Обновить данные</button>
-        </div>
-      </div>
-
-      <!-- Total metrics -->
-      <div class="metrics" id="home-metrics"></div>
-
-      <!-- Project cards grid -->
-      <div class="project-grid" id="project-grid"></div>
-    </div>
-
-    <!-- ================ PROJECT WORKSPACE ================ -->
-    <div class="page" id="page-project">
-      <div class="breadcrumb">
-        <a onclick="showPage('home')">🏠 Проекты</a>
-        <span class="sep">›</span>
-        <span class="current" id="pw-name">—</span>
-      </div>
-
-      <div class="page-header">
-        <h2 id="pw-title">📁 Проект</h2>
-        <div class="actions">
-          <button class="btn btn-primary" onclick="openModal('task')">+ Задача</button>
-          <button class="btn btn-primary" onclick="openModal('partner')">+ Партнёр</button>
-          <button class="btn btn-primary" onclick="openModal('comm')">+ Контакт</button>
-          <button class="btn btn-secondary" onclick="openModal('project')">+ Проект</button>
-        </div>
-      </div>
-
-      <!-- Project metrics -->
-      <div class="metrics" id="pw-metrics"></div>
-
-      <!-- Tabs -->
-      <div class="tabs" id="pw-tabs">
-        <div class="tab active" data-tab="overview" onclick="showPwTab('overview')">📊 Обзор</div>
-        <div class="tab" data-tab="partners" onclick="showPwTab('partners')">🤝 Партнёры</div>
-        <div class="tab" data-tab="projects" onclick="showPwTab('projects')">📁 Проекты</div>
-        <div class="tab" data-tab="tasks" onclick="showPwTab('tasks')">✅ Задачи</div>
-        <div class="tab" data-tab="comms" onclick="showPwTab('comms')">💬 Коммуникации</div>
-      </div>
-
-      <!-- Tab content -->
-      <div id="pw-content"></div>
-    </div>
-
-    <!-- ================ DASHBOARD ================ -->
-    <div class="page" id="page-dashboard">
-      <div class="page-header">
-        <h2>📊 Общий дашборд</h2>
+        <h2>🏠 Мои проекты</h2>
         <div class="actions">
           <button class="btn btn-secondary" onclick="loadData()">🔄 Обновить</button>
         </div>
       </div>
+      <div class="metrics" id="home-metrics"></div>
+      <div class="project-grid" id="project-grid"></div>
+    </div>
 
+    <!-- ======== PROJECT VIEW (subprojects) ======== -->
+    <div class="page" id="page-project">
+      <div class="breadcrumb">
+        <a onclick="showPage('home')">🏠 Проекты</a>
+        <span class="sep">›</span>
+        <span class="current" id="pv-name">—</span>
+      </div>
+      <div class="page-header">
+        <h2 id="pv-title">📁 Проект</h2>
+        <div class="actions">
+          <button class="btn btn-primary" id="btn-add-sub" onclick="openAddSubproject()">+ Подпроект</button>
+          <button class="btn btn-primary" onclick="openModal('task')">+ Задача</button>
+          <button class="btn btn-secondary" onclick="openModal('partner')">+ Партнёр</button>
+        </div>
+      </div>
+      <div class="metrics" id="pv-metrics"></div>
+      <div class="subproject-grid" id="subproject-grid"></div>
+
+      <!-- Project-level tabs -->
+      <div class="tabs" id="pv-tabs">
+        <div class="tab active" data-tab="overview" onclick="showPvTab('overview')">📊 Обзор</div>
+        <div class="tab" data-tab="tasks" onclick="showPvTab('tasks')">✅ Задачи</div>
+        <div class="tab" data-tab="partners" onclick="showPvTab('partners')">🤝 Партнёры</div>
+        <div class="tab" data-tab="comms" onclick="showPvTab('comms')">💬 Коммуникации</div>
+      </div>
+      <div id="pv-content"></div>
+    </div>
+
+    <!-- ======== SUBPROJECT VIEW (workspace) ======== -->
+    <div class="page" id="page-subproject">
+      <div class="breadcrumb">
+        <a onclick="showPage('home')">🏠 Проекты</a>
+        <span class="sep">›</span>
+        <a onclick="openProject(currentProject)" id="sp-parent">—</a>
+        <span class="sep">›</span>
+        <span class="current" id="sp-name">—</span>
+      </div>
+      <div class="page-header">
+        <h2 id="sp-title">📁 Подпроект</h2>
+        <div class="actions">
+          <button class="btn btn-primary" onclick="openModal('task')">+ Задача</button>
+          <button class="btn btn-primary" onclick="openModal('partner')">+ Партнёр</button>
+          <button class="btn btn-secondary" onclick="openModal('comm')">+ Контакт</button>
+        </div>
+      </div>
+      <div class="metrics" id="sp-metrics"></div>
+
+      <div class="tabs" id="sp-tabs">
+        <div class="tab active" data-tab="overview" onclick="showSpTab('overview')">📊 Обзор</div>
+        <div class="tab" data-tab="tasks" onclick="showSpTab('tasks')">✅ Задачи</div>
+        <div class="tab" data-tab="partners" onclick="showSpTab('partners')">🤝 Партнёры</div>
+        <div class="tab" data-tab="projects" onclick="showSpTab('projects')">📁 Проекты</div>
+        <div class="tab" data-tab="comms" onclick="showSpTab('comms')">💬 Коммуникации</div>
+      </div>
+      <div id="sp-content"></div>
+    </div>
+
+    <!-- ======== TASK DETAIL with AI ======== -->
+    <div class="page" id="page-taskdetail">
+      <div class="breadcrumb" id="td-breadcrumb"></div>
+      <div id="td-content"></div>
+    </div>
+
+    <!-- ======== DASHBOARD ======== -->
+    <div class="page" id="page-dashboard">
+      <div class="page-header">
+        <h2>📊 Дашборд генерального директора</h2>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="loadData()">🔄 Обновить</button>
+        </div>
+      </div>
       <div class="metrics" id="dash-metrics"></div>
-
-      <!-- Urgent Tasks -->
       <div class="card">
-        <div class="card-header">
-          <h3>🔴 Срочные задачи (P1)</h3>
-          <button class="btn btn-sm btn-secondary" onclick="showPage('tasks')">Все задачи →</button>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th></tr></thead>
-            <tbody id="urgent-tasks"></tbody>
-          </table>
-        </div>
+        <div class="card-header"><h3>🔴 Просроченные задачи</h3></div>
+        <div class="table-wrap"><table><thead><tr><th>Задача</th><th>Проект</th><th>Приоритет</th><th>Дедлайн</th><th>Ответственный</th><th></th></tr></thead><tbody id="dash-overdue"></tbody></table></div>
       </div>
-
-      <!-- Active Projects -->
       <div class="card">
-        <div class="card-header">
-          <h3>📁 Активные проекты</h3>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Проект</th><th>Направление</th><th>Статус</th><th>Прогресс</th><th>Приоритет</th><th>Дедлайн</th></tr></thead>
-            <tbody id="active-projects"></tbody>
-          </table>
-        </div>
+        <div class="card-header"><h3>📁 Все активные проекты</h3></div>
+        <div class="table-wrap"><table><thead><tr><th>Проект</th><th>Направление</th><th>Статус</th><th>Прогресс</th><th>Дедлайн</th></tr></thead><tbody id="dash-projects"></tbody></table></div>
       </div>
-
-      <!-- Recent Communications -->
       <div class="card">
-        <div class="card-header">
-          <h3>💬 Последние коммуникации</h3>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>Партнёр</th><th>Тип</th><th>Тема</th><th>Дата</th><th>Автор</th></tr></thead>
-            <tbody id="recent-comms"></tbody>
-          </table>
-        </div>
+        <div class="card-header"><h3>💬 Последние коммуникации</h3></div>
+        <div class="table-wrap"><table><thead><tr><th>Партнёр</th><th>Тип</th><th>Тема</th><th>Дата</th><th>Автор</th></tr></thead><tbody id="dash-comms"></tbody></table></div>
       </div>
     </div>
 
-    <!-- ================ PARTNERS ================ -->
+    <!-- ======== PARTNERS ======== -->
     <div class="page" id="page-partners">
       <div class="page-header">
         <h2>🤝 Все партнёры</h2>
         <div class="actions">
-          <button class="btn btn-primary" id="btn-add-partner" onclick="openModal('partner')">+ Добавить партнёра</button>
-          <button class="btn btn-secondary" onclick="exportCSV('partners')">📥 Экспорт CSV</button>
+          <button class="btn btn-primary" id="btn-add-partner" onclick="openModal('partner')">+ Партнёр</button>
+          <button class="btn btn-secondary" onclick="exportCSV('partners')">📥 CSV</button>
         </div>
       </div>
-
       <div class="filters-bar">
         <div id="partner-filters"></div>
         <input class="search-input" id="partner-search" placeholder="🔍 Поиск..." oninput="renderPartners()">
       </div>
-
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Название</th>
-                <th>Страна</th>
-                <th>Направление</th>
-                <th>Продукт</th>
-                <th>Статус</th>
-                <th>Контакт</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="partners-table"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Название</th><th>Страна</th><th>Направление</th><th>Продукт</th><th>Статус</th><th>Контакт</th><th></th></tr></thead>
+        <tbody id="partners-table"></tbody>
+      </table></div></div>
     </div>
 
-    <!-- ================ TASKS ================ -->
+    <!-- ======== TASKS ======== -->
     <div class="page" id="page-tasks">
       <div class="page-header">
         <h2>✅ Все задачи</h2>
         <div class="actions">
-          <button class="btn btn-primary" onclick="openModal('task')">+ Новая задача</button>
-          <button class="btn btn-secondary" onclick="exportCSV('tasks')">📥 Экспорт CSV</button>
+          <button class="btn btn-primary" onclick="openModal('task')">+ Задача</button>
+          <button class="btn btn-secondary" onclick="exportCSV('tasks')">📥 CSV</button>
         </div>
       </div>
-
       <div class="filters-bar">
         <div id="task-filters"></div>
         <input class="search-input" id="task-search" placeholder="🔍 Поиск..." oninput="renderTasks()">
       </div>
-
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Описание</th>
-                <th>Направление</th>
-                <th>Приоритет</th>
-                <th>Статус</th>
-                <th>Ответственный</th>
-                <th>Дедлайн</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="tasks-table"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Статус</th><th>Ответственный</th><th>Дедлайн</th><th></th></tr></thead>
+        <tbody id="tasks-table"></tbody>
+      </table></div></div>
     </div>
 
-    <!-- ================ STAFF ================ -->
+    <!-- ======== STAFF ======== -->
     <div class="page" id="page-staff">
       <div class="page-header">
         <h2>👥 Сотрудники</h2>
         <div class="actions">
-          <button class="btn btn-primary" id="btn-add-staff" onclick="openModal('staff')">+ Добавить сотрудника</button>
+          <button class="btn btn-primary" id="btn-add-staff" onclick="openModal('staff')">+ Сотрудник</button>
         </div>
       </div>
-
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Имя</th>
-                <th>Роль</th>
-                <th>Направление</th>
-                <th>Telegram</th>
-                <th>Email</th>
-                <th>Телефон</th>
-                <th>Статус</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="staff-table"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Имя</th><th>Роль</th><th>Направление</th><th>Telegram</th><th>Email</th><th>Статус</th><th></th></tr></thead>
+        <tbody id="staff-table"></tbody>
+      </table></div></div>
     </div>
 
-    <!-- ================ APPROVALS ================ -->
+    <!-- ======== APPROVALS ======== -->
     <div class="page" id="page-approvals">
-      <div class="page-header">
-        <h2>📋 Согласования</h2>
-      </div>
+      <div class="page-header"><h2>📋 Согласования</h2></div>
       <div id="approvals-content"></div>
     </div>
 
-    <!-- ================ COMMUNICATIONS ================ -->
+    <!-- ======== COMMS ======== -->
     <div class="page" id="page-comms">
       <div class="page-header">
         <h2>💬 Коммуникации</h2>
         <div class="actions">
-          <button class="btn btn-primary" onclick="openModal('comm')">+ Записать контакт</button>
+          <button class="btn btn-primary" onclick="openModal('comm')">+ Контакт</button>
         </div>
       </div>
-
       <div class="filters-bar">
-        <input class="search-input" id="comm-search" placeholder="🔍 Поиск по партнёру..." oninput="renderComms()">
+        <input class="search-input" id="comm-search" placeholder="🔍 Поиск..." oninput="renderComms()">
       </div>
-
-      <div class="card">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Партнёр</th>
-                <th>Тип</th>
-                <th>Тема</th>
-                <th>Результат</th>
-                <th>Дата</th>
-                <th>Автор</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="comms-table"></tbody>
-          </table>
-        </div>
-      </div>
+      <div class="card"><div class="table-wrap"><table>
+        <thead><tr><th>Партнёр</th><th>Тип</th><th>Тема</th><th>Результат</th><th>Дата</th><th>Автор</th><th></th></tr></thead>
+        <tbody id="comms-table"></tbody>
+      </table></div></div>
     </div>
 
-    <!-- ================ SETTINGS ================ -->
+    <!-- ======== SETTINGS ======== -->
     <div class="page" id="page-settings">
-      <div class="page-header">
-        <h2>⚙️ Настройки системы</h2>
+      <div class="page-header"><h2>⚙️ Настройки</h2></div>
+      <div class="card" style="padding:28px">
+        <h3 style="margin-bottom:20px;font-size:15px">🔗 Подключения</h3>
+        <div class="form-group"><label>API</label><input type="text" id="settingsApiUrl" readonly style="opacity:0.7"></div>
+        <div class="form-group"><label>Sheet ID</label><input type="text" value="12BniI4H5inrEDJKWNrSxL480acGSGJlSIFvCqYfd9KY" readonly style="opacity:0.7"></div>
       </div>
-
-      <div class="card" style="padding: 28px;">
-        <h3 style="margin-bottom: 20px; font-size: 15px;">🔗 Подключения</h3>
-        <div class="form-group">
-          <label>API Endpoint (n8n Webhook)</label>
-          <input type="text" id="settingsApiUrl" readonly style="opacity: 0.7">
-        </div>
-        <div class="form-group">
-          <label>Google Sheet ID</label>
-          <input type="text" value="12BniI4H5inrEDJKWNrSxL480acGSGJlSIFvCqYfd9KY" readonly style="opacity: 0.7">
-        </div>
-        <div class="form-group">
-          <label>Telegram Bot</label>
-          <input type="text" value="RKT HUB Bot (@RKT_HUB_bot)" readonly style="opacity: 0.7">
-        </div>
-      </div>
-
-      <div class="card" style="padding: 28px; margin-top: 16px;">
-        <h3 style="margin-bottom: 20px; font-size: 15px;">👤 Ваш профиль</h3>
+      <div class="card" style="padding:28px;margin-top:16px">
+        <h3 style="margin-bottom:20px;font-size:15px">👤 Профиль</h3>
         <div class="detail-grid">
           <div class="detail-item"><div class="detail-label">Имя</div><div class="detail-value" id="s-name">—</div></div>
           <div class="detail-item"><div class="detail-label">Роль</div><div class="detail-value" id="s-role">—</div></div>
@@ -1680,9 +1649,8 @@ tbody tr:last-child td {
           <div class="detail-item"><div class="detail-label">Telegram ID</div><div class="detail-value" id="s-tgid">—</div></div>
         </div>
       </div>
-
-      <div class="card" style="padding: 28px; margin-top: 16px;">
-        <h3 style="margin-bottom: 20px; font-size: 15px;">📊 Статистика базы</h3>
+      <div class="card" style="padding:28px;margin-top:16px">
+        <h3 style="margin-bottom:20px;font-size:15px">📊 Статистика</h3>
         <div class="detail-grid" id="s-stats"></div>
       </div>
     </div>
@@ -1690,9 +1658,7 @@ tbody tr:last-child td {
   </main>
 </div>
 
-<!-- ============================================================
-     MODAL
-     ============================================================ -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
@@ -1707,11 +1673,9 @@ tbody tr:last-child td {
   </div>
 </div>
 
-<!-- ============================================================
-     DETAIL MODAL
-     ============================================================ -->
+<!-- DETAIL MODAL -->
 <div class="modal-overlay" id="detailOverlay" onclick="if(event.target===this)closeDetail()">
-  <div class="modal" style="width: 620px;">
+  <div class="modal" style="width:620px">
     <div class="modal-header">
       <h3 id="detailTitle">Детали</h3>
       <button class="modal-close" onclick="closeDetail()">✕</button>
@@ -1719,14 +1683,12 @@ tbody tr:last-child td {
     <div class="modal-body" id="detailBody"></div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeDetail()">Закрыть</button>
-      <button class="btn btn-primary" id="detailEditBtn" onclick="">✏️ Редактировать</button>
+      <button class="btn btn-primary" id="detailEditBtn">✏️ Редактировать</button>
     </div>
   </div>
 </div>
 
-<!-- ============================================================
-     CONFIRM DIALOG
-     ============================================================ -->
+<!-- CONFIRM -->
 <div class="confirm-overlay" id="confirmOverlay">
   <div class="confirm-box">
     <div class="icon">⚠️</div>
@@ -1739,18 +1701,12 @@ tbody tr:last-child td {
   </div>
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
-
-<!-- Status Bar -->
 <div class="status-bar">
   <div><span class="dot dot-green" id="statusDot"></span> <span id="statusText">Подключено</span></div>
   <div id="statusTime"></div>
 </div>
 
-<!-- ============================================================
-     JAVASCRIPT — FULL APPLICATION LOGIC
-     ============================================================ -->
 <script>
 // ============================================================
 // CONFIG & STATE
@@ -1758,390 +1714,384 @@ tbody tr:last-child td {
 const CONFIG = {
   API_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-api',
   WRITE_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-write',
-  SHEET_ID: '12BniI4H5inrEDJKWNrSxL480acGSGJlSIFvCqYfd9KY',
-  REFRESH_INTERVAL: 300000, // 5 min auto-refresh
-  VERSION: '2.1.0'
+  AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
+  REFRESH: 300000,
+  VERSION: '3.0.0'
 };
 
-let DATA = {
-  partners: [],
-  tasks: [],
-  directions: [],
-  staff: [],
-  projects: [],
-  approvals: [],
-  comms: []
-};
-
+let DATA = { partners:[], tasks:[], directions:[], staff:[], projects:[], approvals:[], comms:[] };
 let USER = null;
 let currentModal = '';
 let editingItem = null;
 let confirmCallback = null;
 let currentFilters = { partners: 'Все', tasks: 'Все' };
 let refreshTimer = null;
-let currentProject = null;   // Selected direction name
-let currentPwTab = 'overview'; // Active tab in project workspace
+
+// Navigation state
+let currentProject = null;       // Top-level project key (e.g. 'rkt', 'sites')
+let currentSubproject = null;    // Subproject direction (e.g. 'КТ', 'Пышки мира')
+let currentPvTab = 'overview';   // Project view tab
+let currentSpTab = 'overview';   // Subproject view tab
+let currentTaskId = null;        // Task open for detail+AI
+let aiMessages = [];             // AI chat history for current task
 
 // ============================================================
-// DIRECTION METADATA — descriptions, icons, colors
+// TOP-LEVEL PROJECTS DEFINITION
 // ============================================================
-const DIR_META = {
-  'КТ': {
-    emoji: '🔬',
-    cls: 'ct',
+const PROJECTS = {
+  rkt: {
+    name: 'РКТ',
+    emoji: '🏥',
     color: 'var(--accent)',
-    desc: 'Компьютерные томографы — основной проект. Локализация с Syno-Tech, выход на рынок Q4 2027.'
+    gradient: 'linear-gradient(90deg, #00d4aa, #00b894)',
+    desc: 'Российские Компьютерные Технологии — локализация медицинского оборудования',
+    subprojects: {
+      'КТ':       { emoji: '🔬', color: 'var(--accent)', desc: 'Компьютерные томографы — локализация с Syno-Tech' },
+      'Рентген':  { emoji: '📡', color: 'var(--blue)', desc: 'Рентгеновские аппараты — расширение линейки' },
+      'Роботы':   { emoji: '🤖', color: 'var(--purple)', desc: 'Хирургические робототехнические системы' },
+      'Урология': { emoji: '💊', color: 'var(--orange)', desc: 'Урологическое оборудование' },
+      'PACS':     { emoji: '💻', color: 'var(--pink)', desc: 'Системы архивации медицинских изображений' },
+      'УЗИ':      { emoji: '🩺', color: 'var(--green)', desc: 'Ультразвуковая диагностика — план с 2028' }
+    }
   },
-  'Рентген': {
-    emoji: '📡',
-    cls: 'xray',
+  sites: {
+    name: 'Сайты',
+    emoji: '🌐',
     color: 'var(--blue)',
-    desc: 'Рентгеновские аппараты — расширение линейки после запуска КТ.'
-  },
-  'Роботы': {
-    emoji: '🤖',
-    cls: 'robots',
-    color: 'var(--purple)',
-    desc: 'Хирургические робототехнические системы — перспективное направление.'
-  },
-  'Урология': {
-    emoji: '💊',
-    cls: 'urology',
-    color: 'var(--orange)',
-    desc: 'Урологическое оборудование — нишевый сегмент рынка.'
-  },
-  'PACS': {
-    emoji: '💻',
-    cls: 'pacs',
-    color: 'var(--pink)',
-    desc: 'Системы архивации и передачи медицинских изображений (PACS/RIS).'
-  },
-  'УЗИ': {
-    emoji: '🩺',
-    cls: 'uzi',
-    color: 'var(--green)',
-    desc: 'Ультразвуковая диагностика — план внедрения со 2 полугодия 2028.'
-  },
-  'Общее': {
-    emoji: '📌',
-    cls: 'general',
-    color: 'var(--text2)',
-    desc: 'Общие задачи и проекты компании РКТ.'
+    gradient: 'linear-gradient(90deg, #4dabf7, #228be6)',
+    desc: 'Разработка и ведение веб-сайтов для бизнеса',
+    subprojects: {
+      'Пышки мира':  { emoji: '🍩', color: 'var(--orange)', desc: 'Сайт для ресторана Пышки мира' },
+      'Брежнев':     { emoji: '🏛', color: 'var(--red)', desc: 'Сайт для рестоклуба Брежнев' },
+      'Кератин Агрыз': { emoji: '💇', color: 'var(--pink)', desc: 'Сайт кератинового выпрямления, Агрыз' }
+    },
+    canAddSub: true // can add new subprojects (sites)
   }
 };
 
 // ============================================================
-// ROLE DEFINITIONS
+// ROLES
 // ============================================================
 const ROLES = {
-  'CEO': {
-    emoji: '👑',
-    level: 3,
-    canWrite: true,
-    canDelete: true,
-    canApprove: true,
-    canManageStaff: true,
-    seeAll: true
-  },
-  'Зам': {
-    emoji: '⭐',
-    level: 2,
-    canWrite: false,
-    canDelete: false,
-    canApprove: false,
-    canManageStaff: false,
-    seeAll: true
-  },
-  'Руководитель': {
-    emoji: '📋',
-    level: 1,
-    canWrite: false,
-    canDelete: false,
-    canApprove: false,
-    canManageStaff: false,
-    seeAll: false
-  }
+  'CEO':          { emoji: '👑', level: 3, canWrite: true, canDelete: true, canApprove: true, canManageStaff: true, seeAll: true },
+  'Зам':          { emoji: '⭐', level: 2, canWrite: false, canDelete: false, canApprove: false, canManageStaff: false, seeAll: true },
+  'Руководитель': { emoji: '📋', level: 1, canWrite: false, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false }
 };
 
 function getUserPerms() {
-  if (!USER) return ROLES['Руководитель'];
-  return ROLES[USER.role] || ROLES['Руководитель'];
+  return USER ? (ROLES[USER.role] || ROLES['Руководитель']) : ROLES['Руководитель'];
 }
 
 // ============================================================
 // FORM DEFINITIONS
 // ============================================================
+function getDirectionOptions() {
+  // Gather all subproject names across all projects
+  let opts = [];
+  Object.values(PROJECTS).forEach(p => {
+    Object.keys(p.subprojects).forEach(sp => { if (!opts.includes(sp)) opts.push(sp); });
+  });
+  opts.push('Общее');
+  return opts;
+}
+
 const FORM_DEFS = {
   partner: {
-    title: 'Партнёр',
-    sheet: 'Партнёры',
+    title: 'Партнёр', sheet: 'Партнёры',
     fields: [
       { name: 'Название', type: 'text', required: true, placeholder: 'Название компании' },
-      { name: 'Страна', type: 'text', placeholder: 'Китай, Россия, ...' },
-      { name: 'Направление', type: 'select', options: ['КТ', 'Рентген', 'Роботы', 'Урология', 'PACS', 'УЗИ'] },
-      { name: 'Продукт', type: 'text', placeholder: 'Основной продукт' },
+      { name: 'Страна', type: 'text', placeholder: 'Китай, Россия...' },
+      { name: 'Направление', type: 'select', options: () => getDirectionOptions() },
+      { name: 'Продукт', type: 'text', placeholder: 'Продукт' },
       { name: 'Статус', type: 'select', options: ['Research', 'Переговоры', 'Активный', 'Пауза'] },
-      { name: 'Контакт', type: 'text', placeholder: 'Имя контактного лица' },
+      { name: 'Контакт', type: 'text', placeholder: 'Имя контакта' },
       { name: 'Email', type: 'text', placeholder: 'email@company.com' },
-      { name: 'Телефон', type: 'text', placeholder: '+7 ...' },
+      { name: 'Телефон', type: 'text', placeholder: '+7...' },
       { name: 'Сайт', type: 'text', placeholder: 'https://' },
-      { name: 'Описание', type: 'textarea', placeholder: 'Комментарии, заметки...' }
+      { name: 'Описание', type: 'textarea', placeholder: 'Заметки...' }
     ]
   },
   project: {
-    title: 'Проект',
-    sheet: 'Проекты',
+    title: 'Проект', sheet: 'Проекты',
     fields: [
       { name: 'Название', type: 'text', required: true, placeholder: 'Название проекта' },
-      { name: 'Направление', type: 'select', options: ['КТ', 'Рентген', 'Роботы', 'Урология', 'PACS', 'УЗИ'] },
-      { name: 'Описание', type: 'textarea', placeholder: 'Описание проекта...' },
+      { name: 'Направление', type: 'select', options: () => getDirectionOptions() },
+      { name: 'Описание', type: 'textarea', placeholder: 'Описание...' },
       { name: 'Статус', type: 'select', options: ['Исследование', 'Подготовка', 'В работе', 'Переговоры', 'Завершён'] },
       { name: 'Приоритет', type: 'select', options: ['P1', 'P2', 'P3'] },
       { name: 'Прогресс', type: 'text', placeholder: '0-100' },
-      { name: 'Партнёр', type: 'text', placeholder: 'Связанный партнёр' },
-      { name: 'Бюджет', type: 'text', placeholder: 'Бюджет проекта' },
+      { name: 'Партнёр', type: 'text', placeholder: 'Партнёр' },
+      { name: 'Бюджет', type: 'text', placeholder: 'Бюджет' },
       { name: 'Дедлайн', type: 'date' },
-      { name: 'Ответственный', type: 'text', placeholder: 'Кто ведёт проект' }
+      { name: 'Ответственный', type: 'text', placeholder: 'Кто ведёт' }
     ]
   },
   task: {
-    title: 'Задача',
-    sheet: 'Задачи',
+    title: 'Задача', sheet: 'Задачи',
     fields: [
       { name: 'Описание', type: 'text', required: true, placeholder: 'Что нужно сделать' },
-      { name: 'Направление', type: 'select', options: ['КТ', 'Рентген', 'Роботы', 'Урология', 'PACS', 'УЗИ', 'Общее'] },
+      { name: 'Направление', type: 'select', options: () => getDirectionOptions() },
       { name: 'Приоритет', type: 'select', options: ['P1', 'P2', 'P3'] },
       { name: 'Статус', type: 'select', options: ['⏳ В очереди', 'В работе', 'На проверке', 'Готово'] },
       { name: 'Ответственный', type: 'text', placeholder: 'Кто выполняет' },
-      { name: 'Проект', type: 'text', placeholder: 'Связанный проект' },
+      { name: 'Проект', type: 'text', placeholder: 'Проект' },
       { name: 'Дедлайн', type: 'date' },
       { name: 'Комментарий', type: 'textarea', placeholder: 'Доп. информация...' }
     ]
   },
   staff: {
-    title: 'Сотрудник',
-    sheet: 'Сотрудники',
+    title: 'Сотрудник', sheet: 'Сотрудники',
     fields: [
       { name: 'Имя', type: 'text', required: true, placeholder: 'ФИО' },
-      { name: 'Telegram_ID', type: 'text', placeholder: 'Числовой ID из Telegram' },
+      { name: 'Telegram_ID', type: 'text', placeholder: 'Числовой Telegram ID' },
       { name: 'Username', type: 'text', placeholder: '@username' },
       { name: 'Роль', type: 'select', options: ['CEO', 'Зам', 'Руководитель'] },
-      { name: 'Направление', type: 'select', options: ['Все', 'КТ', 'Рентген', 'Роботы', 'Урология', 'PACS'] },
-      { name: 'Email', type: 'text', placeholder: 'email@company.com' },
-      { name: 'Телефон', type: 'text', placeholder: '+7 ...' }
+      { name: 'Направление', type: 'select', options: () => ['Все', ...getDirectionOptions()] },
+      { name: 'Email', type: 'text', placeholder: 'email' },
+      { name: 'Телефон', type: 'text', placeholder: '+7...' }
     ]
   },
   comm: {
-    title: 'Коммуникация',
-    sheet: 'Коммуникации',
+    title: 'Коммуникация', sheet: 'Коммуникации',
     fields: [
       { name: 'Партнёр', type: 'text', required: true, placeholder: 'С кем общались' },
-      { name: 'Тип', type: 'select', options: ['Звонок', 'Email', 'Встреча', 'Письмо', 'Чат', 'Zoom', 'WhatsApp'] },
-      { name: 'Тема', type: 'text', placeholder: 'Тема обсуждения' },
-      { name: 'Результат', type: 'textarea', placeholder: 'Итог, договорённости, следующие шаги...' },
+      { name: 'Тип', type: 'select', options: ['Звонок', 'Email', 'Встреча', 'Чат', 'Zoom', 'WhatsApp'] },
+      { name: 'Тема', type: 'text', placeholder: 'Тема' },
+      { name: 'Результат', type: 'textarea', placeholder: 'Итог, договорённости...' },
       { name: 'Следующий_шаг', type: 'text', placeholder: 'Что делать дальше' },
       { name: 'Дата_следующего', type: 'date' }
+    ]
+  },
+  site: {
+    title: 'Сайт (подпроект)', sheet: null, // handled locally
+    fields: [
+      { name: 'Название', type: 'text', required: true, placeholder: 'Название бизнеса' },
+      { name: 'Ссылка', type: 'text', placeholder: 'https://...' },
+      { name: 'Клиент', type: 'text', placeholder: 'Имя заказчика' },
+      { name: 'Телефон', type: 'text', placeholder: '+7...' },
+      { name: 'Описание', type: 'textarea', placeholder: 'Описание проекта...' }
     ]
   }
 };
 
 // ============================================================
+// HELPERS
+// ============================================================
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escA(s) { return String(s||'').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
+function emptyRow(c,m) { return '<tr><td colspan="'+c+'" class="empty"><div class="icon">📭</div><p>'+m+'</p></td></tr>'; }
+
+function statusBadge(s) {
+  if (!s) return '';
+  let c = 's-active';
+  if (s==='Активный'||s.includes('Готово')) c='s-done';
+  else if (s==='Переговоры') c='s-talks';
+  else if (s==='Research'||s.includes('Исследование')) c='s-research';
+  else if (s==='Пауза') c='s-pause';
+  else if (s.includes('работе')||s.includes('Подготовка')||s.includes('проверке')) c='s-work';
+  else if (s.includes('Ожидает')||s.includes('очереди')) c='s-urgent';
+  else if (s.includes('Одобрено')) c='s-done';
+  else if (s.includes('Отклонено')) c='s-urgent';
+  return '<span class="status '+c+'">'+esc(s)+'</span>';
+}
+
+function prBadge(p) {
+  if (!p) return '';
+  return '<span class="'+(p==='P1'?'p1':p==='P2'?'p2':'p3')+'">'+esc(p)+'</span>';
+}
+
+function progBar(v) {
+  v = parseInt(v)||0;
+  const c = v>=80?'var(--green)':v>=50?'var(--accent)':v>=25?'var(--orange)':'var(--red)';
+  return '<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill" style="width:'+v+'%;background:'+c+'"></div></div><span class="progress-text">'+v+'%</span></div>';
+}
+
+function actBtns(type, id, name) {
+  const p = getUserPerms();
+  let h = '<div class="actions-cell">';
+  h += '<button class="act-btn view" onclick="viewItem(\''+type+'\',\''+escA(id)+'\')" title="Просмотр">👁</button>';
+  if (type === 'task') {
+    h += '<button class="act-btn ai" onclick="openTaskDetail(\''+escA(id)+'\')" title="Открыть с ИИ">🤖</button>';
+  }
+  h += '<button class="act-btn" onclick="editItem(\''+type+'\',\''+escA(id)+'\')" title="Редактировать">✏️</button>';
+  if (p.canDelete) h += '<button class="act-btn del" onclick="confirmDelete(\''+type+'\',\''+escA(id)+'\',\''+escA(name)+'\')" title="Удалить">🗑</button>';
+  h += '</div>';
+  return h;
+}
+
+function toast(m,t) {
+  const e = document.getElementById('toast');
+  e.textContent = m;
+  e.className = 'toast toast-'+(t||'success')+' show';
+  setTimeout(()=>e.classList.remove('show'), 3000);
+}
+
+function setStatus(s) {
+  const d=document.getElementById('statusDot'), t=document.getElementById('statusText');
+  if (s==='connected') { d.className='dot dot-green'; t.textContent='Подключено • '+new Date().toLocaleTimeString('ru',{hour:'2-digit',minute:'2-digit'}); }
+  else if (s==='loading') { d.className='dot dot-green'; t.textContent='Загрузка...'; }
+  else { d.className='dot dot-red'; t.textContent='Ошибка подключения'; }
+}
+
+function updateStatusTime() {
+  const e=document.getElementById('statusTime');
+  if(e) e.textContent=new Date().toLocaleString('ru',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+
+function today() { return new Date().toISOString().split('T')[0]; }
+
+// ============================================================
 // AUTHENTICATION
 // ============================================================
 function checkSavedLogin() {
-  const saved = localStorage.getItem('rkt_user');
-  if (saved) {
-    try {
-      USER = JSON.parse(saved);
-      if (USER && USER.tgId) {
-        showApp();
-        return;
-      }
-    } catch (e) {}
-    localStorage.removeItem('rkt_user');
-  }
+  const s = localStorage.getItem('rkt_user');
+  if (s) { try { USER=JSON.parse(s); if(USER&&USER.tgId){showApp();return;} } catch(e){} localStorage.removeItem('rkt_user'); }
 }
 
 async function doLogin() {
   const tgId = document.getElementById('loginTgId').value.trim();
-
-  if (!tgId) {
-    showLoginError('Введите Telegram ID');
-    return;
-  }
-
-  if (!/^\d+$/.test(tgId)) {
-    showLoginError('Telegram ID должен содержать только цифры');
-    return;
-  }
+  if (!tgId) { showLoginErr('Введите Telegram ID'); return; }
+  if (!/^\d+$/.test(tgId)) { showLoginErr('Только цифры'); return; }
 
   document.getElementById('loginBtn').disabled = true;
   document.getElementById('loginBtnText').textContent = 'Подключаюсь...';
-  document.getElementById('loginLoading').style.display = 'block';
   document.getElementById('loginError').style.display = 'none';
 
   try {
-    const response = await fetch(CONFIG.API_URL);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const data = await response.json();
-    DATA = normalizeData(data);
+    const r = await fetch(CONFIG.API_URL);
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    DATA = normData(await r.json());
 
-    const staffList = DATA.staff || [];
-    const staffMember = staffList.find(s => String(s.Telegram_ID).trim() === String(tgId).trim());
-
-    if (!staffMember) {
-      showLoginError('⛔ Telegram ID «' + tgId + '» не найден в базе сотрудников. Обратитесь к администратору.');
-      resetLoginBtn();
-      return;
-    }
+    const staff = DATA.staff.find(s => String(s.Telegram_ID).trim() === String(tgId).trim());
+    if (!staff) { showLoginErr('⛔ ID «'+tgId+'» не найден. Обратитесь к администратору.'); resetLogin(); return; }
 
     USER = {
-      id: staffMember.ID || '',
-      tgId: String(staffMember.Telegram_ID).trim(),
-      name: staffMember['Имя'] || 'Сотрудник',
-      role: staffMember['Роль'] || 'Руководитель',
-      direction: staffMember['Направление'] || 'Все',
-      email: staffMember['Email'] || '',
-      phone: staffMember['Телефон'] || '',
-      username: staffMember['Username'] || ''
+      id: staff.ID||'', tgId: String(staff.Telegram_ID).trim(),
+      name: staff['Имя']||'Сотрудник', role: staff['Роль']||'Руководитель',
+      direction: staff['Направление']||'Все', email: staff['Email']||'',
+      phone: staff['Телефон']||'', username: staff['Username']||''
     };
-
     localStorage.setItem('rkt_user', JSON.stringify(USER));
     showApp();
-
-  } catch (e) {
-    console.error('Login error:', e);
-    showLoginError('⚠️ Не удалось подключиться к серверу. Проверьте интернет и попробуйте снова.');
-    resetLoginBtn();
+  } catch(e) {
+    console.error(e);
+    showLoginErr('⚠️ Не удалось подключиться. Проверьте интернет.');
+    resetLogin();
   }
 }
 
-function showLoginError(msg) {
-  const el = document.getElementById('loginError');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-function resetLoginBtn() {
-  document.getElementById('loginBtn').disabled = false;
-  document.getElementById('loginBtnText').textContent = 'Войти в систему';
-  document.getElementById('loginLoading').style.display = 'none';
-}
+function showLoginErr(m) { const e=document.getElementById('loginError'); e.textContent=m; e.style.display='block'; }
+function resetLogin() { document.getElementById('loginBtn').disabled=false; document.getElementById('loginBtnText').textContent='Войти в систему'; }
 
 function doLogout() {
-  USER = null;
-  localStorage.removeItem('rkt_user');
-  if (refreshTimer) clearInterval(refreshTimer);
-  document.getElementById('mainApp').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('loginTgId').value = '';
-  resetLoginBtn();
-  document.getElementById('loginError').style.display = 'none';
+  USER=null; localStorage.removeItem('rkt_user');
+  if(refreshTimer) clearInterval(refreshTimer);
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginTgId').value='';
+  resetLogin(); document.getElementById('loginError').style.display='none';
 }
 
 function showApp() {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('mainApp').style.display = 'flex';
-
-  const perms = getUserPerms();
-
-  // User bar
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('mainApp').style.display='flex';
+  const p = getUserPerms();
   document.getElementById('userName').textContent = USER.name;
-  document.getElementById('userRoleText').textContent = perms.emoji + ' ' + USER.role + (USER.direction !== 'Все' ? ' — ' + USER.direction : '');
+  document.getElementById('userRoleText').textContent = p.emoji+' '+USER.role;
   document.getElementById('userAvatar').textContent = USER.name.charAt(0).toUpperCase();
-
-  // Settings page
   document.getElementById('settingsApiUrl').value = CONFIG.API_URL;
   document.getElementById('s-name').textContent = USER.name;
-  document.getElementById('s-role').textContent = perms.emoji + ' ' + USER.role;
+  document.getElementById('s-role').textContent = p.emoji+' '+USER.role;
   document.getElementById('s-dir').textContent = USER.direction;
   document.getElementById('s-tgid').textContent = USER.tgId;
-
-  // Role-based visibility
-  document.getElementById('btn-add-staff').style.display = perms.canManageStaff ? '' : 'none';
-  document.getElementById('nav-approvals').classList.toggle('hidden', !perms.canApprove);
-
-  // Load data
+  document.getElementById('btn-add-staff').style.display = p.canManageStaff?'':'none';
+  document.getElementById('nav-approvals').classList.toggle('hidden', !p.canApprove);
   loadData();
-
-  // Auto-refresh
-  if (refreshTimer) clearInterval(refreshTimer);
-  refreshTimer = setInterval(loadData, CONFIG.REFRESH_INTERVAL);
-
-  // Status bar time
-  updateStatusTime();
-  setInterval(updateStatusTime, 60000);
+  if(refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(loadData, CONFIG.REFRESH);
+  updateStatusTime(); setInterval(updateStatusTime, 60000);
 }
 
 // ============================================================
-// DATA LOADING & WRITING
+// DATA
 // ============================================================
-function normalizeData(d) {
+function normData(d) {
   return {
-    partners: Array.isArray(d.partners) ? d.partners : [],
-    tasks: Array.isArray(d.tasks) ? d.tasks : [],
-    directions: Array.isArray(d.directions) ? d.directions : [],
-    staff: Array.isArray(d.staff) ? d.staff : [],
-    projects: Array.isArray(d.projects) ? d.projects : [],
-    approvals: Array.isArray(d.approvals) ? d.approvals : [],
-    comms: Array.isArray(d.comms) ? d.comms : []
+    partners: Array.isArray(d.partners)?d.partners:[],
+    tasks: Array.isArray(d.tasks)?d.tasks:[],
+    directions: Array.isArray(d.directions)?d.directions:[],
+    staff: Array.isArray(d.staff)?d.staff:[],
+    projects: Array.isArray(d.projects)?d.projects:[],
+    approvals: Array.isArray(d.approvals)?d.approvals:[],
+    comms: Array.isArray(d.comms)?d.comms:[]
   };
 }
 
 async function loadData() {
   setStatus('loading');
   try {
-    const response = await fetch(CONFIG.API_URL);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
-    const data = await response.json();
-    DATA = normalizeData(data);
+    const r = await fetch(CONFIG.API_URL);
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    DATA = normData(await r.json());
     renderAll();
     setStatus('connected');
-    toast('✅ Данные загружены', 'success');
-  } catch (e) {
-    console.error('Load error:', e);
+    toast('✅ Данные обновлены','success');
+  } catch(e) {
+    console.error(e);
     setStatus('error');
-    toast('⚠️ Ошибка загрузки данных', 'error');
+    toast('⚠️ Ошибка загрузки','error');
   }
 }
 
 async function apiWrite(sheet, row) {
   try {
-    const payload = JSON.stringify({ sheet: sheet, row: row });
-    const b64 = btoa(unescape(encodeURIComponent(payload)));
-    const response = await fetch(CONFIG.WRITE_URL + '?b64=' + b64);
-    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const b64 = btoa(unescape(encodeURIComponent(JSON.stringify({sheet,row}))));
+    const r = await fetch(CONFIG.WRITE_URL+'?b64='+b64);
+    if(!r.ok) throw new Error('HTTP '+r.status);
     return true;
-  } catch (e) {
-    console.error('Write error:', e);
-    toast('❌ Ошибка записи: ' + e.message, 'error');
-    return false;
-  }
+  } catch(e) { toast('❌ Ошибка записи: '+e.message,'error'); return false; }
 }
 
 // ============================================================
 // FILTERING
 // ============================================================
 function filterByRole(arr) {
-  const perms = getUserPerms();
-  if (perms.seeAll || !USER || USER.direction === 'Все') return arr;
-  return arr.filter(item => {
-    const dir = item['Направление'] || '';
-    return dir === USER.direction || dir === 'Все' || dir === 'Общее' || dir === '';
-  });
+  const p = getUserPerms();
+  if (p.seeAll || !USER || USER.direction==='Все') return arr;
+  return arr.filter(i => { const d=i['Направление']||''; return d===USER.direction||d==='Все'||d==='Общее'||d===''; });
 }
 
-function filterBySearch(arr, searchId, fields) {
-  const el = document.getElementById(searchId);
-  if (!el) return arr;
-  const q = el.value.toLowerCase().trim();
-  if (!q) return arr;
-  return arr.filter(item => fields.some(f => (item[f] || '').toLowerCase().includes(q)));
+function filterBySearch(arr, sid, fields) {
+  const e = document.getElementById(sid);
+  if(!e) return arr;
+  const q = e.value.toLowerCase().trim();
+  if(!q) return arr;
+  return arr.filter(i => fields.some(f => (i[f]||'').toLowerCase().includes(q)));
 }
 
-function filterByDirection(arr, dir) {
-  if (!dir || dir === 'Все') return arr;
-  return arr.filter(item => (item['Направление'] || '').includes(dir));
+function filterByDir(arr, dir) {
+  if(!dir||dir==='Все') return arr;
+  return arr.filter(i => (i['Направление']||'').includes(dir));
+}
+
+// Which top-level project does a direction belong to?
+function dirToProject(dir) {
+  for (const [key, proj] of Object.entries(PROJECTS)) {
+    if (proj.subprojects[dir]) return key;
+  }
+  return null;
+}
+
+// Get all direction names for a top-level project
+function getProjectDirs(projKey) {
+  const p = PROJECTS[projKey];
+  return p ? Object.keys(p.subprojects) : [];
+}
+
+// Filter data by top-level project (all its subproject directions)
+function filterByProject(arr, projKey) {
+  const dirs = getProjectDirs(projKey);
+  return arr.filter(i => dirs.includes(i['Направление']||''));
 }
 
 // ============================================================
@@ -2150,127 +2100,41 @@ function filterByDirection(arr, dir) {
 function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-  const pageEl = document.getElementById('page-' + page);
-  const navEl = document.querySelector('[data-page="' + page + '"]');
-
-  if (pageEl) pageEl.classList.add('active');
-  if (navEl) navEl.classList.add('active');
-
-  // Close sidebar on mobile
+  const pe = document.getElementById('page-'+page);
+  const ne = document.querySelector('[data-page="'+page+'"]');
+  if(pe) pe.classList.add('active');
+  if(ne) ne.classList.add('active');
   document.getElementById('sidebar').classList.remove('open');
-
-  // Reset project selection when going home
-  if (page === 'home') currentProject = null;
+  if(page==='home') { currentProject=null; currentSubproject=null; }
 }
 
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
 
-function openProject(dirName) {
-  currentProject = dirName;
-  currentPwTab = 'overview';
+function openProject(projKey) {
+  currentProject = projKey;
+  currentSubproject = null;
+  currentPvTab = 'overview';
   showPage('project');
-  renderProjectWorkspace();
+  renderProjectView();
 }
 
-function showPwTab(tab) {
-  currentPwTab = tab;
-
-  // Update tab UI
-  document.querySelectorAll('#pw-tabs .tab').forEach(t => {
-    t.classList.toggle('active', t.getAttribute('data-tab') === tab);
-  });
-
-  renderProjectWorkspace();
+function openSubproject(spName) {
+  currentSubproject = spName;
+  currentSpTab = 'overview';
+  showPage('subproject');
+  renderSubprojectView();
 }
 
-// ============================================================
-// HELPER FUNCTIONS
-// ============================================================
-function escHtml(s) {
-  return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function showPvTab(tab) {
+  currentPvTab = tab;
+  document.querySelectorAll('#pv-tabs .tab').forEach(t => t.classList.toggle('active', t.getAttribute('data-tab')===tab));
+  renderProjectView();
 }
 
-function escAttr(s) {
-  return String(s || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
-}
-
-function emptyRow(cols, msg) {
-  return '<tr><td colspan="' + cols + '" class="empty"><div class="icon">📭</div><p>' + msg + '</p></td></tr>';
-}
-
-function statusBadge(s) {
-  if (!s) return '';
-  let cls = 's-active';
-  if (s === 'Активный' || s.includes('Готово')) cls = 's-done';
-  else if (s === 'Переговоры') cls = 's-talks';
-  else if (s === 'Research' || s.includes('Исследование')) cls = 's-research';
-  else if (s === 'Пауза') cls = 's-pause';
-  else if (s.includes('работе') || s.includes('Подготовка') || s.includes('проверке')) cls = 's-work';
-  else if (s.includes('Ожидает') || s.includes('очереди')) cls = 's-urgent';
-  else if (s.includes('Одобрено')) cls = 's-done';
-  else if (s.includes('Отклонено')) cls = 's-urgent';
-  return '<span class="status ' + cls + '">' + escHtml(s) + '</span>';
-}
-
-function priorityBadge(p) {
-  if (!p) return '';
-  const cls = p === 'P1' ? 'p1' : p === 'P2' ? 'p2' : 'p3';
-  return '<span class="' + cls + '">' + escHtml(p) + '</span>';
-}
-
-function progressBar(val) {
-  const v = parseInt(val) || 0;
-  const color = v >= 80 ? 'var(--green)' : v >= 50 ? 'var(--accent)' : v >= 25 ? 'var(--orange)' : 'var(--red)';
-  return '<div class="progress-wrap">' +
-    '<div class="progress-bar"><div class="progress-fill" style="width:' + v + '%;background:' + color + '"></div></div>' +
-    '<span class="progress-text">' + v + '%</span>' +
-    '</div>';
-}
-
-function actionButtons(type, id, name) {
-  const perms = getUserPerms();
-  let html = '<div class="actions-cell">';
-  html += '<button class="act-btn view" onclick="viewItem(\'' + type + '\',\'' + escAttr(id) + '\')" title="Просмотр">👁</button>';
-  html += '<button class="act-btn" onclick="editItem(\'' + type + '\',\'' + escAttr(id) + '\')" title="Редактировать">✏️</button>';
-  if (perms.canDelete) {
-    html += '<button class="act-btn del" onclick="confirmDelete(\'' + type + '\',\'' + escAttr(id) + '\',\'' + escAttr(name) + '\')" title="Удалить">🗑</button>';
-  }
-  html += '</div>';
-  return html;
-}
-
-function toast(msg, type) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = 'toast toast-' + (type || 'success') + ' show';
-  setTimeout(() => el.classList.remove('show'), 3000);
-}
-
-function setStatus(state) {
-  const dot = document.getElementById('statusDot');
-  const text = document.getElementById('statusText');
-  if (state === 'connected') {
-    dot.className = 'dot dot-green';
-    text.textContent = 'Подключено • ' + new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
-  } else if (state === 'loading') {
-    dot.className = 'dot dot-green';
-    text.textContent = 'Загрузка данных...';
-  } else {
-    dot.className = 'dot dot-red';
-    text.textContent = 'Ошибка подключения';
-  }
-}
-
-function updateStatusTime() {
-  const el = document.getElementById('statusTime');
-  if (el) {
-    el.textContent = new Date().toLocaleString('ru-RU', {
-      day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-    });
-  }
+function showSpTab(tab) {
+  currentSpTab = tab;
+  document.querySelectorAll('#sp-tabs .tab').forEach(t => t.classList.toggle('active', t.getAttribute('data-tab')===tab));
+  renderSubprojectView();
 }
 
 // ============================================================
@@ -2288,528 +2152,701 @@ function renderAll() {
   renderComms();
   renderSettings();
   updateBadges();
-  if (currentProject) renderProjectWorkspace();
+  if(currentProject && !currentSubproject) renderProjectView();
+  if(currentSubproject) renderSubprojectView();
 }
 
 function updateBadges() {
   const fp = filterByRole(DATA.partners);
-  const ft = filterByRole(DATA.tasks).filter(t => (t['Статус'] || '') !== 'Готово');
-  const pendingApprovals = DATA.approvals.filter(a => (a['Статус'] || '').includes('Ожидает'));
-
+  const ft = filterByRole(DATA.tasks).filter(t => (t['Статус']||'')!=='Готово');
+  const pa = DATA.approvals.filter(a => (a['Статус']||'').includes('Ожидает'));
   document.getElementById('badge-partners').textContent = fp.length;
   document.getElementById('badge-tasks').textContent = ft.length;
-  document.getElementById('badge-approvals').textContent = pendingApprovals.length;
+  document.getElementById('badge-approvals').textContent = pa.length;
 }
 
 // ============================================================
-// RENDER: HOME — PROJECT GRID
+// RENDER: HOME — TOP-LEVEL PROJECT CARDS
 // ============================================================
 function renderHome() {
-  const partners = filterByRole(DATA.partners);
-  const tasks = filterByRole(DATA.tasks);
-  const projects = filterByRole(DATA.projects);
-  const today = new Date().toISOString().split('T')[0];
-  const activeTasks = tasks.filter(t => (t['Статус'] || '') !== 'Готово');
-  const overdue = activeTasks.filter(t => t['Дедлайн'] && t['Дедлайн'] < today);
+  const allPartners = filterByRole(DATA.partners);
+  const allTasks = filterByRole(DATA.tasks);
+  const allProjects = filterByRole(DATA.projects);
+  const td = today();
+  const overdue = allTasks.filter(t => t['Дедлайн'] && t['Дедлайн']<td && (t['Статус']||'')!=='Готово');
+  const active = allTasks.filter(t => (t['Статус']||'')!=='Готово');
 
-  // Home metrics (totals)
+  // Total metrics across all projects
   document.getElementById('home-metrics').innerHTML =
-    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">' + partners.length + '</div><div class="m-label">Партнёров</div><div class="m-sub">' + partners.filter(p => p['Статус'] === 'Активный').length + ' активных</div></div>' +
-    '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">' + projects.length + '</div><div class="m-label">Проектов</div><div class="m-sub">' + projects.filter(p => (p['Статус'] || '') !== 'Завершён').length + ' активных</div></div>' +
-    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">' + activeTasks.length + '</div><div class="m-label">Задач в работе</div><div class="m-sub">' + tasks.filter(t => (t['Статус'] || '') === 'Готово').length + ' выполнено</div></div>' +
-    '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:' + (overdue.length ? 'var(--red)' : 'var(--green)') + '">' + overdue.length + '</div><div class="m-label">Просрочено</div></div>' +
-    '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">' + DATA.staff.length + '</div><div class="m-label">Сотрудников</div><div class="m-sub">' + DATA.staff.filter(s => (s['Статус'] || 'Активный') === 'Активный').length + ' активных</div></div>';
+    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+allPartners.length+'</div><div class="m-label">Партнёров</div></div>'+
+    '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">'+allProjects.length+'</div><div class="m-label">Проектов</div></div>'+
+    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+active.length+'</div><div class="m-label">Задач</div></div>'+
+    '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:'+(overdue.length?'var(--red)':'var(--green)')+'">'+overdue.length+'</div><div class="m-label">Просрочено</div></div>'+
+    '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">'+DATA.staff.length+'</div><div class="m-label">Команда</div></div>';
 
-  // Collect all unique directions
-  const dirSet = new Set();
-  DATA.directions.forEach(d => { if (d['Название']) dirSet.add(d['Название']); });
-  partners.forEach(p => { if (p['Направление']) dirSet.add(p['Направление']); });
-  projects.forEach(p => { if (p['Направление']) dirSet.add(p['Направление']); });
-  tasks.forEach(t => { if (t['Направление'] && t['Направление'] !== 'Общее') dirSet.add(t['Направление']); });
+  // Project cards
+  let html = '';
+  for (const [key, proj] of Object.entries(PROJECTS)) {
+    const dirs = getProjectDirs(key);
+    const pp = allPartners.filter(p => dirs.includes(p['Направление']||''));
+    const pt = allTasks.filter(t => dirs.includes(t['Направление']||''));
+    const ptActive = pt.filter(t => (t['Статус']||'')!=='Готово');
+    const ptOverdue = ptActive.filter(t => t['Дедлайн'] && t['Дедлайн']<td);
+    const ppr = allProjects.filter(p => dirs.includes(p['Направление']||''));
+    const avgPr = ppr.length ? Math.round(ppr.reduce((s,p) => s+(parseInt(p['Прогресс'])||0),0)/ppr.length) : 0;
 
-  const allDirs = [...dirSet];
+    let stTag = '';
+    if (ptOverdue.length) stTag = '<span class="status-tag" style="background:var(--red-glow);color:var(--red)">🔴 '+ptOverdue.length+' просроч.</span>';
+    else if (ptActive.length) stTag = '<span class="status-tag" style="background:var(--accent-glow);color:var(--accent)">В работе</span>';
+    else stTag = '<span class="status-tag" style="background:rgba(136,153,170,0.15);color:var(--text2)">Старт</span>';
 
-  // Add "Общее" at end if general tasks exist
-  const generalTasks = tasks.filter(t => (t['Направление'] || '') === 'Общее');
-  if (generalTasks.length > 0) allDirs.push('Общее');
+    html += '<div class="project-card" onclick="openProject(\''+key+'\')">';
+    html += '<div class="project-card-top" style="background:'+proj.gradient+'"></div>';
+    html += stTag;
+    html += '<div class="project-card-header">';
+    html += '<span class="emoji">'+proj.emoji+'</span>';
+    html += '<h3>'+esc(proj.name)+'</h3>';
+    html += '<div class="desc">'+esc(proj.desc)+'</div>';
+    html += '</div>';
+    html += '<div class="project-card-stats">';
+    html += '<div class="pcs"><div class="v" style="color:'+proj.color+'">'+Object.keys(proj.subprojects).length+'</div><div class="l">Подпроектов</div></div>';
+    html += '<div class="pcs"><div class="v" style="color:'+proj.color+'">'+pp.length+'</div><div class="l">Партнёров</div></div>';
+    html += '<div class="pcs"><div class="v" style="color:'+proj.color+'">'+ptActive.length+'</div><div class="l">Задач</div></div>';
+    html += '</div>';
+    html += '<div class="project-card-progress">';
+    html += '<div class="bar"><div class="fill" style="width:'+avgPr+'%;background:'+proj.color+'"></div></div>';
+    html += '<div class="info"><span>Прогресс</span><span>'+avgPr+'%</span></div>';
+    html += '</div></div>';
+  }
 
-  // Build project cards
-  const grid = document.getElementById('project-grid');
-  grid.innerHTML = allDirs.map(dir => {
-    const meta = DIR_META[dir] || { emoji: '📌', cls: 'general', color: 'var(--text2)', desc: '' };
+  // Add project card
+  html += '<div class="project-card add-card" onclick="openModal(\'newproject\')">';
+  html += '<span class="add-icon">➕</span>';
+  html += '<span class="add-text">Добавить проект</span>';
+  html += '</div>';
 
-    const dp = partners.filter(p => (p['Направление'] || '').includes(dir));
-    const dpr = projects.filter(p => (p['Направление'] || '').includes(dir));
-    const dt = tasks.filter(t => (t['Направление'] || '').includes(dir));
-    const dtActive = dt.filter(t => (t['Статус'] || '') !== 'Готово');
-    const dtOverdue = dtActive.filter(t => t['Дедлайн'] && t['Дедлайн'] < today);
-
-    // Average progress across projects in this direction
-    const avgProg = dpr.length
-      ? Math.round(dpr.reduce((sum, p) => sum + (parseInt(p['Прогресс']) || 0), 0) / dpr.length)
-      : 0;
-
-    // Status tag
-    let statusTag = '';
-    if (dtOverdue.length > 0) {
-      statusTag = '<span class="status-tag" style="background:var(--red-glow);color:var(--red)">🔴 ' + dtOverdue.length + ' просроч.</span>';
-    } else if (dtActive.length > 0) {
-      statusTag = '<span class="status-tag" style="background:var(--accent-glow);color:var(--accent)">В работе</span>';
-    } else {
-      statusTag = '<span class="status-tag" style="background:rgba(136,153,170,0.15);color:var(--text2)">Старт</span>';
-    }
-
-    return '<div class="project-card ' + meta.cls + '" onclick="openProject(\'' + escAttr(dir) + '\')">' +
-      '<div class="project-card-top"></div>' +
-      statusTag +
-      '<div class="project-card-header">' +
-        '<span class="emoji">' + meta.emoji + '</span>' +
-        '<h3>' + escHtml(dir) + '</h3>' +
-        '<div class="desc">' + escHtml(meta.desc) + '</div>' +
-      '</div>' +
-      '<div class="project-card-stats">' +
-        '<div class="pcs"><div class="v" style="color:' + meta.color + '">' + dp.length + '</div><div class="l">Партнёров</div></div>' +
-        '<div class="pcs"><div class="v" style="color:' + meta.color + '">' + dpr.length + '</div><div class="l">Проектов</div></div>' +
-        '<div class="pcs"><div class="v" style="color:' + meta.color + '">' + dtActive.length + '</div><div class="l">Задач</div></div>' +
-      '</div>' +
-      '<div class="project-card-progress">' +
-        '<div class="bar"><div class="fill" style="width:' + avgProg + '%;background:' + meta.color + '"></div></div>' +
-        '<div class="info"><span>Прогресс</span><span>' + avgProg + '%</span></div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
+  document.getElementById('project-grid').innerHTML = html;
 }
 
 // ============================================================
-// RENDER: PROJECT WORKSPACE
+// RENDER: PROJECT VIEW (subprojects)
 // ============================================================
-function renderProjectWorkspace() {
-  if (!currentProject) return;
-  const dir = currentProject;
-  const meta = DIR_META[dir] || { emoji: '📌', cls: 'general', color: 'var(--accent)', desc: '' };
-  const today = new Date().toISOString().split('T')[0];
+function renderProjectView() {
+  if(!currentProject) return;
+  const proj = PROJECTS[currentProject];
+  if(!proj) return;
+  const td = today();
 
-  // Header
-  document.getElementById('pw-name').textContent = dir;
-  document.getElementById('pw-title').innerHTML = meta.emoji + ' ' + escHtml(dir);
+  document.getElementById('pv-name').textContent = proj.name;
+  document.getElementById('pv-title').innerHTML = proj.emoji + ' ' + esc(proj.name);
+  document.getElementById('btn-add-sub').style.display = proj.canAddSub ? '' : 'none';
 
-  // Filter data for this direction
-  const dp = filterByRole(DATA.partners).filter(p => (p['Направление'] || '').includes(dir));
-  const dpr = filterByRole(DATA.projects).filter(p => (p['Направление'] || '').includes(dir));
-  const dt = filterByRole(DATA.tasks).filter(t => (t['Направление'] || '').includes(dir));
-  const dtActive = dt.filter(t => (t['Статус'] || '') !== 'Готово');
-  const dtDone = dt.filter(t => (t['Статус'] || '') === 'Готово');
-  const dtOverdue = dtActive.filter(t => t['Дедлайн'] && t['Дедлайн'] < today);
-  const avgProg = dpr.length ? Math.round(dpr.reduce((s, p) => s + (parseInt(p['Прогресс']) || 0), 0) / dpr.length) : 0;
-
-  // Comms linked to partners in this direction
-  const dirPartnerNames = dp.map(p => p['Название']).filter(Boolean);
-  const dc = (DATA.comms || []).filter(c => dirPartnerNames.some(pn => (c['Партнёр'] || '').includes(pn)));
+  const dirs = getProjectDirs(currentProject);
+  const pp = filterByRole(DATA.partners).filter(p => dirs.includes(p['Направление']||''));
+  const pt = filterByRole(DATA.tasks).filter(t => dirs.includes(t['Направление']||''));
+  const ppr = filterByRole(DATA.projects).filter(p => dirs.includes(p['Направление']||''));
+  const ptActive = pt.filter(t => (t['Статус']||'')!=='Готово');
+  const ptOverdue = ptActive.filter(t => t['Дедлайн'] && t['Дедлайн']<td);
+  const avgPr = ppr.length ? Math.round(ppr.reduce((s,p) => s+(parseInt(p['Прогресс'])||0),0)/ppr.length) : 0;
 
   // Metrics
-  document.getElementById('pw-metrics').innerHTML =
-    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">' + dp.length + '</div><div class="m-label">Партнёров</div><div class="m-sub">' + dp.filter(p => p['Статус'] === 'Активный').length + ' активных</div></div>' +
-    '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">' + dpr.length + '</div><div class="m-label">Проектов</div><div class="m-sub">ср. прогресс ' + avgProg + '%</div></div>' +
-    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">' + dtActive.length + '</div><div class="m-label">Активных задач</div><div class="m-sub">' + dtDone.length + ' выполнено</div></div>' +
-    '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:' + (dtOverdue.length ? 'var(--red)' : 'var(--green)') + '">' + dtOverdue.length + '</div><div class="m-label">Просрочено</div></div>' +
-    '<div class="metric-card"><div class="m-icon">💬</div><div class="m-value">' + dc.length + '</div><div class="m-label">Коммуникаций</div></div>';
+  document.getElementById('pv-metrics').innerHTML =
+    '<div class="metric-card"><div class="m-icon">📂</div><div class="m-value">'+Object.keys(proj.subprojects).length+'</div><div class="m-label">Подпроектов</div></div>'+
+    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+pp.length+'</div><div class="m-label">Партнёров</div></div>'+
+    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+ptActive.length+'</div><div class="m-label">Задач</div><div class="m-sub">'+(ptOverdue.length?'🔴 '+ptOverdue.length+' просроч.':'в работе')+'</div></div>'+
+    '<div class="metric-card"><div class="m-icon">📈</div><div class="m-value">'+avgPr+'%</div><div class="m-label">Прогресс</div></div>'+
+    '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">'+ppr.length+'</div><div class="m-label">Проектов</div></div>';
 
-  const content = document.getElementById('pw-content');
+  // Subproject cards grid
+  let sgHtml = '';
+  for (const [spName, spMeta] of Object.entries(proj.subprojects)) {
+    const spp = pp.filter(p => (p['Направление']||'')===spName);
+    const spt = ptActive.filter(t => (t['Направление']||'')===spName);
+    const spOverdue = spt.filter(t => t['Дедлайн'] && t['Дедлайн']<td);
+
+    sgHtml += '<div class="subproject-card" onclick="openSubproject(\''+escA(spName)+'\')">';
+    sgHtml += '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+spMeta.color+'"></div>';
+    sgHtml += '<span class="sp-emoji">'+spMeta.emoji+'</span>';
+    sgHtml += '<h4>'+esc(spName)+'</h4>';
+    sgHtml += '<div class="sp-desc">'+esc(spMeta.desc)+'</div>';
+    sgHtml += '<div class="sp-stats">';
+    sgHtml += '<span>🤝 '+spp.length+'</span>';
+    sgHtml += '<span>✅ '+spt.length+'</span>';
+    if (spOverdue.length) sgHtml += '<span style="color:var(--red)">🔴 '+spOverdue.length+'</span>';
+    sgHtml += '</div></div>';
+  }
+
+  // Add subproject card (only for sites etc.)
+  if (proj.canAddSub) {
+    sgHtml += '<div class="subproject-card add-sub" onclick="openAddSubproject()">';
+    sgHtml += '<span class="add-icon" style="font-size:32px;opacity:0.4">➕</span>';
+    sgHtml += '<span style="font-size:12px;color:var(--text2)">Добавить</span>';
+    sgHtml += '</div>';
+  }
+
+  document.getElementById('subproject-grid').innerHTML = sgHtml;
+
+  // Tab content
+  const content = document.getElementById('pv-content');
   let html = '';
 
-  // ——— OVERVIEW TAB ———
-  if (currentPwTab === 'overview') {
-
-    // Overdue tasks block
-    if (dtOverdue.length) {
-      html += '<div class="card" style="border-color:rgba(255,107,107,0.4)">';
-      html += '<div class="card-header" style="background:rgba(255,107,107,0.05)"><h3>🔴 Просроченные задачи (' + dtOverdue.length + ')</h3></div>';
-      html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Дедлайн</th><th>Ответственный</th></tr></thead><tbody>';
-      html += dtOverdue.map(t =>
-        '<tr style="background:rgba(255,107,107,0.03)">' +
-        '<td>' + escHtml(t['Описание'] || t['Название']) + '</td>' +
-        '<td>' + priorityBadge(t['Приоритет']) + '</td>' +
-        '<td style="color:var(--red);font-weight:700">' + escHtml(t['Дедлайн']) + '</td>' +
-        '<td>' + escHtml(t['Ответственный'] || '—') + '</td></tr>'
-      ).join('');
+  if (currentPvTab === 'overview') {
+    // Overdue
+    if (ptOverdue.length) {
+      html += '<div class="card" style="border-color:rgba(255,107,107,0.4)"><div class="card-header" style="background:rgba(255,107,107,0.05)"><h3>🔴 Просроченные ('+ptOverdue.length+')</h3></div>';
+      html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
+      html += ptOverdue.map(t => '<tr style="background:rgba(255,107,107,0.03)"><td>'+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td style="color:var(--red);font-weight:700">'+esc(t['Дедлайн'])+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>').join('');
       html += '</tbody></table></div></div>';
     }
-
-    // Active projects block
-    if (dpr.length) {
-      html += '<div class="card"><div class="card-header"><h3>📁 Проекты (' + dpr.length + ')</h3></div>';
-      html += '<div class="table-wrap"><table><thead><tr><th>Проект</th><th>Статус</th><th>Прогресс</th><th>Приоритет</th><th>Партнёр</th><th>Дедлайн</th></tr></thead><tbody>';
-      html += dpr.map(p =>
-        '<tr><td><strong>' + escHtml(p['Название']) + '</strong></td>' +
-        '<td>' + statusBadge(p['Статус']) + '</td>' +
-        '<td>' + progressBar(p['Прогресс']) + '</td>' +
-        '<td>' + priorityBadge(p['Приоритет']) + '</td>' +
-        '<td style="font-size:12px">' + escHtml(p['Партнёр'] || '') + '</td>' +
-        '<td>' + escHtml(p['Дедлайн'] || '—') + '</td></tr>'
-      ).join('');
+    // Active projects
+    if (ppr.length) {
+      html += '<div class="card"><div class="card-header"><h3>📁 Проекты ('+ppr.length+')</h3></div>';
+      html += '<div class="table-wrap"><table><thead><tr><th>Проект</th><th>Направление</th><th>Статус</th><th>Прогресс</th><th>Дедлайн</th></tr></thead><tbody>';
+      html += ppr.map(p => '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+esc(p['Направление'])+'</td><td>'+statusBadge(p['Статус'])+'</td><td>'+progBar(p['Прогресс'])+'</td><td>'+esc(p['Дедлайн']||'—')+'</td></tr>').join('');
       html += '</tbody></table></div></div>';
     }
-
-    // Top tasks by priority
-    const pOrder = { P1: 1, P2: 2, P3: 3 };
-    const topTasks = [...dtActive].sort((a, b) => (pOrder[a['Приоритет']] || 9) - (pOrder[b['Приоритет']] || 9)).slice(0, 10);
-
-    html += '<div class="card"><div class="card-header"><h3>✅ Задачи (' + dtActive.length + ' активных)</h3></div>';
-    html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Статус</th><th>Ответственный</th><th>Дедлайн</th></tr></thead><tbody>';
-    html += topTasks.length ? topTasks.map(t => {
-      const isOverdue = t['Дедлайн'] && t['Дедлайн'] < today && (t['Статус'] || '') !== 'Готово';
-      return '<tr style="' + (isOverdue ? 'background:rgba(255,107,107,0.03)' : '') + '">' +
-        '<td>' + (isOverdue ? '🔴 ' : '') + escHtml(t['Описание'] || t['Название']) + '</td>' +
-        '<td>' + priorityBadge(t['Приоритет']) + '</td>' +
-        '<td>' + statusBadge(t['Статус']) + '</td>' +
-        '<td style="font-size:12px">' + escHtml(t['Ответственный'] || '—') + '</td>' +
-        '<td>' + escHtml(t['Дедлайн'] || '—') + '</td></tr>';
-    }).join('') : emptyRow(5, 'Нет задач');
+    // Recent tasks
+    const pOrder = {P1:1,P2:2,P3:3};
+    const topT = [...ptActive].sort((a,b) => (pOrder[a['Приоритет']]||9)-(pOrder[b['Приоритет']]||9)).slice(0,10);
+    html += '<div class="card"><div class="card-header"><h3>✅ Актуальные задачи</h3></div>';
+    html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
+    html += topT.length ? topT.map(t => {
+      const od = t['Дедлайн']&&t['Дедлайн']<td;
+      return '<tr style="'+(od?'background:rgba(255,107,107,0.03)':'')+'"><td>'+(od?'🔴 ':'')+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Дедлайн']||'—')+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>';
+    }).join('') : emptyRow(6,'Нет задач');
     html += '</tbody></table></div></div>';
 
-    // Partners preview
-    if (dp.length) {
-      html += '<div class="card"><div class="card-header"><h3>🤝 Партнёры (' + dp.length + ')</h3></div>';
-      html += '<div class="table-wrap"><table><thead><tr><th>Название</th><th>Страна</th><th>Статус</th><th>Продукт</th><th>Контакт</th></tr></thead><tbody>';
-      html += dp.map(p =>
-        '<tr><td><strong>' + escHtml(p['Название']) + '</strong></td>' +
-        '<td>' + escHtml(p['Страна']) + '</td>' +
-        '<td>' + statusBadge(p['Статус']) + '</td>' +
-        '<td style="font-size:12px">' + escHtml(p['Продукт'] || '') + '</td>' +
-        '<td style="font-size:12px">' + escHtml(p['Контакт'] || '') + '</td></tr>'
-      ).join('');
-      html += '</tbody></table></div></div>';
-    }
-
-    if (!html) {
-      html = '<div class="empty"><div class="icon">🚀</div><p>Направление «' + escHtml(dir) + '» пока пустое. Добавьте партнёров, проекты и задачи!</p></div>';
-    }
-
-  // ——— PARTNERS TAB ———
-  } else if (currentPwTab === 'partners') {
-    html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Название</th><th>Страна</th><th>Продукт</th><th>Статус</th><th>Контакт</th><th>Email</th><th></th></tr></thead><tbody>';
-    html += dp.length ? dp.map(p =>
-      '<tr><td><strong>' + escHtml(p['Название']) + '</strong></td>' +
-      '<td>' + escHtml(p['Страна']) + '</td>' +
-      '<td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">' + escHtml(p['Продукт'] || '') + '</td>' +
-      '<td>' + statusBadge(p['Статус']) + '</td>' +
-      '<td style="font-size:12px">' + escHtml(p['Контакт'] || '') + '</td>' +
-      '<td style="font-size:12px">' + escHtml(p['Email'] || '') + '</td>' +
-      '<td>' + actionButtons('partner', p.ID, p['Название']) + '</td></tr>'
-    ).join('') : emptyRow(7, 'Нет партнёров в направлении «' + escHtml(dir) + '»');
-    html += '</tbody></table></div></div>';
-
-  // ——— PROJECTS TAB ———
-  } else if (currentPwTab === 'projects') {
-    html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Проект</th><th>Статус</th><th>Приоритет</th><th>Прогресс</th><th>Партнёр</th><th>Бюджет</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
-    html += dpr.length ? dpr.map(p =>
-      '<tr><td><strong>' + escHtml(p['Название']) + '</strong></td>' +
-      '<td>' + statusBadge(p['Статус']) + '</td>' +
-      '<td>' + priorityBadge(p['Приоритет']) + '</td>' +
-      '<td>' + progressBar(p['Прогресс']) + '</td>' +
-      '<td style="font-size:12px">' + escHtml(p['Партнёр'] || '') + '</td>' +
-      '<td style="font-size:12px">' + escHtml(p['Бюджет'] || '—') + '</td>' +
-      '<td>' + escHtml(p['Дедлайн'] || '—') + '</td>' +
-      '<td>' + actionButtons('project', p.ID, p['Название']) + '</td></tr>'
-    ).join('') : emptyRow(8, 'Нет проектов');
-    html += '</tbody></table></div></div>';
-
-  // ——— TASKS TAB ———
-  } else if (currentPwTab === 'tasks') {
-    const pOrder = { P1: 1, P2: 2, P3: 3 };
-    const sorted = [...dt].sort((a, b) => (pOrder[a['Приоритет']] || 9) - (pOrder[b['Приоритет']] || 9));
-
-    html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Статус</th><th>Ответственный</th><th>Проект</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
-    html += sorted.length ? sorted.map(t => {
-      const isOD = t['Дедлайн'] && t['Дедлайн'] < today && (t['Статус'] || '') !== 'Готово';
-      return '<tr style="' + (isOD ? 'background:rgba(255,107,107,0.05)' : '') + '">' +
-        '<td>' + (isOD ? '🔴 ' : '') + escHtml(t['Описание'] || t['Название']) + '</td>' +
-        '<td>' + priorityBadge(t['Приоритет']) + '</td>' +
-        '<td>' + statusBadge(t['Статус']) + '</td>' +
-        '<td style="font-size:12px">' + escHtml(t['Ответственный'] || '—') + '</td>' +
-        '<td style="font-size:12px">' + escHtml(t['Проект'] || '—') + '</td>' +
-        '<td>' + (isOD ? '<span style="color:var(--red);font-weight:700">' : '') + escHtml(t['Дедлайн'] || '—') + (isOD ? '</span>' : '') + '</td>' +
-        '<td>' + actionButtons('task', t.ID, t['Описание'] || t['Название']) + '</td></tr>';
-    }).join('') : emptyRow(7, 'Нет задач');
-    html += '</tbody></table></div></div>';
-
-  // ——— COMMS TAB ———
-  } else if (currentPwTab === 'comms') {
-    html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Партнёр</th><th>Тип</th><th>Тема</th><th>Результат</th><th>Дата</th><th>Автор</th><th></th></tr></thead><tbody>';
-    html += dc.length ? dc.map(c =>
-      '<tr><td><strong>' + escHtml(c['Партнёр']) + '</strong></td>' +
-      '<td>' + escHtml(c['Тип']) + '</td>' +
-      '<td>' + escHtml(c['Тема']) + '</td>' +
-      '<td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">' + escHtml(c['Результат'] || '') + '</td>' +
-      '<td>' + escHtml(c['Дата'] || '—') + '</td>' +
-      '<td style="font-size:12px">' + escHtml(c['Автор'] || '—') + '</td>' +
-      '<td>' + actionButtons('comm', c.ID || '', c['Партнёр']) + '</td></tr>'
-    ).join('') : emptyRow(7, 'Нет коммуникаций по направлению «' + escHtml(dir) + '»');
-    html += '</tbody></table></div></div>';
+  } else if (currentPvTab === 'tasks') {
+    html += renderTaskTable(pt);
+  } else if (currentPvTab === 'partners') {
+    html += renderPartnerTable(pp);
+  } else if (currentPvTab === 'comms') {
+    const pNames = pp.map(p => p['Название']).filter(Boolean);
+    const dc = (DATA.comms||[]).filter(c => pNames.some(n => (c['Партнёр']||'').includes(n)));
+    html += renderCommTable(dc);
   }
 
   content.innerHTML = html;
 }
 
 // ============================================================
-// RENDER: DASHBOARD
+// RENDER: SUBPROJECT VIEW (workspace inside e.g. КТ or Пышки)
+// ============================================================
+function renderSubprojectView() {
+  if (!currentSubproject||!currentProject) return;
+  const proj = PROJECTS[currentProject];
+  const spMeta = proj?.subprojects[currentSubproject] || { emoji:'📌', color:'var(--text2)', desc:'' };
+  const td = today();
+
+  document.getElementById('sp-parent').textContent = proj.name;
+  document.getElementById('sp-parent').setAttribute('onclick', "openProject('"+currentProject+"')");
+  document.getElementById('sp-name').textContent = currentSubproject;
+  document.getElementById('sp-title').innerHTML = spMeta.emoji + ' ' + esc(currentSubproject);
+
+  const sp = filterByRole(DATA.partners).filter(p => (p['Направление']||'')===currentSubproject);
+  const st = filterByRole(DATA.tasks).filter(t => (t['Направление']||'')===currentSubproject);
+  const spr = filterByRole(DATA.projects).filter(p => (p['Направление']||'')===currentSubproject);
+  const stActive = st.filter(t => (t['Статус']||'')!=='Готово');
+  const stDone = st.filter(t => (t['Статус']||'')==='Готово');
+  const stOverdue = stActive.filter(t => t['Дедлайн']&&t['Дедлайн']<td);
+  const avgPr = spr.length ? Math.round(spr.reduce((s,p) => s+(parseInt(p['Прогресс'])||0),0)/spr.length) : 0;
+  const pNames = sp.map(p => p['Название']).filter(Boolean);
+  const sc = (DATA.comms||[]).filter(c => pNames.some(n => (c['Партнёр']||'').includes(n)));
+
+  document.getElementById('sp-metrics').innerHTML =
+    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+sp.length+'</div><div class="m-label">Партнёров</div></div>'+
+    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+stActive.length+'</div><div class="m-label">Задач</div><div class="m-sub">'+stDone.length+' выполнено</div></div>'+
+    '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:'+(stOverdue.length?'var(--red)':'var(--green)')+'">'+stOverdue.length+'</div><div class="m-label">Просрочено</div></div>'+
+    '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">'+spr.length+'</div><div class="m-label">Проектов</div><div class="m-sub">'+avgPr+'% прогресс</div></div>'+
+    '<div class="metric-card"><div class="m-icon">💬</div><div class="m-value">'+sc.length+'</div><div class="m-label">Контактов</div></div>';
+
+  const content = document.getElementById('sp-content');
+  let html = '';
+
+  if (currentSpTab==='overview') {
+    if (stOverdue.length) {
+      html += '<div class="card" style="border-color:rgba(255,107,107,0.4)"><div class="card-header" style="background:rgba(255,107,107,0.05)"><h3>🔴 Просроченные ('+stOverdue.length+')</h3></div>';
+      html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Дедлайн</th><th>Ответственный</th><th></th></tr></thead><tbody>';
+      html += stOverdue.map(t => '<tr style="background:rgba(255,107,107,0.03)"><td>'+esc(t['Описание']||t['Название'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td style="color:var(--red);font-weight:700">'+esc(t['Дедлайн'])+'</td><td>'+esc(t['Ответственный']||'—')+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>').join('');
+      html += '</tbody></table></div></div>';
+    }
+    if (spr.length) {
+      html += '<div class="card"><div class="card-header"><h3>📁 Проекты</h3></div><div class="table-wrap"><table><thead><tr><th>Проект</th><th>Статус</th><th>Прогресс</th><th>Партнёр</th><th>Дедлайн</th></tr></thead><tbody>';
+      html += spr.map(p => '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+statusBadge(p['Статус'])+'</td><td>'+progBar(p['Прогресс'])+'</td><td>'+esc(p['Партнёр']||'')+'</td><td>'+esc(p['Дедлайн']||'—')+'</td></tr>').join('');
+      html += '</tbody></table></div></div>';
+    }
+    const pO = {P1:1,P2:2,P3:3};
+    const topT = [...stActive].sort((a,b)=>(pO[a['Приоритет']]||9)-(pO[b['Приоритет']]||9)).slice(0,10);
+    html += '<div class="card"><div class="card-header"><h3>✅ Задачи ('+stActive.length+')</h3></div><div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Статус</th><th>Ответственный</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
+    html += topT.length ? topT.map(t => {
+      const od = t['Дедлайн']&&t['Дедлайн']<td&&(t['Статус']||'')!=='Готово';
+      return '<tr style="'+(od?'background:rgba(255,107,107,0.03)':'')+'"><td>'+(od?'🔴 ':'')+esc(t['Описание']||t['Название'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Ответственный']||'—')+'</td><td>'+esc(t['Дедлайн']||'—')+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>';
+    }).join('') : emptyRow(6,'Нет задач'); 
+    html += '</tbody></table></div></div>';
+    if(sp.length) {
+      html += '<div class="card"><div class="card-header"><h3>🤝 Партнёры ('+sp.length+')</h3></div><div class="table-wrap"><table><thead><tr><th>Название</th><th>Страна</th><th>Статус</th><th>Продукт</th><th>Контакт</th></tr></thead><tbody>';
+      html += sp.map(p => '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+esc(p['Страна'])+'</td><td>'+statusBadge(p['Статус'])+'</td><td>'+esc(p['Продукт']||'')+'</td><td>'+esc(p['Контакт']||'')+'</td></tr>').join('');
+      html += '</tbody></table></div></div>';
+    }
+    if(!html) html = '<div class="empty"><div class="icon">🚀</div><p>Направление «'+esc(currentSubproject)+'» пока пустое.</p></div>';
+
+  } else if (currentSpTab==='tasks') { html += renderTaskTable(st);
+  } else if (currentSpTab==='partners') { html += renderPartnerTable(sp);
+  } else if (currentSpTab==='projects') {
+    html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Проект</th><th>Статус</th><th>Приоритет</th><th>Прогресс</th><th>Партнёр</th><th>Бюджет</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
+    html += spr.length ? spr.map(p => '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+statusBadge(p['Статус'])+'</td><td>'+prBadge(p['Приоритет'])+'</td><td>'+progBar(p['Прогресс'])+'</td><td>'+esc(p['Партнёр']||'')+'</td><td>'+esc(p['Бюджет']||'—')+'</td><td>'+esc(p['Дедлайн']||'—')+'</td><td>'+actBtns('project',p.ID,p['Название'])+'</td></tr>').join('') : emptyRow(8,'Нет проектов');
+    html += '</tbody></table></div></div>';
+  } else if (currentSpTab==='comms') { html += renderCommTable(sc); }
+
+  content.innerHTML = html;
+}
+
+// Reusable table renderers
+function renderTaskTable(data) {
+  const pO = {P1:1,P2:2,P3:3};
+  const sorted = [...data].sort((a,b)=>(pO[a['Приоритет']]||9)-(pO[b['Приоритет']]||9));
+  const td = today();
+  let h = '<div class="card"><div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Статус</th><th>Ответственный</th><th>Проект</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
+  h += sorted.length ? sorted.map(t => {
+    const od = t['Дедлайн']&&t['Дедлайн']<td&&(t['Статус']||'')!=='Готово';
+    return '<tr style="'+(od?'background:rgba(255,107,107,0.05)':'')+'"><td>'+(od?'🔴 ':'')+esc(t['Описание']||t['Название'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Ответственный']||'—')+'</td><td>'+esc(t['Проект']||'—')+'</td><td>'+(od?'<span style="color:var(--red);font-weight:700">':'')+esc(t['Дедлайн']||'—')+(od?'</span>':'')+'</td><td>'+actBtns('task',t.ID,t['Описание']||t['Название'])+'</td></tr>';
+  }).join('') : emptyRow(7,'Нет задач');
+  h += '</tbody></table></div></div>';
+  return h;
+}
+
+function renderPartnerTable(data) {
+  let h = '<div class="card"><div class="table-wrap"><table><thead><tr><th>Название</th><th>Страна</th><th>Продукт</th><th>Статус</th><th>Контакт</th><th>Email</th><th></th></tr></thead><tbody>';
+  h += data.length ? data.map(p => '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+esc(p['Страна'])+'</td><td>'+esc(p['Продукт']||'')+'</td><td>'+statusBadge(p['Статус'])+'</td><td>'+esc(p['Контакт']||'')+'</td><td>'+esc(p['Email']||'')+'</td><td>'+actBtns('partner',p.ID,p['Название'])+'</td></tr>').join('') : emptyRow(7,'Нет партнёров');
+  h += '</tbody></table></div></div>';
+  return h;
+}
+
+function renderCommTable(data) {
+  let h = '<div class="card"><div class="table-wrap"><table><thead><tr><th>Партнёр</th><th>Тип</th><th>Тема</th><th>Результат</th><th>Дата</th><th>Автор</th><th></th></tr></thead><tbody>';
+  h += data.length ? data.map(c => '<tr><td><strong>'+esc(c['Партнёр'])+'</strong></td><td>'+esc(c['Тип'])+'</td><td>'+esc(c['Тема'])+'</td><td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">'+esc(c['Результат']||'')+'</td><td>'+esc(c['Дата']||'—')+'</td><td>'+esc(c['Автор']||'—')+'</td><td>'+actBtns('comm',c.ID||'',c['Партнёр'])+'</td></tr>').join('') : emptyRow(7,'Нет коммуникаций');
+  h += '</tbody></table></div></div>';
+  return h;
+}
+
+// ============================================================
+// RENDER: DASHBOARD (ГД)
 // ============================================================
 function renderDashboard() {
   const fp = filterByRole(DATA.partners);
   const ft = filterByRole(DATA.tasks);
   const fpr = filterByRole(DATA.projects);
-  const today = new Date().toISOString().split('T')[0];
-  const activeTasks = ft.filter(t => (t['Статус'] || '') !== 'Готово');
-  const overdue = activeTasks.filter(t => t['Дедлайн'] && t['Дедлайн'] < today);
+  const td = today();
+  const active = ft.filter(t => (t['Статус']||'')!=='Готово');
+  const overdue = active.filter(t => t['Дедлайн']&&t['Дедлайн']<td);
 
   document.getElementById('dash-metrics').innerHTML =
-    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">' + fp.length + '</div><div class="m-label">Партнёров</div><div class="m-sub">' + fp.filter(p => p['Статус'] === 'Активный').length + ' активных</div></div>' +
-    '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">' + fpr.length + '</div><div class="m-label">Проектов</div><div class="m-sub">' + fpr.filter(p => (p['Статус'] || '') !== 'Завершён').length + ' активных</div></div>' +
-    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">' + activeTasks.length + '</div><div class="m-label">Задач</div><div class="m-sub">' + (overdue.length > 0 ? '🔴 ' + overdue.length + ' просрочено' : 'в работе') + '</div></div>' +
-    '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">' + DATA.staff.length + '</div><div class="m-label">Сотрудников</div></div>' +
-    '<div class="metric-card"><div class="m-icon">📂</div><div class="m-value">' + DATA.directions.length + '</div><div class="m-label">Направлений</div></div>';
+    '<div class="metric-card"><div class="m-icon">🏢</div><div class="m-value">'+Object.keys(PROJECTS).length+'</div><div class="m-label">Проектов</div><div class="m-sub">РКТ, Сайты...</div></div>'+
+    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+fp.length+'</div><div class="m-label">Партнёров</div><div class="m-sub">'+fp.filter(p=>p['Статус']==='Активный').length+' активных</div></div>'+
+    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+active.length+'</div><div class="m-label">Задач в работе</div><div class="m-sub">'+(overdue.length?'🔴 '+overdue.length+' просрочено':'всё в срок')+'</div></div>'+
+    '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">'+fpr.length+'</div><div class="m-label">Подпроектов</div></div>'+
+    '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">'+DATA.staff.length+'</div><div class="m-label">Команда</div></div>';
 
-  // Urgent tasks
-  const urgent = ft.filter(t => t['Приоритет'] === 'P1' && (t['Статус'] || '') !== 'Готово').slice(0, 8);
-  document.getElementById('urgent-tasks').innerHTML = urgent.length
-    ? urgent.map(t =>
-      '<tr><td>' + escHtml(t['Описание'] || t['Название']) + '</td><td>' + escHtml(t['Направление']) + '</td><td>' + priorityBadge(t['Приоритет']) + '</td><td>' + statusBadge(t['Статус']) + '</td><td>' + escHtml(t['Дедлайн'] || '—') + '</td></tr>'
-    ).join('')
-    : emptyRow(5, 'Нет срочных задач 🎉');
+  // Overdue table
+  document.getElementById('dash-overdue').innerHTML = overdue.length ? overdue.map(t =>
+    '<tr style="background:rgba(255,107,107,0.03)"><td>'+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td style="color:var(--red);font-weight:700">'+esc(t['Дедлайн'])+'</td><td>'+esc(t['Ответственный']||'—')+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>'
+  ).join('') : emptyRow(6,'Нет просроченных задач 🎉');
 
   // Active projects
-  const activeProjects = fpr.filter(p => (p['Статус'] || '') !== 'Завершён').slice(0, 8);
-  document.getElementById('active-projects').innerHTML = activeProjects.length
-    ? activeProjects.map(p =>
-      '<tr><td><strong>' + escHtml(p['Название']) + '</strong></td><td>' + escHtml(p['Направление']) + '</td><td>' + statusBadge(p['Статус']) + '</td><td>' + progressBar(p['Прогресс']) + '</td><td>' + priorityBadge(p['Приоритет']) + '</td><td>' + escHtml(p['Дедлайн'] || '—') + '</td></tr>'
-    ).join('')
-    : emptyRow(6, 'Нет активных проектов');
+  const ap = fpr.filter(p => (p['Статус']||'')!=='Завершён').slice(0,10);
+  document.getElementById('dash-projects').innerHTML = ap.length ? ap.map(p =>
+    '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+esc(p['Направление'])+'</td><td>'+statusBadge(p['Статус'])+'</td><td>'+progBar(p['Прогресс'])+'</td><td>'+esc(p['Дедлайн']||'—')+'</td></tr>'
+  ).join('') : emptyRow(5,'Нет проектов');
 
   // Recent comms
-  const recentComms = (DATA.comms || []).slice(0, 5);
-  document.getElementById('recent-comms').innerHTML = recentComms.length
-    ? recentComms.map(c =>
-      '<tr><td>' + escHtml(c['Партнёр']) + '</td><td>' + escHtml(c['Тип']) + '</td><td>' + escHtml(c['Тема']) + '</td><td>' + escHtml(c['Дата'] || '—') + '</td><td>' + escHtml(c['Автор'] || '—') + '</td></tr>'
-    ).join('')
-    : emptyRow(5, 'Нет записей');
+  const rc = (DATA.comms||[]).slice(0,5);
+  document.getElementById('dash-comms').innerHTML = rc.length ? rc.map(c =>
+    '<tr><td>'+esc(c['Партнёр'])+'</td><td>'+esc(c['Тип'])+'</td><td>'+esc(c['Тема'])+'</td><td>'+esc(c['Дата']||'—')+'</td><td>'+esc(c['Автор']||'—')+'</td></tr>'
+  ).join('') : emptyRow(5,'Нет записей');
 }
 
 // ============================================================
-// RENDER: FILTERS
+// RENDER: GLOBAL PAGES (Partners, Tasks, Staff, Approvals, Comms, Settings)
 // ============================================================
-function renderFilterChips(containerId, filterKey, dataKey) {
-  const allDirs = ['Все', ...new Set(DATA[dataKey].map(item => item['Направление']).filter(Boolean))];
-  const el = document.getElementById(containerId);
-  if (!el) return;
-  el.innerHTML = allDirs.map(d =>
-    '<button class="filter-chip ' + (currentFilters[filterKey] === d ? 'active' : '') + '" onclick="setFilter(\'' + filterKey + '\',\'' + escAttr(d) + '\')">' + escHtml(d) + '</button>'
-  ).join('');
+function renderPartnerFilters() {
+  const allDirs = ['Все', ...new Set(DATA.partners.map(i=>i['Направление']).filter(Boolean))];
+  const el = document.getElementById('partner-filters');
+  if(el) el.innerHTML = allDirs.map(d => '<button class="filter-chip '+(currentFilters.partners===d?'active':'')+'" onclick="currentFilters.partners=\''+escA(d)+'\';renderAll()">'+esc(d)+'</button>').join('');
 }
 
-function setFilter(key, value) {
-  currentFilters[key] = value;
-  renderAll();
+function renderTaskFilters() {
+  const allDirs = ['Все', ...new Set(DATA.tasks.map(i=>i['Направление']).filter(Boolean))];
+  const el = document.getElementById('task-filters');
+  if(el) el.innerHTML = allDirs.map(d => '<button class="filter-chip '+(currentFilters.tasks===d?'active':'')+'" onclick="currentFilters.tasks=\''+escA(d)+'\';renderAll()">'+esc(d)+'</button>').join('');
 }
 
-function renderPartnerFilters() { renderFilterChips('partner-filters', 'partners', 'partners'); }
-function renderTaskFilters() { renderFilterChips('task-filters', 'tasks', 'tasks'); }
-
-// ============================================================
-// RENDER: PARTNERS PAGE
-// ============================================================
 function renderPartners() {
-  let data = filterByRole(DATA.partners);
-  data = filterByDirection(data, currentFilters.partners === 'Все' ? null : currentFilters.partners);
-  data = filterBySearch(data, 'partner-search', ['Название', 'Страна', 'Продукт', 'Контакт']);
-
-  document.getElementById('partners-table').innerHTML = data.length ? data.map(p =>
-    '<tr>' +
-    '<td><strong>' + escHtml(p['Название']) + '</strong></td>' +
-    '<td>' + escHtml(p['Страна']) + '</td>' +
-    '<td>' + escHtml(p['Направление']) + '</td>' +
-    '<td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">' + escHtml(p['Продукт'] || '') + '</td>' +
-    '<td>' + statusBadge(p['Статус']) + '</td>' +
-    '<td style="font-size:12px">' + escHtml(p['Контакт'] || '') + '</td>' +
-    '<td>' + actionButtons('partner', p.ID, p['Название']) + '</td>' +
-    '</tr>'
-  ).join('') : emptyRow(7, 'Партнёры не найдены');
+  let d = filterByRole(DATA.partners);
+  d = filterByDir(d, currentFilters.partners==='Все'?null:currentFilters.partners);
+  d = filterBySearch(d,'partner-search',['Название','Страна','Продукт','Контакт']);
+  document.getElementById('partners-table').innerHTML = d.length ? d.map(p =>
+    '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+esc(p['Страна'])+'</td><td>'+esc(p['Направление'])+'</td><td>'+esc(p['Продукт']||'')+'</td><td>'+statusBadge(p['Статус'])+'</td><td>'+esc(p['Контакт']||'')+'</td><td>'+actBtns('partner',p.ID,p['Название'])+'</td></tr>'
+  ).join('') : emptyRow(7,'Нет партнёров');
 }
 
-// ============================================================
-// RENDER: TASKS PAGE
-// ============================================================
 function renderTasks() {
-  let data = filterByRole(DATA.tasks);
-  data = filterByDirection(data, currentFilters.tasks === 'Все' ? null : currentFilters.tasks);
-  data = filterBySearch(data, 'task-search', ['Описание', 'Название', 'Ответственный', 'Проект']);
-
-  // Sort by priority
-  const pOrder = { 'P1': 1, 'P2': 2, 'P3': 3 };
-  data = [...data].sort((a, b) => (pOrder[a['Приоритет']] || 9) - (pOrder[b['Приоритет']] || 9));
-
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('tasks-table').innerHTML = data.length ? data.map(t => {
-    const isOverdue = t['Дедлайн'] && t['Дедлайн'] < today && (t['Статус'] || '') !== 'Готово';
-    return '<tr style="' + (isOverdue ? 'background:rgba(255,107,107,0.05)' : '') + '">' +
-      '<td>' + (isOverdue ? '🔴 ' : '') + escHtml(t['Описание'] || t['Название']) + '</td>' +
-      '<td>' + escHtml(t['Направление']) + '</td>' +
-      '<td>' + priorityBadge(t['Приоритет']) + '</td>' +
-      '<td>' + statusBadge(t['Статус']) + '</td>' +
-      '<td style="font-size:12px">' + escHtml(t['Ответственный'] || '—') + '</td>' +
-      '<td>' + (isOverdue ? '<span style="color:var(--red);font-weight:700">' : '') + escHtml(t['Дедлайн'] || '—') + (isOverdue ? '</span>' : '') + '</td>' +
-      '<td>' + actionButtons('task', t.ID, t['Описание'] || t['Название']) + '</td>' +
-      '</tr>';
-  }).join('') : emptyRow(7, 'Задачи не найдены');
+  let d = filterByRole(DATA.tasks);
+  d = filterByDir(d, currentFilters.tasks==='Все'?null:currentFilters.tasks);
+  d = filterBySearch(d,'task-search',['Описание','Название','Ответственный','Проект']);
+  const pO = {P1:1,P2:2,P3:3};
+  d = [...d].sort((a,b)=>(pO[a['Приоритет']]||9)-(pO[b['Приоритет']]||9));
+  const td = today();
+  document.getElementById('tasks-table').innerHTML = d.length ? d.map(t => {
+    const od = t['Дедлайн']&&t['Дедлайн']<td&&(t['Статус']||'')!=='Готово';
+    return '<tr style="'+(od?'background:rgba(255,107,107,0.05)':'')+'"><td>'+(od?'🔴 ':'')+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Ответственный']||'—')+'</td><td>'+(od?'<span style="color:var(--red);font-weight:700">':'')+esc(t['Дедлайн']||'—')+(od?'</span>':'')+'</td><td>'+actBtns('task',t.ID,t['Описание']||t['Название'])+'</td></tr>';
+  }).join('') : emptyRow(7,'Нет задач');
 }
 
-// ============================================================
-// RENDER: STAFF
-// ============================================================
 function renderStaff() {
-  const perms = getUserPerms();
+  const p = getUserPerms();
   document.getElementById('staff-table').innerHTML = DATA.staff.length ? DATA.staff.map(s => {
-    const roleEmoji = (ROLES[s['Роль']] || {}).emoji || '👤';
-    return '<tr>' +
-      '<td><strong>' + escHtml(s['Имя'] || '(не заполнено)') + '</strong></td>' +
-      '<td>' + roleEmoji + ' ' + escHtml(s['Роль']) + '</td>' +
-      '<td>' + escHtml(s['Направление']) + '</td>' +
-      '<td style="font-size:11px">' + (s.Telegram_ID ? '✅ ' + escHtml(s.Telegram_ID) : '❌ нет') + '</td>' +
-      '<td style="font-size:12px">' + escHtml(s['Email'] || '—') + '</td>' +
-      '<td style="font-size:12px">' + escHtml(s['Телефон'] || '—') + '</td>' +
-      '<td>' + statusBadge(s['Статус'] || 'Активный') + '</td>' +
-      '<td>' + (perms.canManageStaff ? actionButtons('staff', s.ID, s['Имя']) : '') + '</td>' +
-      '</tr>';
-  }).join('') : emptyRow(8, 'Нет сотрудников');
+    const re = (ROLES[s['Роль']]||{}).emoji||'👤';
+    return '<tr><td><strong>'+esc(s['Имя']||'—')+'</strong></td><td>'+re+' '+esc(s['Роль'])+'</td><td>'+esc(s['Направление'])+'</td><td style="font-size:11px">'+(s.Telegram_ID?'✅ '+esc(s.Telegram_ID):'❌ нет')+'</td><td>'+esc(s['Email']||'—')+'</td><td>'+statusBadge(s['Статус']||'Активный')+'</td><td>'+(p.canManageStaff?actBtns('staff',s.ID,s['Имя']):'')+'</td></tr>';
+  }).join('') : emptyRow(7,'Нет сотрудников');
 }
 
-// ============================================================
-// RENDER: APPROVALS
-// ============================================================
 function renderApprovals() {
   const el = document.getElementById('approvals-content');
-  const perms = getUserPerms();
+  const p = getUserPerms();
+  if (!p.canApprove) { el.innerHTML = '<div class="empty"><div class="icon">🔒</div><p>Только для CEO</p></div>'; return; }
+  const pending = DATA.approvals.filter(a=>(a['Статус']||'').includes('Ожидает'));
+  let h = '<div class="card"><div class="card-header"><h3>⏳ Ожидают ('+pending.length+')</h3></div><div class="table-wrap"><table><thead><tr><th>Тип</th><th>Описание</th><th>От кого</th><th>Дата</th><th>Действия</th></tr></thead><tbody>';
+  h += pending.length ? pending.map(a =>
+    '<tr><td>'+esc(a['Тип'])+'</td><td>'+esc(a['Описание'])+'</td><td>'+esc(a['От_кого'])+'</td><td>'+esc(a['Дата_запроса']||'')+'</td><td><div class="actions-cell"><button class="btn btn-xs btn-approve" onclick="handleApproval(\''+escA(a.ID)+'\',true)">✅</button> <button class="btn btn-xs btn-reject" onclick="handleApproval(\''+escA(a.ID)+'\',false)">❌</button></div></td></tr>'
+  ).join('') : emptyRow(5,'Нет ожидающих ✨');
+  h += '</tbody></table></div></div>';
+  el.innerHTML = h;
+}
 
-  if (!perms.canApprove) {
-    el.innerHTML = '<div class="empty"><div class="icon">🔒</div><p>Раздел согласований доступен только CEO.</p></div>';
+function renderComms() {
+  let d = DATA.comms||[];
+  d = filterBySearch(d,'comm-search',['Партнёр','Тема','Результат']);
+  document.getElementById('comms-table').innerHTML = d.length ? d.map(c =>
+    '<tr><td><strong>'+esc(c['Партнёр'])+'</strong></td><td>'+esc(c['Тип'])+'</td><td>'+esc(c['Тема'])+'</td><td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis">'+esc(c['Результат']||'')+'</td><td>'+esc(c['Дата']||'—')+'</td><td>'+esc(c['Автор']||'—')+'</td><td>'+actBtns('comm',c.ID||'',c['Партнёр'])+'</td></tr>'
+  ).join('') : emptyRow(7,'Нет записей');
+}
+
+function renderSettings() {
+  const stats = [
+    {l:'Партнёры',v:DATA.partners.length},{l:'Проекты',v:DATA.projects.length},
+    {l:'Задачи',v:DATA.tasks.length},{l:'Сотрудники',v:DATA.staff.length},
+    {l:'Направления',v:DATA.directions.length},{l:'Коммуникации',v:(DATA.comms||[]).length},
+    {l:'Версия',v:CONFIG.VERSION}
+  ];
+  document.getElementById('s-stats').innerHTML = stats.map(s => '<div class="detail-item"><div class="detail-label">'+s.l+'</div><div class="detail-value">'+s.v+'</div></div>').join('');
+}
+
+// ============================================================
+// TASK DETAIL WITH AI ASSISTANT
+// ============================================================
+function openTaskDetail(taskId) {
+  const task = DATA.tasks.find(t => t.ID === taskId);
+  if (!task) { toast('Задача не найдена','error'); return; }
+  currentTaskId = taskId;
+  aiMessages = [];
+
+  // Breadcrumb
+  let bc = '<a onclick="showPage(\'home\')">🏠 Проекты</a><span class="sep">›</span>';
+  const dir = task['Направление']||'';
+  const projKey = dirToProject(dir);
+  if (projKey) {
+    bc += '<a onclick="openProject(\''+projKey+'\')">'+esc(PROJECTS[projKey].name)+'</a><span class="sep">›</span>';
+    bc += '<a onclick="openSubproject(\''+escA(dir)+'\')">'+esc(dir)+'</a><span class="sep">›</span>';
+  }
+  bc += '<span class="current">'+esc(task['Описание']||task['Название'])+'</span>';
+  document.getElementById('td-breadcrumb').innerHTML = bc;
+
+  // Task detail card
+  let html = '<div class="task-detail">';
+  html += '<div class="task-detail-header">';
+  html += '<h3>'+esc(task['Описание']||task['Название'])+'</h3>';
+  html += '<div class="task-meta">';
+  html += '<div class="meta-item">'+prBadge(task['Приоритет'])+' '+esc(task['Приоритет']||'')+'</div>';
+  html += '<div class="meta-item">'+statusBadge(task['Статус'])+'</div>';
+  if(task['Направление']) html += '<div class="meta-item">📂 '+esc(task['Направление'])+'</div>';
+  if(task['Ответственный']) html += '<div class="meta-item">👤 '+esc(task['Ответственный'])+'</div>';
+  if(task['Дедлайн']) {
+    const od = task['Дедлайн']<today()&&(task['Статус']||'')!=='Готово';
+    html += '<div class="meta-item" style="'+(od?'color:var(--red);font-weight:700':'')+'">📅 '+esc(task['Дедлайн'])+(od?' 🔴':'')+'</div>';
+  }
+  html += '</div></div>';
+
+  // Detail fields
+  html += '<div class="task-detail-body">';
+  html += '<div class="detail-grid">';
+  const fields = [
+    ['Проект', task['Проект']],
+    ['Направление', task['Направление']],
+    ['Приоритет', task['Приоритет']],
+    ['Статус', task['Статус']],
+    ['Ответственный', task['Ответственный']],
+    ['Дедлайн', task['Дедлайн']]
+  ];
+  fields.forEach(([l,v]) => {
+    if(v) html += '<div class="detail-item"><div class="detail-label">'+esc(l)+'</div><div class="detail-value">'+esc(v)+'</div></div>';
+  });
+  if(task['Комментарий']) {
+    html += '<div class="detail-item detail-full"><div class="detail-label">Комментарий</div><div class="detail-value">'+esc(task['Комментарий'])+'</div></div>';
+  }
+  html += '</div>';
+
+  // Action buttons
+  html += '<div style="display:flex;gap:10px;margin-top:20px;flex-wrap:wrap">';
+  html += '<button class="btn btn-primary" onclick="editItem(\'task\',\''+escA(taskId)+'\')">✏️ Редактировать</button>';
+  html += '<button class="btn btn-secondary" onclick="changeTaskStatus(\''+escA(taskId)+'\')">🔄 Сменить статус</button>';
+  const p = getUserPerms();
+  if(p.canDelete) html += '<button class="btn btn-danger" onclick="confirmDelete(\'task\',\''+escA(taskId)+'\',\''+escA(task['Описание']||task['Название'])+'\')">🗑 Удалить</button>';
+  html += '</div>';
+  html += '</div></div>';
+
+  // AI ASSISTANT PANEL
+  html += '<div class="ai-panel">';
+  html += '<div class="ai-panel-header">';
+  html += '<h4>🤖 ИИ-ассистент по задаче</h4>';
+  html += '<button class="btn btn-xs btn-secondary" onclick="aiGenerateSteps()">📋 Сгенерировать план</button>';
+  html += '</div>';
+
+  // AI messages
+  html += '<div class="ai-chat-messages" id="ai-messages">';
+  html += '<div class="ai-msg system">ИИ-ассистент готов помочь с задачей «'+esc(task['Описание']||task['Название'])+'». Задайте вопрос или используйте кнопки ниже.</div>';
+  html += '</div>';
+
+  // Quick actions
+  html += '<div class="ai-suggestions">';
+  html += '<button class="ai-suggestion-btn" onclick="aiQuickAction(\'plan\')">📋 План выполнения</button>';
+  html += '<button class="ai-suggestion-btn" onclick="aiQuickAction(\'risks\')">⚠️ Риски</button>';
+  html += '<button class="ai-suggestion-btn" onclick="aiQuickAction(\'email\')">📧 Написать письмо</button>';
+  html += '<button class="ai-suggestion-btn" onclick="aiQuickAction(\'checklist\')">✅ Чеклист</button>';
+  html += '<button class="ai-suggestion-btn" onclick="aiQuickAction(\'next\')">➡️ Следующие шаги</button>';
+  html += '</div>';
+
+  // Input
+  html += '<div class="ai-input-area">';
+  html += '<input class="ai-input" id="ai-input" placeholder="Спросите ИИ о задаче..." onkeydown="if(event.key===\'Enter\')sendAiMessage()">';
+  html += '<button class="ai-send-btn" id="ai-send-btn" onclick="sendAiMessage()">Отправить</button>';
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('td-content').innerHTML = html;
+  showPage('taskdetail');
+}
+
+function changeTaskStatus(taskId) {
+  const task = DATA.tasks.find(t => t.ID===taskId);
+  if(!task) return;
+  const statuses = ['⏳ В очереди', 'В работе', 'На проверке', 'Готово'];
+  const cur = task['Статус']||'';
+  const idx = statuses.indexOf(cur);
+  const next = statuses[(idx+1)%statuses.length];
+  task['Статус'] = next;
+  openTaskDetail(taskId);
+  toast('Статус: '+next, 'success');
+  apiWrite('Задачи', task);
+}
+
+// ============================================================
+// AI CHAT FUNCTIONS
+// ============================================================
+async function sendAiMessage() {
+  const input = document.getElementById('ai-input');
+  const msg = input.value.trim();
+  if(!msg) return;
+
+  input.value = '';
+  addAiMessage('user', msg);
+
+  // Get task context
+  const task = DATA.tasks.find(t => t.ID===currentTaskId);
+  const context = task ? 'Задача: '+( task['Описание']||task['Название'])+'. Направление: '+(task['Направление']||'')+'. Статус: '+(task['Статус']||'')+'. Приоритет: '+(task['Приоритет']||'')+'. Дедлайн: '+(task['Дедлайн']||'не указан')+'. Ответственный: '+(task['Ответственный']||'не указан')+'. Проект: '+(task['Проект']||'')+'. Комментарий: '+(task['Комментарий']||'') : '';
+
+  await callAI(msg, context);
+}
+
+function aiQuickAction(type) {
+  const task = DATA.tasks.find(t => t.ID===currentTaskId);
+  if(!task) return;
+  const name = task['Описание']||task['Название'];
+
+  const prompts = {
+    plan: 'Составь пошаговый план выполнения задачи «'+name+'». Дай конкретные шаги с оценкой времени.',
+    risks: 'Какие основные риски при выполнении задачи «'+name+'»? Как их минимизировать?',
+    email: 'Напиши деловое письмо партнёру по задаче «'+name+'». Тон — профессиональный.',
+    checklist: 'Создай подробный чеклист для задачи «'+name+'» — что нужно проверить перед завершением.',
+    next: 'Какие следующие шаги после выполнения задачи «'+name+'»? Что нужно сделать далее?'
+  };
+
+  const msg = prompts[type] || 'Помоги с задачей «'+name+'»';
+  addAiMessage('user', msg);
+
+  const context = 'Задача: '+name+'. Направление: '+(task['Направление']||'')+'. Статус: '+(task['Статус']||'')+'. Приоритет: '+(task['Приоритет']||'')+'. Дедлайн: '+(task['Дедлайн']||'не указан')+'. Ответственный: '+(task['Ответственный']||'не указан')+'.';
+  callAI(msg, context);
+}
+
+function aiGenerateSteps() {
+  aiQuickAction('plan');
+}
+
+async function callAI(userMsg, context) {
+  // Show loading
+  const container = document.getElementById('ai-messages');
+  const loadingId = 'ai-loading-'+Date.now();
+  container.innerHTML += '<div class="ai-msg assistant" id="'+loadingId+'"><div class="ai-loading"><span></span><span></span><span></span></div></div>';
+  container.scrollTop = container.scrollHeight;
+
+  const sendBtn = document.getElementById('ai-send-btn');
+  sendBtn.disabled = true;
+
+  try {
+    // Try calling AI endpoint
+    const response = await fetch(CONFIG.AI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: userMsg,
+        context: context,
+        history: aiMessages.slice(-10),
+        user: USER ? USER.name : ''
+      })
+    });
+
+    let aiResponse = '';
+    if (response.ok) {
+      const data = await response.json();
+      aiResponse = data.response || data.text || data.message || 'Ответ получен.';
+    } else {
+      // Fallback: generate local response
+      aiResponse = generateLocalAIResponse(userMsg, context);
+    }
+
+    // Remove loading, add response
+    const loadEl = document.getElementById(loadingId);
+    if(loadEl) loadEl.remove();
+    addAiMessage('assistant', aiResponse);
+
+  } catch(e) {
+    // Fallback to local response
+    const loadEl = document.getElementById(loadingId);
+    if(loadEl) loadEl.remove();
+    const fallback = generateLocalAIResponse(userMsg, context);
+    addAiMessage('assistant', fallback);
+  }
+
+  sendBtn.disabled = false;
+}
+
+function generateLocalAIResponse(msg, context) {
+  // Smart local fallback when AI endpoint is not available
+  const lower = msg.toLowerCase();
+
+  if (lower.includes('план') || lower.includes('шаг')) {
+    return '📋 **План выполнения:**\n\n1. Анализ текущего состояния и требований\n2. Подготовка необходимых документов и материалов\n3. Согласование с ответственными лицами\n4. Выполнение основной работы\n5. Проверка результатов и тестирование\n6. Финальное согласование и закрытие задачи\n\n⏱ Рекомендуемый срок: разбейте на этапы по 1-2 дня каждый.\n\n💡 Совет: начните с пункта 1 сегодня, чтобы не откладывать.';
+  }
+  if (lower.includes('риск')) {
+    return '⚠️ **Возможные риски:**\n\n1. Задержка от партнёров/подрядчиков\n2. Нехватка ресурсов или бюджета\n3. Изменение требований в процессе\n4. Технические сложности\n\n🛡 **Митигация:**\n- Заложите буфер по срокам (15-20%)\n- Подготовьте план Б для критических этапов\n- Регулярно сверяйтесь с заказчиком';
+  }
+  if (lower.includes('письм') || lower.includes('email')) {
+    return '📧 **Шаблон письма:**\n\nУважаемый [Имя],\n\nВ рамках нашего сотрудничества хотел бы обсудить текущий статус по задаче.\n\nНа данный момент мы находимся на этапе [этап]. Для продвижения нам необходимо [действие].\n\nПредлагаю назначить встречу/звонок для обсуждения деталей.\n\nС уважением,\n'+((USER?USER.name:''))||'[Ваше имя]';
+  }
+  if (lower.includes('чеклист') || lower.includes('проверк')) {
+    return '✅ **Чеклист:**\n\n☐ Все документы подготовлены\n☐ Согласование с руководством получено\n☐ Бюджет утверждён\n☐ Сроки реалистичны\n☐ Ответственные назначены\n☐ Риски учтены\n☐ Результат соответствует ТЗ\n☐ Обратная связь получена';
+  }
+  if (lower.includes('следующ') || lower.includes('далее') || lower.includes('next')) {
+    return '➡️ **Следующие шаги:**\n\n1. Зафиксировать результаты текущей задачи\n2. Уведомить заинтересованных лиц о завершении\n3. Обновить статус в системе\n4. Провести ретроспективу (что пошло хорошо / что улучшить)\n5. Перейти к следующей задаче по приоритету';
+  }
+
+  return '🤖 Я проанализировал задачу. Вот что могу сказать:\n\n' + context + '\n\nЧтобы я дал более точный ответ, уточните что именно вас интересует — план выполнения, риски, коммуникации или другой аспект.';
+}
+
+function addAiMessage(role, text) {
+  aiMessages.push({ role, content: text });
+  const container = document.getElementById('ai-messages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + role;
+  // Simple markdown-like formatting
+  div.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+// ============================================================
+// MODALS: OPEN / CLOSE / SAVE
+// ============================================================
+function openModal(type, existingData) {
+  if (type === 'newproject') {
+    openAddProjectModal();
     return;
   }
 
-  const pending = DATA.approvals.filter(a => (a['Статус'] || '').includes('Ожидает'));
-  const decided = DATA.approvals.filter(a => !(a['Статус'] || '').includes('Ожидает'));
-
-  let html = '<div class="card"><div class="card-header"><h3>⏳ Ожидают решения (' + pending.length + ')</h3></div>';
-  html += '<div class="table-wrap"><table><thead><tr><th>Тип</th><th>Описание</th><th>От кого</th><th>Направление</th><th>Дата</th><th>Действия</th></tr></thead><tbody>';
-  html += pending.length ? pending.map(a =>
-    '<tr><td>' + escHtml(a['Тип']) + '</td>' +
-    '<td>' + escHtml(a['Описание']) + '</td>' +
-    '<td>' + escHtml(a['От_кого']) + '</td>' +
-    '<td>' + escHtml(a['Направление']) + '</td>' +
-    '<td>' + escHtml(a['Дата_запроса'] || '') + '</td>' +
-    '<td><div class="actions-cell">' +
-    '<button class="btn btn-xs btn-approve" onclick="handleApproval(\'' + escAttr(a.ID) + '\',true)">✅ Да</button> ' +
-    '<button class="btn btn-xs btn-reject" onclick="handleApproval(\'' + escAttr(a.ID) + '\',false)">❌ Нет</button>' +
-    '</div></td></tr>'
-  ).join('') : emptyRow(6, 'Нет ожидающих согласований ✨');
-  html += '</tbody></table></div></div>';
-
-  if (decided.length > 0) {
-    html += '<div class="card" style="margin-top:16px"><div class="card-header"><h3>📜 История решений</h3></div>';
-    html += '<div class="table-wrap"><table><thead><tr><th>Тип</th><th>Описание</th><th>Статус</th><th>Дата решения</th></tr></thead><tbody>';
-    html += decided.map(a =>
-      '<tr><td>' + escHtml(a['Тип']) + '</td><td>' + escHtml(a['Описание']) + '</td><td>' + statusBadge(a['Статус']) + '</td><td>' + escHtml(a['Дата_решения'] || '') + '</td></tr>'
-    ).join('');
-    html += '</tbody></table></div></div>';
-  }
-
-  el.innerHTML = html;
-}
-
-// ============================================================
-// RENDER: COMMUNICATIONS
-// ============================================================
-function renderComms() {
-  let data = DATA.comms || [];
-  data = filterBySearch(data, 'comm-search', ['Партнёр', 'Тема', 'Результат']);
-
-  document.getElementById('comms-table').innerHTML = data.length ? data.map(c =>
-    '<tr>' +
-    '<td><strong>' + escHtml(c['Партнёр']) + '</strong></td>' +
-    '<td>' + escHtml(c['Тип']) + '</td>' +
-    '<td>' + escHtml(c['Тема']) + '</td>' +
-    '<td style="font-size:12px;max-width:250px;overflow:hidden;text-overflow:ellipsis">' + escHtml(c['Результат'] || '') + '</td>' +
-    '<td>' + escHtml(c['Дата'] || '—') + '</td>' +
-    '<td style="font-size:12px">' + escHtml(c['Автор'] || '—') + '</td>' +
-    '<td>' + actionButtons('comm', c.ID || '', c['Партнёр']) + '</td>' +
-    '</tr>'
-  ).join('') : emptyRow(7, 'Нет записей о коммуникациях');
-}
-
-// ============================================================
-// RENDER: SETTINGS
-// ============================================================
-function renderSettings() {
-  const stats = [
-    { label: 'Партнёры', value: DATA.partners.length },
-    { label: 'Проекты', value: DATA.projects.length },
-    { label: 'Задачи', value: DATA.tasks.length },
-    { label: 'Сотрудники', value: DATA.staff.length },
-    { label: 'Направления', value: DATA.directions.length },
-    { label: 'Согласования', value: DATA.approvals.length },
-    { label: 'Коммуникации', value: (DATA.comms || []).length },
-    { label: 'Версия', value: CONFIG.VERSION }
-  ];
-  document.getElementById('s-stats').innerHTML = stats.map(s =>
-    '<div class="detail-item"><div class="detail-label">' + s.label + '</div><div class="detail-value">' + s.value + '</div></div>'
-  ).join('');
-}
-
-// ============================================================
-// MODAL: OPEN / CLOSE
-// ============================================================
-function openModal(type, existingData) {
   currentModal = type;
   editingItem = existingData || null;
   const def = FORM_DEFS[type];
-  if (!def) return;
+  if(!def) return;
 
-  // Auto-set direction when inside project workspace
-  const autoDir = currentProject || null;
+  // Auto-set direction
+  const autoDir = currentSubproject || null;
 
-  document.getElementById('modalTitle').textContent =
-    (editingItem ? '✏️ Редактировать: ' : '➕ Добавить: ') + def.title;
+  document.getElementById('modalTitle').textContent = (editingItem?'✏️ Редактировать: ':'➕ Добавить: ') + def.title;
 
   let html = '';
   for (const field of def.fields) {
-    const val = editingItem
-      ? (editingItem[field.name] || '')
-      : (field.name === 'Направление' && autoDir ? autoDir : '');
-    const reqClass = field.required ? 'required' : '';
+    const val = editingItem ? (editingItem[field.name]||'') : (field.name==='Направление'&&autoDir ? autoDir : '');
+    const req = field.required ? 'required' : '';
 
-    html += '<div class="form-group">';
-    html += '<label class="' + reqClass + '">' + escHtml(field.name) + '</label>';
+    html += '<div class="form-group"><label class="'+req+'">'+esc(field.name)+'</label>';
+    const opts = typeof field.options === 'function' ? field.options() : field.options;
 
-    if (field.type === 'select') {
-      html += '<select id="field-' + field.name + '">';
-      for (const opt of field.options) {
-        html += '<option value="' + escAttr(opt) + '"' + (val === opt ? ' selected' : '') + '>' + escHtml(opt) + '</option>';
-      }
+    if (field.type==='select') {
+      html += '<select id="field-'+field.name+'">';
+      for (const o of (opts||[])) html += '<option value="'+escA(o)+'"'+(val===o?' selected':'')+'>'+esc(o)+'</option>';
       html += '</select>';
-    } else if (field.type === 'textarea') {
-      html += '<textarea id="field-' + field.name + '" placeholder="' + escAttr(field.placeholder || '') + '">' + escHtml(val) + '</textarea>';
+    } else if (field.type==='textarea') {
+      html += '<textarea id="field-'+field.name+'" placeholder="'+escA(field.placeholder||'')+'">'+esc(val)+'</textarea>';
     } else {
-      html += '<input type="' + field.type + '" id="field-' + field.name + '" value="' + escAttr(val) + '" placeholder="' + escAttr(field.placeholder || '') + '">';
+      html += '<input type="'+field.type+'" id="field-'+field.name+'" value="'+escA(val)+'" placeholder="'+escA(field.placeholder||'')+'">';
     }
     html += '</div>';
   }
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('show');
+  setTimeout(() => { const f=document.getElementById('field-'+def.fields[0].name); if(f)f.focus(); }, 200);
+}
 
-  // Focus first field
-  setTimeout(() => {
-    const first = document.getElementById('field-' + def.fields[0].name);
-    if (first) first.focus();
-  }, 200);
+function openAddProjectModal() {
+  currentModal = 'newproject';
+  document.getElementById('modalTitle').textContent = '➕ Добавить проект';
+  document.getElementById('modalBody').innerHTML =
+    '<div class="form-group"><label class="required">Название проекта</label><input type="text" id="field-projname" placeholder="Например: Бурмистр"></div>'+
+    '<div class="form-group"><label>Emoji</label><input type="text" id="field-projemoji" placeholder="🏢" value="🏢"></div>'+
+    '<div class="form-group"><label>Описание</label><textarea id="field-projdesc" placeholder="Описание проекта..."></textarea></div>'+
+    '<div class="form-group"><label>Цвет</label><select id="field-projcolor"><option value="var(--accent)">Зелёный</option><option value="var(--blue)">Синий</option><option value="var(--purple)">Фиолетовый</option><option value="var(--orange)">Оранжевый</option><option value="var(--pink)">Розовый</option></select></div>';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+function openAddSubproject() {
+  if (!currentProject) return;
+  currentModal = 'newsubproject';
+  const proj = PROJECTS[currentProject];
+  document.getElementById('modalTitle').textContent = '➕ Добавить подпроект в «'+proj.name+'»';
+
+  let fieldsHtml = '<div class="form-group"><label class="required">Название</label><input type="text" id="field-subname" placeholder="Название подпроекта"></div>';
+  fieldsHtml += '<div class="form-group"><label>Emoji</label><input type="text" id="field-subemoji" placeholder="📌" value="📌"></div>';
+  fieldsHtml += '<div class="form-group"><label>Описание</label><textarea id="field-subdesc" placeholder="Описание..."></textarea></div>';
+
+  // For sites: extra fields
+  if (proj.canAddSub) {
+    fieldsHtml += '<div class="form-group"><label>Ссылка на сайт</label><input type="text" id="field-suburl" placeholder="https://..."></div>';
+    fieldsHtml += '<div class="form-group"><label>Клиент</label><input type="text" id="field-subclient" placeholder="Имя заказчика"></div>';
+    fieldsHtml += '<div class="form-group"><label>Телефон</label><input type="text" id="field-subphone" placeholder="+7..."></div>';
+  }
+
+  document.getElementById('modalBody').innerHTML = fieldsHtml;
+  document.getElementById('modalOverlay').classList.add('show');
 }
 
 function closeModal() {
@@ -2818,193 +2855,180 @@ function closeModal() {
   editingItem = null;
 }
 
-// ============================================================
-// MODAL: SAVE
-// ============================================================
 async function saveModal() {
-  const def = FORM_DEFS[currentModal];
-  if (!def) return;
+  // Handle new project
+  if (currentModal === 'newproject') {
+    const name = document.getElementById('field-projname').value.trim();
+    if (!name) { toast('Введите название','warning'); return; }
+    const key = name.toLowerCase().replace(/[^a-zа-яё0-9]/gi,'_');
+    const emoji = document.getElementById('field-projemoji').value.trim() || '📁';
+    const desc = document.getElementById('field-projdesc').value.trim();
+    const color = document.getElementById('field-projcolor').value;
 
-  // Validate required fields
+    PROJECTS[key] = {
+      name: name, emoji: emoji, color: color,
+      gradient: 'linear-gradient(90deg, '+color+', '+color+')',
+      desc: desc, subprojects: {}, canAddSub: true
+    };
+    closeModal();
+    renderAll();
+    toast('✅ Проект «'+name+'» создан!','success');
+    return;
+  }
+
+  // Handle new subproject
+  if (currentModal === 'newsubproject') {
+    const name = document.getElementById('field-subname').value.trim();
+    if (!name) { toast('Введите название','warning'); return; }
+    const emoji = document.getElementById('field-subemoji').value.trim() || '📌';
+    const desc = document.getElementById('field-subdesc').value.trim();
+    const proj = PROJECTS[currentProject];
+    if (!proj) return;
+
+    proj.subprojects[name] = { emoji: emoji, color: proj.color, desc: desc };
+
+    // If site project, save extra fields as a direction record
+    if (proj.canAddSub) {
+      const url = document.getElementById('field-suburl')?.value || '';
+      const client = document.getElementById('field-subclient')?.value || '';
+      const phone = document.getElementById('field-subphone')?.value || '';
+      // Write to Directions sheet
+      await apiWrite('Направления', {
+        ID: 'DIR'+String(Date.now()).slice(-6),
+        'Название': name,
+        'Проект': proj.name,
+        'Emoji': emoji,
+        'Описание': desc,
+        'Ссылка': url,
+        'Клиент': client,
+        'Телефон': phone,
+        'Дата_создания': today()
+      });
+    }
+
+    closeModal();
+    renderAll();
+    if(currentProject) renderProjectView();
+    toast('✅ Подпроект «'+name+'» добавлен!','success');
+    return;
+  }
+
+  // Standard form save
+  const def = FORM_DEFS[currentModal];
+  if(!def) return;
+
   for (const field of def.fields) {
     if (field.required) {
-      const el = document.getElementById('field-' + field.name);
-      if (!el || !el.value.trim()) {
-        toast('⚠️ Заполните поле «' + field.name + '»', 'warning');
-        if (el) el.focus();
-        return;
-      }
+      const el = document.getElementById('field-'+field.name);
+      if(!el||!el.value.trim()) { toast('Заполните «'+field.name+'»','warning'); if(el)el.focus(); return; }
     }
   }
 
-  // Build row
   const row = {};
-  if (editingItem) {
-    row.ID = editingItem.ID;
-  } else {
-    row.ID = currentModal.charAt(0).toUpperCase() + String(Date.now()).slice(-6);
-  }
+  row.ID = editingItem ? editingItem.ID : currentModal.charAt(0).toUpperCase()+String(Date.now()).slice(-6);
 
   for (const field of def.fields) {
-    const el = document.getElementById('field-' + field.name);
+    const el = document.getElementById('field-'+field.name);
     row[field.name] = el ? el.value : '';
   }
 
-  // Auto-fill system fields
-  const today = new Date().toISOString().split('T')[0];
+  const td = today();
+  if(def.sheet==='Сотрудники'&&!editingItem) { row['Статус']='Активный'; row['Дата_добавления']=td; }
+  if(def.sheet==='Проекты') { if(!editingItem) row['Создано']=td; row['Обновлено']=td; }
+  if(def.sheet==='Коммуникации'&&!editingItem) { row['Дата']=td; row['Автор']=USER?USER.name:''; }
 
-  if (def.sheet === 'Сотрудники' && !editingItem) {
-    row['Статус'] = 'Активный';
-    row['Дата_добавления'] = today;
-  }
-  if (def.sheet === 'Проекты') {
-    if (!editingItem) row['Создано'] = today;
-    row['Обновлено'] = today;
-  }
-  if (def.sheet === 'Коммуникации') {
-    if (!editingItem) {
-      row['Дата'] = today;
-      row['Автор'] = USER ? USER.name : '';
-    }
-  }
-
-  // Check permissions
   const perms = getUserPerms();
-  if (!perms.canWrite && !editingItem) {
-    // Send through approval workflow
+  if(!perms.canWrite && !editingItem) {
     const approvalRow = {
-      ID: 'APR' + String(Date.now()).slice(-6),
-      'Тип': 'Добавление: ' + def.title,
-      'Описание': row['Название'] || row['Описание'] || row['Имя'] || row['Партнёр'] || '',
-      'От_кого': USER ? USER.name : '',
-      'Telegram_ID': USER ? USER.tgId : '',
-      'Направление': row['Направление'] || '',
+      ID: 'APR'+String(Date.now()).slice(-6),
+      'Тип': 'Добавление: '+def.title,
+      'Описание': row['Название']||row['Описание']||row['Имя']||row['Партнёр']||'',
+      'От_кого': USER?USER.name:'',
+      'Telegram_ID': USER?USER.tgId:'',
+      'Направление': row['Направление']||'',
       'Статус': '⏳ Ожидает',
-      'Дата_запроса': today,
-      'Данные': JSON.stringify(row).substring(0, 500)
+      'Дата_запроса': td,
+      'Данные': JSON.stringify(row).substring(0,500)
     };
-
     document.getElementById('modalSaveBtn').disabled = true;
     const ok = await apiWrite('Согласования', approvalRow);
     document.getElementById('modalSaveBtn').disabled = false;
-
-    if (ok) {
-      toast('⏳ Запрос на согласование отправлен CEO', 'info');
-      setTimeout(() => loadData(), 1500);
-    }
+    if(ok) toast('⏳ Отправлено на согласование','info');
     closeModal();
+    setTimeout(loadData, 1500);
     return;
   }
 
-  // Direct write for CEO
   document.getElementById('modalSaveBtn').disabled = true;
   const ok = await apiWrite(def.sheet, row);
   document.getElementById('modalSaveBtn').disabled = false;
-
-  if (ok) {
-    toast('✅ ' + def.title + ' сохранён!', 'success');
-    setTimeout(() => loadData(), 1500);
-  }
+  if(ok) toast('✅ '+def.title+' сохранён!','success');
   closeModal();
+  setTimeout(loadData, 1500);
 }
 
 // ============================================================
-// VIEW DETAIL
+// VIEW / EDIT / DELETE
 // ============================================================
 function viewItem(type, id) {
-  const dataMap = { partner: 'partners', project: 'projects', task: 'tasks', staff: 'staff', comm: 'comms' };
-  const key = dataMap[type];
-  const item = DATA[key]?.find(i => i.ID === id);
-  if (!item) return;
+  const map = {partner:'partners',project:'projects',task:'tasks',staff:'staff',comm:'comms'};
+  const item = DATA[map[type]]?.find(i => i.ID===id);
+  if(!item) return;
 
-  const title = item['Название'] || item['Описание'] || item['Имя'] || item['Партнёр'] || 'Детали';
-  document.getElementById('detailTitle').textContent = '📋 ' + title;
+  document.getElementById('detailTitle').textContent = '📋 '+(item['Название']||item['Описание']||item['Имя']||item['Партнёр']||'Детали');
 
-  const allFields = Object.entries(item).filter(([k]) => k !== 'row_number');
+  const fields = Object.entries(item).filter(([k])=>k!=='row_number');
   let html = '<div class="detail-grid">';
-  for (const [key, val] of allFields) {
-    if (!val && val !== 0) continue;
-    const isLong = String(val).length > 60;
-    html += '<div class="detail-item ' + (isLong ? 'detail-full' : '') + '">';
-    html += '<div class="detail-label">' + escHtml(key) + '</div>';
-    html += '<div class="detail-value">' + escHtml(val) + '</div>';
-    html += '</div>';
+  for (const [k,v] of fields) {
+    if(!v&&v!==0) continue;
+    const long = String(v).length > 60;
+    html += '<div class="detail-item '+(long?'detail-full':'')+'"><div class="detail-label">'+esc(k)+'</div><div class="detail-value">'+esc(v)+'</div></div>';
   }
   html += '</div>';
-
   document.getElementById('detailBody').innerHTML = html;
-  document.getElementById('detailEditBtn').onclick = function () {
-    closeDetail();
-    editItem(type, id);
-  };
+  document.getElementById('detailEditBtn').onclick = function() { closeDetail(); editItem(type,id); };
   document.getElementById('detailOverlay').classList.add('show');
 }
 
-function closeDetail() {
-  document.getElementById('detailOverlay').classList.remove('show');
-}
+function closeDetail() { document.getElementById('detailOverlay').classList.remove('show'); }
 
-// ============================================================
-// EDIT ITEM
-// ============================================================
 function editItem(type, id) {
-  const dataMap = { partner: 'partners', project: 'projects', task: 'tasks', staff: 'staff', comm: 'comms' };
-  const key = dataMap[type];
-  const item = DATA[key]?.find(i => i.ID === id);
-  if (item) openModal(type, item);
+  const map = {partner:'partners',project:'projects',task:'tasks',staff:'staff',comm:'comms'};
+  const item = DATA[map[type]]?.find(i => i.ID===id);
+  if(item) openModal(type, item);
 }
 
-// ============================================================
-// DELETE ITEM
-// ============================================================
 function confirmDelete(type, id, name) {
-  const perms = getUserPerms();
-  if (!perms.canDelete) {
-    toast('⛔ Удаление доступно только CEO', 'error');
-    return;
-  }
-
-  document.getElementById('confirmTitle').textContent = 'Удалить запись?';
-  document.getElementById('confirmText').textContent = '«' + (name || id) + '» будет удалена. Это действие нельзя отменить.';
+  if(!getUserPerms().canDelete) { toast('⛔ Только CEO','error'); return; }
+  document.getElementById('confirmTitle').textContent = 'Удалить?';
+  document.getElementById('confirmText').textContent = '«'+(name||id)+'» будет удалена.';
   document.getElementById('confirmOverlay').classList.add('show');
-
-  confirmCallback = function (confirmed) {
-    if (confirmed) {
-      const dataMap = { partner: 'partners', project: 'projects', task: 'tasks', staff: 'staff', comm: 'comms' };
-      const key = dataMap[type];
-      if (key && DATA[key]) {
-        DATA[key] = DATA[key].filter(i => i.ID !== id);
-      }
+  confirmCallback = function(ok) {
+    if(ok) {
+      const map = {partner:'partners',project:'projects',task:'tasks',staff:'staff',comm:'comms'};
+      if(DATA[map[type]]) DATA[map[type]] = DATA[map[type]].filter(i=>i.ID!==id);
       renderAll();
-      toast('🗑 Запись удалена (локально)', 'warning');
+      toast('🗑 Удалено','warning');
     }
   };
 }
 
-function closeConfirm(result) {
+function closeConfirm(r) {
   document.getElementById('confirmOverlay').classList.remove('show');
-  if (confirmCallback) {
-    confirmCallback(result);
-    confirmCallback = null;
-  }
+  if(confirmCallback) { confirmCallback(r); confirmCallback=null; }
 }
 
 // ============================================================
-// APPROVALS HANDLING
+// APPROVALS
 // ============================================================
 async function handleApproval(id, approved) {
-  const item = DATA.approvals.find(a => a.ID === id);
-  if (!item) return;
-
-  const today = new Date().toISOString().split('T')[0];
-  item['Статус'] = approved ? '✅ Одобрено' : '❌ Отклонено';
-  item['Дата_решения'] = today;
-  item['Решение_CEO'] = USER ? USER.name : '';
-
+  const item = DATA.approvals.find(a=>a.ID===id);
+  if(!item) return;
+  item['Статус'] = approved?'✅ Одобрено':'❌ Отклонено';
+  item['Дата_решения'] = today();
+  item['Решение_CEO'] = USER?USER.name:'';
   renderAll();
-  toast(approved ? '✅ Одобрено' : '❌ Отклонено', approved ? 'success' : 'error');
-
-  // Persist to sheet
+  toast(approved?'✅ Одобрено':'❌ Отклонено', approved?'success':'error');
   await apiWrite('Согласования', item);
 }
 
@@ -3012,55 +3036,63 @@ async function handleApproval(id, approved) {
 // CSV EXPORT
 // ============================================================
 function exportCSV(type) {
-  const dataMap = { partners: DATA.partners, tasks: DATA.tasks, projects: DATA.projects };
-  const data = filterByRole(dataMap[type] || []);
-  if (!data.length) {
-    toast('Нет данных для экспорта', 'warning');
-    return;
-  }
-
-  const headers = Object.keys(data[0]).filter(k => k !== 'row_number');
-  let csv = '\uFEFF'; // BOM for Excel UTF-8
-  csv += headers.join(';') + '\n';
-  data.forEach(row => {
-    csv += headers.map(h => '"' + String(row[h] || '').replace(/"/g, '""') + '"').join(';') + '\n';
-  });
-
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
+  const map = {partners:DATA.partners, tasks:DATA.tasks, projects:DATA.projects};
+  const data = filterByRole(map[type]||[]);
+  if(!data.length) { toast('Нет данных','warning'); return; }
+  const headers = Object.keys(data[0]).filter(k=>k!=='row_number');
+  let csv = '\uFEFF' + headers.join(';')+'\n';
+  data.forEach(r => { csv += headers.map(h=>'"'+String(r[h]||'').replace(/"/g,'""')+'"').join(';')+'\n'; });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
   const a = document.createElement('a');
-  a.href = url;
-  a.download = 'RKT_' + type + '_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.href = URL.createObjectURL(blob);
+  a.download = 'RKT_'+type+'_'+today()+'.csv';
   a.click();
-  URL.revokeObjectURL(url);
-  toast('📥 Экспорт завершён', 'success');
+  toast('📥 Экспорт готов','success');
 }
 
 // ============================================================
-// KEYBOARD SHORTCUTS
+// KEYBOARD
 // ============================================================
-document.addEventListener('keydown', function (e) {
-  // Enter on login screen
-  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') {
-    doLogin();
-    return;
-  }
-
-  // Escape to close modals
-  if (e.key === 'Escape') {
-    if (document.getElementById('confirmOverlay').classList.contains('show')) {
-      closeConfirm(false);
-    } else if (document.getElementById('detailOverlay').classList.contains('show')) {
-      closeDetail();
-    } else if (document.getElementById('modalOverlay').classList.contains('show')) {
-      closeModal();
-    }
+document.addEventListener('keydown', function(e) {
+  if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none') { doLogin(); return; }
+  if(e.key==='Escape') {
+    if(document.getElementById('confirmOverlay').classList.contains('show')) closeConfirm(false);
+    else if(document.getElementById('detailOverlay').classList.contains('show')) closeDetail();
+    else if(document.getElementById('modalOverlay').classList.contains('show')) closeModal();
   }
 });
 
 // ============================================================
-// INIT
+// INIT — Load saved subprojects from directions
 // ============================================================
+function loadSavedSubprojects() {
+  // Load directions from sheet and add as subprojects to matching projects
+  if (DATA.directions && DATA.directions.length) {
+    DATA.directions.forEach(d => {
+      const name = d['Название'];
+      const projName = d['Проект'] || '';
+      if (!name) return;
+      // Find which project this belongs to
+      for (const [key, proj] of Object.entries(PROJECTS)) {
+        if (proj.name === projName && !proj.subprojects[name]) {
+          proj.subprojects[name] = {
+            emoji: d['Emoji'] || '📌',
+            color: proj.color,
+            desc: d['Описание'] || ''
+          };
+        }
+      }
+    });
+  }
+}
+
+// Override renderAll to include saved subprojects
+const _origRenderAll = renderAll;
+renderAll = function() {
+  loadSavedSubprojects();
+  _origRenderAll();
+};
+
 checkSavedLogin();
 </script>
 </body>
