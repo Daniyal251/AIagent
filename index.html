@@ -1872,11 +1872,23 @@ const CONFIG = {
   AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
   SHEET_ID: '1Te4CsdcN1rvpznHNyPa24MuH5ZSx45DUUDREWO5mtoE',
   REFRESH: 300000,
-  VERSION: '6.0.0'
+  VERSION: '7.1.0'
 };
 
 let DATA = { partners:[], tasks:[], directions:[], staff:[], projects:[], approvals:[], comms:[], documents:[] };
 let USER = null;
+
+function normalizeRole(role) {
+  const map = {
+    'генеральный директор': 'CEO', 'гендиректор': 'CEO', 'гендир': 'CEO', 'гд': 'CEO', 'директор': 'CEO',
+    'заместитель': 'Зам', 'заместитель директора': 'Зам', 'замдир': 'Зам', 'зам': 'Зам',
+    'менеджер по продажам': 'Менеджер', 'продажник': 'Менеджер', 'менеджер': 'Менеджер',
+    'разраб': 'Разработчик', 'программист': 'Разработчик', 'dev': 'Разработчик', 'разработчик': 'Разработчик',
+    'инженер': 'Инженер', 'руководитель': 'Руководитель', 'сотрудник': 'Сотрудник',
+    'ceo': 'CEO'
+  };
+  return map[(role||'').toLowerCase()] || role || 'Сотрудник';
+}
 let currentModal = '';
 let editingItem = null;
 let confirmCallback = null;
@@ -2289,7 +2301,7 @@ async function doLogin() {
 
     USER = {
       id: staff.ID||'', tgId: String(staff.Telegram_ID).trim(),
-      name: staff['Имя']||'Сотрудник', role: staff['Роль']||'Руководитель',
+      name: staff['Имя']||'Сотрудник', role: normalizeRole(staff['Роль']||'Сотрудник'),
       direction: staff['Направление']||'Все', email: staff['Email']||'',
       phone: staff['Телефон']||'', username: staff['Username']||''
     };
@@ -2382,11 +2394,16 @@ function showApp() {
 // DATA
 // ============================================================
 function normData(d) {
+  const staffArr = Array.isArray(d.staff)?d.staff:[];
+  // Normalize roles and filter out template/placeholder rows
+  const cleanStaff = staffArr
+    .filter(s => s['Имя'] && !['ФИО','Имя','Фамилия','Пример'].includes(s['Имя']))
+    .map(s => { if(s['Роль']) s['Роль'] = normalizeRole(s['Роль']); return s; });
   return {
-    partners: Array.isArray(d.partners)?d.partners:[],
-    tasks: Array.isArray(d.tasks)?d.tasks:[],
+    partners: (Array.isArray(d.partners)?d.partners:[]).filter(p => p['Название'] && !['Название','Пример'].includes(p['Название'])),
+    tasks: (Array.isArray(d.tasks)?d.tasks:[]).filter(t => t['Описание'] && !['Описание','Пример'].includes(t['Описание'])),
     directions: Array.isArray(d.directions)?d.directions:[],
-    staff: Array.isArray(d.staff)?d.staff:[],
+    staff: cleanStaff,
     projects: Array.isArray(d.projects)?d.projects:[],
     approvals: Array.isArray(d.approvals)?d.approvals:[],
     comms: Array.isArray(d.comms)?d.comms:[],
