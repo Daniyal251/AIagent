@@ -1652,6 +1652,13 @@ tbody tr:last-child td { border-bottom: none; }
           <button class="btn btn-primary" id="btn-add-staff" onclick="openModal('staff')">+ Сотрудник</button>
         </div>
       </div>
+      <div class="staff-filters" id="staff-filters">
+        <div class="tabs" id="staff-project-tabs"></div>
+        <div class="search-row" style="margin-top:10px">
+          <input type="text" id="staff-search" placeholder="🔍 Поиск по имени, роли..." oninput="renderStaff()" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;color:var(--text);font-family:inherit;font-size:13px;width:100%;max-width:350px">
+        </div>
+      </div>
+      <div id="staff-stats" style="margin:12px 0"></div>
       <div id="staff-content"></div>
     </div>
 
@@ -2592,27 +2599,146 @@ function renderTasks() {
   }).join('') : emptyRow(7,'Нет задач');
 }
 
+let staffProjectFilter = 'Все';
+
+function renderStaffTabs() {
+  // Build project tabs: Все, РКТ, Сайты + dynamic from directions
+  const projects = ['Все'];
+  const projMap = {};
+  (DATA.directions || []).forEach(d => {
+    const proj = d['Проект'] || '';
+    if (proj && !projects.includes(proj)) {
+      projects.push(proj);
+      projMap[proj] = [];
+    }
+    if (proj) (projMap[proj] = projMap[proj] || []).push(d['Название'] || '');
+  });
+  // Fallback if no directions loaded
+  if (projects.length <= 1) { projects.push('РКТ', 'Сайты'); }
+  
+  const tabsEl = document.getElementById('staff-project-tabs');
+  if (tabsEl) {
+    tabsEl.innerHTML = projects.map(p => {
+      const isActive = staffProjectFilter === p;
+      const emoji = p === 'Все' ? '🏠' : p === 'РКТ' ? '🏥' : p === 'Сайты' ? '🌐' : '📂';
+      const count = p === 'Все' ? DATA.staff.length : DATA.staff.filter(s => {
+        const dir = s['Направление'] || '';
+        if (dir === 'Все' || dir === p) return true;
+        return (projMap[p] || []).some(d => dir.includes(d));
+      }).length;
+      return '<div class="tab' + (isActive ? ' active' : '') + '" onclick="filterStaffByProject(\'' + escA(p) + '\')">' + emoji + ' ' + esc(p) + ' <span style="opacity:0.6;font-size:11px">(' + count + ')</span></div>';
+    }).join('');
+  }
+}
+
+function filterStaffByProject(proj) {
+  staffProjectFilter = proj;
+  renderStaffTabs();
+  renderStaff();
+}
+
+function getStaffForProject(proj) {
+  if (proj === 'Все') return DATA.staff;
+  
+  // Get all directions for this project
+  const projDirs = (DATA.directions || [])
+    .filter(d => (d['Проект'] || '') === proj)
+    .map(d => d['Название'] || '');
+  
+  return DATA.staff.filter(s => {
+    const dir = s['Направление'] || '';
+    if (dir === 'Все') return true; // CEO/Зам видят всё — показываем везде
+    if (dir === proj) return true;   // Напрямую к проекту
+    return projDirs.some(d => dir === d || dir.includes(d));
+  });
+}
+
 function renderStaff() {
+  renderStaffTabs();
+  
   const p = getUserPerms();
-  const roleColors = { CEO: 'linear-gradient(135deg,#00d4aa,#4dabf7)', 'Зам': 'linear-gradient(135deg,#b197fc,#7950f2)', 'Руководитель': 'linear-gradient(135deg,#ffa94d,#fd7e14)' };
-  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">';
-  if (DATA.staff.length) {
-    DATA.staff.forEach(s => {
+  let staff = getStaffForProject(staffProjectFilter);
+  
+  // Search filter
+  const searchEl = document.getElementById('staff-search');
+  const q = (searchEl?.value || '').toLowerCase().trim();
+  if (q) {
+    staff = staff.filter(s => 
+      (s['Имя']||'').toLowerCase().includes(q) || 
+      (s['Роль']||'').toLowerCase().includes(q) ||
+      (s['Направление']||'').toLowerCase().includes(q) ||
+      (s['Email']||'').toLowerCase().includes(q)
+    );
+  }
+  
+  // Stats
+  const roles = {};
+  staff.forEach(s => { const r = s['Роль'] || 'Другое'; roles[r] = (roles[r]||0) + 1; });
+  const statsEl = document.getElementById('staff-stats');
+  if (statsEl) {
+    const statsHtml = Object.entries(roles).map(([r, c]) => {
+      const emoji = {CEO:'👑',Зам:'⭐',Руководитель:'📋',Менеджер:'💼',Инженер:'⚙️',Разработчик:'💻'}[r] || '👤';
+      return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--bg3);border-radius:20px;font-size:12px;color:var(--text2)">' + emoji + ' ' + esc(r) + ': <b style="color:var(--text)">' + c + '</b></span>';
+    }).join(' ');
+    statsEl.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px">' + statsHtml + 
+      '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--accent-glow);border-radius:20px;font-size:12px;color:var(--accent);font-weight:600">Всего: ' + staff.length + '</span></div>';
+  }
+  
+  const roleColors = { 
+    CEO: 'linear-gradient(135deg,#00d4aa,#4dabf7)', 
+    'Зам': 'linear-gradient(135deg,#b197fc,#7950f2)', 
+    'Руководитель': 'linear-gradient(135deg,#ffa94d,#fd7e14)',
+    'Менеджер': 'linear-gradient(135deg,#4dabf7,#228be6)',
+    'Инженер': 'linear-gradient(135deg,#51cf66,#2b8a3e)',
+    'Разработчик': 'linear-gradient(135deg,#f06595,#c2255c)'
+  };
+  
+  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">';
+  if (staff.length) {
+    // Sort: CEO first, then Зам, then Руководитель, then others
+    const roleOrder = {'CEO':0,'Зам':1,'Руководитель':2,'Менеджер':3};
+    staff = [...staff].sort((a,b) => (roleOrder[a['Роль']]??9) - (roleOrder[b['Роль']]??9));
+    
+    staff.forEach(s => {
       const re = (ROLES[s['Роль']]||{}).emoji||'👤';
       const bg = roleColors[s['Роль']] || 'linear-gradient(135deg,var(--text3),var(--text2))';
-      h += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all .2s">';
+      const initial = (s['Имя']||'?').charAt(0).toUpperCase();
+      const dirLabel = s['Направление'] || 'Все';
+      
+      // Direction badge color
+      const dirBadgeColor = dirLabel === 'Все' ? 'var(--accent)' : 
+        dirLabel === 'КТ' ? 'var(--blue)' : 
+        dirLabel.includes('Рентген') ? 'var(--purple)' : 'var(--orange)';
+      
+      h += '<div class="staff-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s;position:relative">';
+      
+      // Header with avatar
       h += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">';
-      h += '<div style="width:48px;height:48px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--bg)">'+esc((s['Имя']||'?').charAt(0).toUpperCase())+'</div>';
-      h += '<div><div style="font-weight:700;font-size:14px">'+esc(s['Имя']||'—')+'</div><div style="font-size:11px;color:var(--text2)">'+re+' '+esc(s['Роль']||'—')+'</div></div>';
+      h += '<div style="width:52px;height:52px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--bg);flex-shrink:0">'+esc(initial)+'</div>';
+      h += '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s['Имя']||'—')+'</div>';
+      h += '<div style="font-size:12px;color:var(--text2)">'+re+' '+esc(s['Роль']||'—')+'</div></div>';
       h += '</div>';
-      h += '<div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text2)">';
-      h += '<span>📂 '+esc(s['Направление']||'Все')+'</span>';
-      if(s['Telegram_ID']) h += '<span>📱 TG: '+esc(s['Telegram_ID'])+'</span>';
-      if(s['Username']) h += '<span>👤 '+esc(s['Username'])+'</span>';
+      
+      // Direction badge
+      h += '<div style="margin-bottom:10px"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:'+dirBadgeColor+'22;color:'+dirBadgeColor+';border-radius:20px;font-size:11px;font-weight:600">📂 '+esc(dirLabel)+'</span></div>';
+      
+      // Details
+      h += '<div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--text2)">';
+      if(s['Telegram_ID']) h += '<span>📱 TG: '+esc(String(s['Telegram_ID']))+'</span>';
+      if(s['Username']) h += '<span>👤 @'+esc(s['Username'])+'</span>';
       if(s['Email']) h += '<span>✉️ '+esc(s['Email'])+'</span>';
       if(s['Телефон']) h += '<span>📞 '+esc(s['Телефон'])+'</span>';
-      h += '<span>'+statusBadge(s['Статус']||'Активный')+'</span>';
+      
+      // Task count for this person
+      const taskCount = DATA.tasks.filter(t => (t['Ответственный']||'').includes(s['Имя']||'___') && (t['Статус']||'')!=='Готово').length;
+      if (taskCount) h += '<span>📋 Активных задач: <b style="color:var(--text)">'+taskCount+'</b></span>';
+      
       h += '</div>';
+      
+      // Status
+      h += '<div style="margin-top:10px">'+statusBadge(s['Статус']||'Активный')+'</div>';
+      
+      // Actions
       if(p.canManageStaff) {
         h += '<div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">';
         h += '<button class="btn btn-sm btn-secondary" onclick="editItem(\'staff\',\''+escA(s.ID)+'\')">✏️ Редакт.</button>';
@@ -2622,7 +2748,8 @@ function renderStaff() {
       h += '</div>';
     });
   } else {
-    h += '<div class="empty" style="grid-column:1/-1"><div class="icon">👥</div><p>Нет сотрудников</p></div>';
+    h += '<div class="empty" style="grid-column:1/-1"><div class="icon">👥</div><p>Нет сотрудников' + (staffProjectFilter !== 'Все' ? ' в проекте «'+esc(staffProjectFilter)+'»' : '') + '</p>' +
+      '<p style="font-size:12px;color:var(--text3);margin-top:6px">Добавьте сотрудника кнопкой «+ Сотрудник»</p></div>';
   }
   h += '</div>';
   document.getElementById('staff-content').innerHTML = h;
