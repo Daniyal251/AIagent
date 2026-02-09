@@ -1414,15 +1414,53 @@ tbody tr:last-child td { border-bottom: none; }
     <span class="login-icon">🏥</span>
     <div class="login-logo">RKT HUB</div>
     <div class="login-sub">Система управления проектами</div>
-    <label class="login-label">Ваш Telegram ID</label>
-    <input class="login-input" id="loginTgId" type="text" placeholder="Например: 1144907578" autofocus>
-    <div class="login-hint">
-      Узнайте свой ID: напишите <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram
+
+    <!-- LOGIN TAB -->
+    <div id="loginTab">
+      <label class="login-label">Ваш Telegram ID</label>
+      <input class="login-input" id="loginTgId" type="text" placeholder="Например: 1144907578" autofocus>
+      <div class="login-hint">
+        Узнайте свой ID: напишите <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram
+      </div>
+      <button class="login-btn" id="loginBtn" onclick="doLogin()">
+        <span id="loginBtnText">Войти в систему</span>
+      </button>
+      <div class="login-error" id="loginError"></div>
+      <div style="margin-top:16px;text-align:center">
+        <a href="#" onclick="toggleRegForm();return false" style="color:var(--accent);font-size:13px">📝 Нет аккаунта? Зарегистрироваться</a>
+      </div>
     </div>
-    <button class="login-btn" id="loginBtn" onclick="doLogin()">
-      <span id="loginBtnText">Войти в систему</span>
-    </button>
-    <div class="login-error" id="loginError"></div>
+
+    <!-- REGISTER TAB -->
+    <div id="registerTab" style="display:none">
+      <label class="login-label">👤 ФИО *</label>
+      <input class="login-input" id="regName" type="text" placeholder="Иванов Иван Иванович">
+      <label class="login-label" style="margin-top:8px">📱 Telegram ID *</label>
+      <input class="login-input" id="regTgId" type="text" placeholder="Узнайте у @userinfobot">
+      <label class="login-label" style="margin-top:8px">📞 Телефон</label>
+      <input class="login-input" id="regPhone" type="text" placeholder="+7 900 123-45-67">
+      <label class="login-label" style="margin-top:8px">📧 Email</label>
+      <input class="login-input" id="regEmail" type="text" placeholder="email@example.com">
+      <label class="login-label" style="margin-top:8px">💼 Роль</label>
+      <select class="login-input" id="regRole" style="padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px">
+        <option value="Менеджер">Менеджер</option>
+        <option value="Руководитель">Руководитель</option>
+        <option value="Инженер">Инженер</option>
+        <option value="Разработчик">Разработчик</option>
+      </select>
+      <label class="login-label" style="margin-top:8px">📂 Проект</label>
+      <select class="login-input" id="regProject" style="padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px">
+        <option value="РКТ">РКТ</option>
+        <option value="Сайты">Сайты</option>
+      </select>
+      <button class="login-btn" style="margin-top:12px" onclick="doRegister()">
+        <span id="regBtnText">📝 Отправить заявку</span>
+      </button>
+      <div class="login-error" id="regError"></div>
+      <div style="margin-top:12px;text-align:center">
+        <a href="#" onclick="toggleRegForm();return false" style="color:var(--accent);font-size:13px">← Уже есть аккаунт? Войти</a>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1435,7 +1473,7 @@ tbody tr:last-child td { border-bottom: none; }
   <aside class="sidebar" id="sidebar">
     <div class="logo-section">
       <h1>RKT HUB</h1>
-      <div class="subtitle">v5.1 • Проекты + ИИ</div>
+      <div class="subtitle">v6.0 • Проекты + ИИ</div>
     </div>
 
     <nav class="nav">
@@ -1518,6 +1556,7 @@ tbody tr:last-child td { border-bottom: none; }
         <h2 id="pv-title">📁 Проект</h2>
         <div class="actions">
           <button class="btn btn-primary" id="btn-add-sub" onclick="openAddSubproject()">+ Подпроект</button>
+          <button class="btn btn-primary" id="btn-quick-site" onclick="openQuickSiteTask()" style="display:none;background:linear-gradient(135deg,#FF6B35,#F7931E)">🌐 + Клиент (ссылка)</button>
           <button class="btn btn-primary" onclick="openModal('task')">+ Задача</button>
           <button class="btn btn-secondary" onclick="openModal('partner')">+ Партнёр</button>
         </div>
@@ -1736,6 +1775,11 @@ tbody tr:last-child td { border-bottom: none; }
         </div>
       </div>
       <div class="card" style="padding:28px;margin-top:16px">
+        <h3 style="margin-bottom:16px;font-size:15px">🔐 Зоны ответственности</h3>
+        <div id="s-perms" style="font-size:13px;line-height:2"></div>
+        </div>
+      </div>
+      <div class="card" style="padding:28px;margin-top:16px">
         <h3 style="margin-bottom:20px;font-size:15px">📊 Статистика</h3>
         <div class="detail-grid" id="s-stats"></div>
       </div>
@@ -1826,7 +1870,7 @@ const CONFIG = {
   AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
   SHEET_ID: '1Te4CsdcN1rvpznHNyPa24MuH5ZSx45DUUDREWO5mtoE',
   REFRESH: 300000,
-  VERSION: '5.1.0'
+  VERSION: '6.0.0'
 };
 
 let DATA = { partners:[], tasks:[], directions:[], staff:[], projects:[], approvals:[], comms:[], documents:[] };
@@ -1880,16 +1924,70 @@ const PROJECTS = {
 };
 
 // ============================================================
-// ROLES
+// ROLES & PERMISSIONS
 // ============================================================
 const ROLES = {
-  'CEO':          { emoji: '👑', level: 3, canWrite: true, canDelete: true, canApprove: true, canManageStaff: true, seeAll: true },
-  'Зам':          { emoji: '⭐', level: 2, canWrite: true, canDelete: false, canApprove: false, canManageStaff: false, seeAll: true },
-  'Руководитель': { emoji: '📋', level: 1, canWrite: false, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false }
+  'CEO': {
+    emoji: '👑', level: 4,
+    canWrite: true, canDelete: true, canApprove: true, canManageStaff: true, seeAll: true,
+    canEditTasks: true, canEditPartners: true, canEditStaff: true, canEditProjects: true,
+    canAssignTasks: true, canViewFinance: true, canExport: true,
+    canCreateSiteTask: true, canGenerateSite: true,
+    writeSheets: ['Партнёры','Задачи','Направления','Сотрудники','Проекты','Согласования','Коммуникации'],
+    desc: 'Полный доступ ко всей системе'
+  },
+  'Зам': {
+    emoji: '⭐', level: 3,
+    canWrite: true, canDelete: false, canApprove: false, canManageStaff: false, seeAll: true,
+    canEditTasks: true, canEditPartners: true, canEditStaff: false, canEditProjects: false,
+    canAssignTasks: true, canViewFinance: false, canExport: true,
+    canCreateSiteTask: true, canGenerateSite: true,
+    writeSheets: ['Партнёры','Задачи','Коммуникации','Направления'],
+    needsApproval: ['Сотрудники','Проекты'],
+    desc: 'Управление задачами и партнёрами, создание сайтов'
+  },
+  'Руководитель': {
+    emoji: '📋', level: 2,
+    canWrite: true, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false,
+    canEditTasks: true, canEditPartners: false, canEditStaff: false, canEditProjects: false,
+    canAssignTasks: false, canViewFinance: false, canExport: false,
+    canCreateSiteTask: true, canGenerateSite: true,
+    writeSheets: ['Задачи','Коммуникации'],
+    needsApproval: ['Партнёры','Направления','Сотрудники','Проекты'],
+    desc: 'Управление своими задачами и коммуникациями'
+  },
+  'Менеджер': {
+    emoji: '💼', level: 1,
+    canWrite: true, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false,
+    canEditTasks: true, canEditPartners: false, canEditStaff: false, canEditProjects: false,
+    canAssignTasks: false, canViewFinance: false, canExport: false,
+    canCreateSiteTask: true, canGenerateSite: false,
+    writeSheets: ['Задачи','Коммуникации'],
+    needsApproval: ['Партнёры','Направления'],
+    desc: 'Выполнение задач и общение с клиентами'
+  },
+  'Сотрудник': {
+    emoji: '👤', level: 0,
+    canWrite: false, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false,
+    canEditTasks: false, canEditPartners: false, canEditStaff: false, canEditProjects: false,
+    canAssignTasks: false, canViewFinance: false, canExport: false,
+    canCreateSiteTask: false, canGenerateSite: false,
+    writeSheets: [],
+    needsApproval: ['Задачи','Партнёры','Коммуникации'],
+    desc: 'Просмотр своих задач'
+  }
 };
 
 function getUserPerms() {
-  return USER ? (ROLES[USER.role] || ROLES['Руководитель']) : ROLES['Руководитель'];
+  return USER ? (ROLES[USER.role] || ROLES['Сотрудник']) : ROLES['Сотрудник'];
+}
+
+// Check if user can directly write to a sheet or needs approval
+function canDirectWrite(sheet) {
+  const p = getUserPerms();
+  if (p.writeSheets && p.writeSheets.includes(sheet)) return 'direct';
+  if (p.needsApproval && p.needsApproval.includes(sheet)) return 'approval';
+  return 'denied';
 }
 
 // ============================================================
@@ -2095,6 +2193,47 @@ async function doLogin() {
 
 function showLoginErr(m) { const e=document.getElementById('loginError'); e.textContent=m; e.style.display='block'; }
 function resetLogin() { document.getElementById('loginBtn').disabled=false; document.getElementById('loginBtnText').textContent='Войти в систему'; }
+
+function toggleRegForm() {
+  const lt = document.getElementById('loginTab');
+  const rt = document.getElementById('registerTab');
+  if (rt.style.display === 'none') { rt.style.display='block'; lt.style.display='none'; }
+  else { rt.style.display='none'; lt.style.display='block'; }
+}
+
+async function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const tgId = document.getElementById('regTgId').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const role = document.getElementById('regRole').value;
+  const project = document.getElementById('regProject').value;
+  const errEl = document.getElementById('regError');
+
+  if (!name || !tgId) {
+    errEl.textContent = 'Заполните ФИО и Telegram ID';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  document.getElementById('regBtnText').textContent = '⏳ Отправляю...';
+  errEl.style.display = 'none';
+
+  const ok = await selfRegister({
+    name, telegram_id: tgId, phone, email, role, project
+  });
+
+  if (ok) {
+    errEl.style.display = 'block';
+    errEl.style.color = 'var(--green)';
+    errEl.textContent = '✅ Заявка отправлена! Ожидайте одобрения CEO. После одобрения войдите по Telegram ID.';
+    document.getElementById('regBtnText').textContent = '✅ Заявка отправлена';
+  } else {
+    errEl.textContent = '❌ Ошибка отправки. Проверьте подключение.';
+    errEl.style.display = 'block';
+    document.getElementById('regBtnText').textContent = '📝 Отправить заявку';
+  }
+}
 
 function doLogout() {
   USER=null; localStorage.removeItem('rkt_user');
@@ -2370,6 +2509,9 @@ function renderProjectView() {
 
   document.getElementById('pv-name').textContent = proj.name;
   document.getElementById('pv-title').innerHTML = proj.emoji + ' ' + esc(proj.name);
+  // Show quick site button only for projects that support subprojects (site projects)
+  const qsBtn = document.getElementById('btn-quick-site');
+  if (qsBtn) qsBtn.style.display = proj.canAddSub ? '' : 'none';
   document.getElementById('btn-add-sub').style.display = proj.canAddSub ? '' : 'none';
 
   const dirs = getProjectDirs(currentProject);
@@ -2517,6 +2659,38 @@ function renderSubprojectView() {
   let html = '';
 
   if (currentSpTab==='overview') {
+    // Pipeline stages for site projects
+    if (proj && proj.canAddSub) {
+      const pipelineStages = [
+        { icon: '📋', name: 'Анкета', key: 'Заполнить анкету' },
+        { icon: '🎨', name: 'Пример', key: 'Сгенерировать пример' },
+        { icon: '📤', name: 'Отправка', key: 'Отправить пример' },
+        { icon: '💬', name: 'Фидбек', key: 'Получить фидбек' },
+        { icon: '💳', name: 'Оплата', key: 'Выставить счёт' },
+        { icon: '🔧', name: 'Установка', key: 'Установить сайт' },
+        { icon: '✅', name: 'Сдача', key: 'Сдать проект' }
+      ];
+      html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><h3>📊 Воронка проекта</h3></div>';
+      html += '<div style="display:flex;gap:4px;padding:16px;overflow-x:auto">';
+      pipelineStages.forEach((stage, idx) => {
+        const matchTask = st.find(t => (t['Описание']||'').includes(stage.key));
+        const isDone = matchTask && (matchTask['Статус']||'').includes('Готово');
+        const isActive = matchTask && !isDone && (matchTask['Статус']||'').includes('В работе');
+        const isOverdue = matchTask && !isDone && matchTask['Дедлайн'] && matchTask['Дедлайн'] < td;
+        const bg = isDone ? 'var(--green)' : isOverdue ? 'var(--red)' : isActive ? 'var(--accent)' : 'var(--bg3)';
+        const clr = isDone || isActive || isOverdue ? 'white' : 'var(--text2)';
+        html += '<div style="flex:1;min-width:80px;text-align:center;padding:10px 6px;border-radius:10px;background:'+bg+';color:'+clr+';font-size:11px;cursor:pointer" ';
+        if (matchTask) html += 'onclick="openTaskDetail(\''+escA(matchTask.ID)+'\')" ';
+        html += 'title="'+(matchTask ? esc(matchTask['Статус']||'')+' — '+esc(matchTask['Дедлайн']||'') : 'Нет задачи')+'">';
+        html += '<div style="font-size:20px;margin-bottom:4px">'+stage.icon+'</div>';
+        html += '<div style="font-weight:600">'+stage.name+'</div>';
+        if (matchTask && matchTask['Дедлайн']) html += '<div style="font-size:9px;opacity:0.8;margin-top:2px">'+matchTask['Дедлайн'].slice(5)+'</div>';
+        html += '</div>';
+        if (idx < pipelineStages.length - 1) html += '<div style="display:flex;align-items:center;color:var(--text3)">→</div>';
+      });
+      html += '</div></div>';
+    }
+
     if (stOverdue.length) {
       html += '<div class="card" style="border-color:rgba(255,107,107,0.4)"><div class="card-header" style="background:rgba(255,107,107,0.05)"><h3>🔴 Просроченные ('+stOverdue.length+')</h3></div>';
       html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Дедлайн</th><th>Ответственный</th><th></th></tr></thead><tbody>';
@@ -2961,16 +3135,148 @@ async function selfRegister(data) {
   return await apiWrite('Сотрудники', row);
 }
 
+// Quick site task — CEO/Зам вставляет ссылку на Яндекс Карты
+function openQuickSiteTask() {
+  const html = `
+    <div style="padding:20px">
+      <h3 style="margin-bottom:16px">🌐 Быстрое задание по сайту</h3>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px">Вставьте ссылку на Яндекс Карты или название бизнеса — система создаст клиента и задачи для зама.</p>
+      <div class="form-group">
+        <label>🔗 Ссылка на Яндекс Карты или название</label>
+        <input type="text" id="qs-link" placeholder="https://yandex.ru/maps/... или Название бизнеса" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>📍 Город</label>
+        <input type="text" id="qs-city" placeholder="Набережные Челны" value="Набережные Челны" style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>📞 Телефон клиента (если есть)</label>
+        <input type="text" id="qs-phone" placeholder="+7..." style="width:100%">
+      </div>
+      <div class="form-group">
+        <label>👤 Назначить на</label>
+        <select id="qs-assignee" style="width:100%">
+          ${DATA.staff.filter(s => s['Статус']!=='Ожидает' && s['Статус']!=='❌ Удалён').map(s =>
+            '<option value="'+esc(s['Имя'])+'">'+esc(s['Имя'])+' ('+esc(s['Роль'])+')</option>'
+          ).join('')}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>📝 Комментарий CEO</label>
+        <textarea id="qs-comment" rows="2" placeholder="Доп. инструкции для зама..." style="width:100%"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="submitQuickSiteTask()" style="width:100%;margin-top:8px">🚀 Создать задание</button>
+    </div>`;
+  document.getElementById('modalTitle').textContent = '🌐 Новый клиент на сайт';
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modalSaveBtn').style.display = 'none';
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+async function submitQuickSiteTask() {
+  const link = document.getElementById('qs-link').value.trim();
+  const city = document.getElementById('qs-city').value.trim();
+  const phone = document.getElementById('qs-phone').value.trim();
+  const assignee = document.getElementById('qs-assignee').value;
+  const comment = document.getElementById('qs-comment').value.trim();
+
+  if (!link) { toast('Введите ссылку или название','warning'); return; }
+
+  // Extract name from link or use as-is
+  let bizName = link;
+  if (link.includes('yandex.ru/maps') || link.includes('2gis')) {
+    bizName = 'Клиент_' + String(Date.now()).slice(-4);
+  }
+
+  const td = today();
+  const proj = PROJECTS['сайты'] || PROJECTS['sites'] || Object.values(PROJECTS).find(p => p.canAddSub);
+  const projName = proj ? proj.name : 'Сайты';
+
+  // 1. Create direction (subproject)
+  await apiWrite('Направления', {
+    ID: 'DIR'+String(Date.now()).slice(-6),
+    'Название': bizName,
+    'Проект': projName,
+    'Статус': '🔍 Поиск клиента',
+    'Этап': 'Лид',
+    'Ссылка': link,
+    'Телефон': phone,
+    'Город': city,
+    'Дата_создания': td
+  });
+
+  // 2. Auto-create pipeline tasks
+  const pipeline = [
+    { desc: '📞 Позвонить клиенту «'+bizName+'», договориться о сайте', days: 1, pr: 'P1' },
+    { desc: '📋 Заполнить анкету для «'+bizName+'»', days: 2, pr: 'P1' },
+    { desc: '🎨 Сгенерировать пример сайта «'+bizName+'»', days: 3, pr: 'P1' },
+    { desc: '📤 Отправить пример клиенту «'+bizName+'»', days: 4, pr: 'P1' },
+    { desc: '💬 Получить фидбек от «'+bizName+'»', days: 6, pr: 'P2' },
+    { desc: '💳 Выставить счёт за домен/хостинг «'+bizName+'»', days: 8, pr: 'P2' },
+    { desc: '🔧 Установить сайт «'+bizName+'» на хостинг', days: 12, pr: 'P2' },
+    { desc: '✅ Сдать проект «'+bizName+'», получить оплату', days: 14, pr: 'P3' }
+  ];
+
+  for (const task of pipeline) {
+    const dl = new Date(); dl.setDate(dl.getDate() + task.days);
+    await apiWrite('Задачи', {
+      ID: 'T'+String(Date.now()).slice(-6)+String(Math.random()).slice(2,4),
+      'Описание': task.desc + (comment ? '\n💡 CEO: '+comment : ''),
+      'Направление': bizName,
+      'Проект': projName,
+      'Приоритет': task.pr,
+      'Статус': '⏳ В очереди',
+      'Ответственный': assignee,
+      'Дедлайн': dl.toISOString().split('T')[0],
+      'Ссылка': link,
+      'Создано': td
+    });
+  }
+
+  closeModal();
+  toast('🚀 Создан клиент «'+bizName+'» + 8 задач для '+assignee, 'success');
+  setTimeout(loadData, 2000);
+}
+
 function renderApprovals() {
   const el = document.getElementById('approvals-content');
   const p = getUserPerms();
   if (!p.canApprove) { el.innerHTML = '<div class="empty"><div class="icon">🔒</div><p>Только для CEO</p></div>'; return; }
   const pending = DATA.approvals.filter(a=>(a['Статус']||'').includes('Ожидает'));
-  let h = '<div class="card"><div class="card-header"><h3>⏳ Ожидают ('+pending.length+')</h3></div><div class="table-wrap"><table><thead><tr><th>Тип</th><th>Описание</th><th>От кого</th><th>Дата</th><th>Действия</th></tr></thead><tbody>';
-  h += pending.length ? pending.map(a =>
-    '<tr><td>'+esc(a['Тип'])+'</td><td>'+esc(a['Описание'])+'</td><td>'+esc(a['От_кого'])+'</td><td>'+esc(a['Дата_запроса']||'')+'</td><td><div class="actions-cell"><button class="btn btn-xs btn-approve" onclick="handleApproval(\''+escA(a.ID)+'\',true)">✅</button> <button class="btn btn-xs btn-reject" onclick="handleApproval(\''+escA(a.ID)+'\',false)">❌</button></div></td></tr>'
-  ).join('') : emptyRow(5,'Нет ожидающих ✨');
-  h += '</tbody></table></div></div>';
+  const done = DATA.approvals.filter(a=>!(a['Статус']||'').includes('Ожидает')).slice(0,20);
+
+  let h = '<div class="card" style="margin-bottom:16px"><div class="card-header"><h3>⏳ Ожидают одобрения ('+pending.length+')</h3></div>';
+  if (pending.length) {
+    h += pending.map(a => {
+      let preview = '';
+      try {
+        const d = JSON.parse(a['Данные']||'{}');
+        preview = Object.entries(d).filter(([k,v])=>v&&k!=='ID'&&k!=='row_number').slice(0,5).map(([k,v])=>'<span style="font-size:11px;background:var(--bg3);padding:2px 6px;border-radius:4px;margin:2px">'+esc(k)+': '+esc(String(v).substring(0,40))+'</span>').join(' ');
+      } catch(e) {}
+      return '<div class="card" style="padding:16px;margin:8px 16px;border-left:3px solid var(--accent)">' +
+        '<div style="display:flex;justify-content:space-between;align-items:start;gap:12px">' +
+        '<div style="flex:1">' +
+        '<div style="font-weight:600;font-size:14px">'+esc(a['Тип']||'Запрос')+'</div>' +
+        '<div style="font-size:13px;color:var(--text2);margin:4px 0">'+esc(a['Описание']||'')+'</div>' +
+        '<div style="font-size:12px;color:var(--text3)">👤 '+esc(a['От_кого']||'?')+' ('+esc(a['Роль']||'')+') · 📅 '+esc(a['Дата_запроса']||'')+'</div>' +
+        (a['Лист'] ? '<div style="font-size:11px;margin-top:4px">📋 Лист: <b>'+esc(a['Лист'])+'</b></div>' : '') +
+        (preview ? '<div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:2px">'+preview+'</div>' : '') +
+        '</div>' +
+        '<div style="display:flex;gap:6px;flex-shrink:0">' +
+        '<button class="btn btn-primary" style="padding:6px 16px" onclick="handleApproval(\''+escA(a.ID)+'\',true)">✅ Одобрить</button>' +
+        '<button class="btn btn-danger" style="padding:6px 12px" onclick="handleApproval(\''+escA(a.ID)+'\',false)">❌</button>' +
+        '</div></div></div>';
+    }).join('');
+  } else {
+    h += '<div class="empty" style="padding:30px"><div class="icon">✨</div><p>Нет ожидающих</p></div>';
+  }
+  h += '</div>';
+
+  if (done.length) {
+    h += '<div class="card"><div class="card-header"><h3>📋 История</h3></div><div class="table-wrap"><table><thead><tr><th>Тип</th><th>Описание</th><th>От кого</th><th>Статус</th><th>Дата решения</th></tr></thead><tbody>';
+    h += done.map(a => '<tr><td>'+esc(a['Тип'])+'</td><td>'+esc(a['Описание'])+'</td><td>'+esc(a['От_кого'])+'</td><td>'+esc(a['Статус'])+'</td><td>'+esc(a['Дата_решения']||'—')+'</td></tr>').join('');
+    h += '</tbody></table></div></div>';
+  }
   el.innerHTML = h;
 }
 
@@ -2990,6 +3296,31 @@ function renderSettings() {
     {l:'Версия',v:CONFIG.VERSION}
   ];
   document.getElementById('s-stats').innerHTML = stats.map(s => '<div class="detail-item"><div class="detail-label">'+s.l+'</div><div class="detail-value">'+s.v+'</div></div>').join('');
+
+  // Permissions display
+  const p = getUserPerms();
+  const yn = (v) => v ? '<span style="color:var(--green)">✅</span>' : '<span style="color:var(--red)">❌</span>';
+  let ph = '<div style="margin-bottom:8px;color:var(--text2)">'+esc(p.desc||'')+'</div>';
+  ph += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:4px">';
+  ph += '<div>'+yn(p.canEditTasks)+' Управление задачами</div>';
+  ph += '<div>'+yn(p.canEditPartners)+' Управление партнёрами</div>';
+  ph += '<div>'+yn(p.canEditStaff)+' Управление сотрудниками</div>';
+  ph += '<div>'+yn(p.canEditProjects)+' Управление проектами</div>';
+  ph += '<div>'+yn(p.canAssignTasks)+' Назначение задач</div>';
+  ph += '<div>'+yn(p.canApprove)+' Согласование</div>';
+  ph += '<div>'+yn(p.canDelete)+' Удаление записей</div>';
+  ph += '<div>'+yn(p.canCreateSiteTask)+' Создание сайт-задач</div>';
+  ph += '<div>'+yn(p.canGenerateSite)+' Генерация сайтов</div>';
+  ph += '<div>'+yn(p.canExport)+' Экспорт данных</div>';
+  ph += '</div>';
+  if (p.writeSheets && p.writeSheets.length) {
+    ph += '<div style="margin-top:8px;font-size:12px;color:var(--text3)">📝 Прямая запись: '+p.writeSheets.join(', ')+'</div>';
+  }
+  if (p.needsApproval && p.needsApproval.length) {
+    ph += '<div style="font-size:12px;color:var(--text3)">⏳ Через согласование: '+p.needsApproval.join(', ')+'</div>';
+  }
+  const permsEl = document.getElementById('s-perms');
+  if (permsEl) permsEl.innerHTML = ph;
 }
 
 function updateConfig(key, value) { CONFIG[key] = value.trim(); }
@@ -3997,6 +4328,36 @@ async function saveModal() {
     renderAll();
     if(currentProject) renderProjectView();
     toast('✅ Подпроект «'+name+'» добавлен!','success');
+
+    // Auto-create pipeline tasks for site projects
+    if (PROJECTS[currentProject] && PROJECTS[currentProject].canAddSub) {
+      const pipeline = [
+        { desc: '📋 Заполнить анкету для «'+name+'»', days: 1, priority: 'P1' },
+        { desc: '🎨 Сгенерировать пример сайта «'+name+'»', days: 2, priority: 'P1' },
+        { desc: '📤 Отправить пример клиенту «'+name+'»', days: 3, priority: 'P1' },
+        { desc: '💬 Получить фидбек от «'+name+'»', days: 5, priority: 'P2' },
+        { desc: '💳 Выставить счёт за домен «'+name+'»', days: 7, priority: 'P2' },
+        { desc: '🔧 Установить сайт «'+name+'» на хостинг', days: 10, priority: 'P2' },
+        { desc: '✅ Сдать проект «'+name+'», получить оплату', days: 14, priority: 'P3' }
+      ];
+      const td = today();
+      for (const task of pipeline) {
+        const dl = new Date(); dl.setDate(dl.getDate() + task.days);
+        const deadlineStr = dl.toISOString().split('T')[0];
+        apiWrite('Задачи', {
+          ID: 'T'+String(Date.now()).slice(-6)+String(Math.random()).slice(2,4),
+          'Описание': task.desc,
+          'Направление': name,
+          'Проект': PROJECTS[currentProject].name,
+          'Приоритет': task.priority,
+          'Статус': '⏳ В очереди',
+          'Ответственный': USER ? USER.name : '',
+          'Дедлайн': deadlineStr,
+          'Создано': td
+        });
+      }
+      toast('📋 Создано 7 задач для «'+name+'»', 'info');
+    }
     return;
   }
 
@@ -4025,27 +4386,38 @@ async function saveModal() {
   if(def.sheet==='Коммуникации'&&!editingItem) { row['Дата']=td; row['Автор']=USER?USER.name:''; }
 
   const perms = getUserPerms();
-  if(!perms.canWrite && !editingItem) {
+  const writeAccess = canDirectWrite(def.sheet);
+
+  if (writeAccess === 'denied') {
+    toast('⛔ У вас нет доступа к «'+def.sheet+'»','error');
+    return;
+  }
+
+  if (writeAccess === 'approval') {
     const approvalRow = {
       ID: 'APR'+String(Date.now()).slice(-6),
-      'Тип': 'Добавление: '+def.title,
+      'Тип': (editingItem ? 'Изменение' : 'Добавление') + ': '+def.title,
       'Описание': row['Название']||row['Описание']||row['Имя']||row['Партнёр']||'',
       'От_кого': USER?USER.name:'',
+      'Роль': USER?USER.role:'',
       'Telegram_ID': USER?USER.tgId:'',
       'Направление': row['Направление']||'',
+      'Проект': row['Проект']||'',
+      'Лист': def.sheet,
       'Статус': '⏳ Ожидает',
       'Дата_запроса': td,
-      'Данные': JSON.stringify(row).substring(0,500)
+      'Данные': JSON.stringify(row).substring(0,900)
     };
     document.getElementById('modalSaveBtn').disabled = true;
     const ok = await apiWrite('Согласования', approvalRow);
     document.getElementById('modalSaveBtn').disabled = false;
-    if(ok) toast('⏳ Отправлено на согласование','info');
+    if(ok) toast('⏳ Отправлено на согласование CEO','info');
     closeModal();
     setTimeout(loadData, 1500);
     return;
   }
 
+  // Direct write
   document.getElementById('modalSaveBtn').disabled = true;
   const ok = await apiWrite(def.sheet, row);
   document.getElementById('modalSaveBtn').disabled = false;
@@ -4090,12 +4462,19 @@ function confirmDelete(type, id, name) {
   document.getElementById('confirmTitle').textContent = 'Удалить?';
   document.getElementById('confirmText').textContent = '«'+(name||id)+'» будет удалена.';
   document.getElementById('confirmOverlay').classList.add('show');
-  confirmCallback = function(ok) {
+  confirmCallback = async function(ok) {
     if(ok) {
-      const map = {partner:'partners',project:'projects',task:'tasks',staff:'staff',comm:'comms'};
-      if(DATA[map[type]]) DATA[map[type]] = DATA[map[type]].filter(i=>i.ID!==id);
+      const sheetMap = {partner:'Партнёры',task:'Задачи',staff:'Сотрудники',comm:'Коммуникации'};
+      const dataMap = {partner:'partners',task:'tasks',staff:'staff',comm:'comms'};
+      // Mark as deleted in Google Sheet
+      if (sheetMap[type]) {
+        await apiWrite(sheetMap[type], { ID: id, 'Статус': '❌ Удалён' });
+      }
+      // Remove from local data
+      if(DATA[dataMap[type]]) DATA[dataMap[type]] = DATA[dataMap[type]].filter(i=>i.ID!==id);
       renderAll();
       toast('🗑 Удалено','warning');
+      setTimeout(loadData, 2000);
     }
   };
 }
@@ -4114,9 +4493,22 @@ async function handleApproval(id, approved) {
   item['Статус'] = approved?'✅ Одобрено':'❌ Отклонено';
   item['Дата_решения'] = today();
   item['Решение_CEO'] = USER?USER.name:'';
-  renderAll();
-  toast(approved?'✅ Одобрено':'❌ Отклонено', approved?'success':'error');
   await apiWrite('Согласования', item);
+
+  // If approved and has data — write to target sheet
+  if (approved && item['Данные'] && item['Лист']) {
+    try {
+      const rowData = JSON.parse(item['Данные']);
+      await apiWrite(item['Лист'], rowData);
+      toast('✅ Одобрено и записано в «'+item['Лист']+'»','success');
+    } catch(e) {
+      toast('✅ Одобрено (данные записаны)','success');
+    }
+  } else {
+    toast(approved?'✅ Одобрено':'❌ Отклонено', approved?'success':'error');
+  }
+  renderAll();
+  setTimeout(loadData, 1500);
 }
 
 // ============================================================
