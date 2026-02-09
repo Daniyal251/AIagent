@@ -1120,6 +1120,7 @@ tbody tr:last-child td { border-bottom: none; }
 .task-step .step-text { font-size: 13px; line-height: 1.5; }
 .task-step .step-text.done { text-decoration: line-through; color: var(--text3); }
 
+.tab-sm { padding: 4px 12px; font-size: 11px; }
 /* ===== SITE GENERATOR ===== */
 .sg-form { display: flex; flex-direction: column; gap: 16px; }
 .sg-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -1529,6 +1530,8 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="tab active" data-tab="overview" onclick="showPvTab('overview')">📊 Обзор</div>
         <div class="tab" data-tab="tasks" onclick="showPvTab('tasks')">✅ Задачи</div>
         <div class="tab" data-tab="partners" onclick="showPvTab('partners')">🤝 Партнёры</div>
+        <div class="tab" data-tab="staff" onclick="showPvTab('staff')">👥 Команда</div>
+        <div class="tab" data-tab="timeline" onclick="showPvTab('timeline')">📅 План-график</div>
         <div class="tab" data-tab="comms" onclick="showPvTab('comms')">💬 Коммуникации</div>
       </div>
       <div id="pv-content"></div>
@@ -1634,10 +1637,26 @@ tbody tr:last-child td { border-bottom: none; }
           <button class="btn btn-secondary" onclick="exportCSV('tasks')">📥 CSV</button>
         </div>
       </div>
-      <div class="filters-bar">
+      <div class="filters-bar" style="display:flex;flex-direction:column;gap:8px">
         <div id="task-filters"></div>
-        <input class="search-input" id="task-search" placeholder="🔍 Поиск..." oninput="renderTasks()">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select id="task-filter-status" onchange="renderTasks()" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text);font-family:inherit;font-size:12px">
+            <option value="active">📋 Активные</option>
+            <option value="Все">Все статусы</option>
+            <option value="⏳ В очереди">⏳ В очереди</option>
+            <option value="🔄 В работе">🔄 В работе</option>
+            <option value="✅ Готово">✅ Готово</option>
+          </select>
+          <select id="task-filter-person" onchange="renderTasks()" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:6px 10px;color:var(--text);font-family:inherit;font-size:12px">
+            <option value="Все">👤 Все сотрудники</option>
+          </select>
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2);cursor:pointer">
+            <input type="checkbox" id="task-show-gantt" onchange="renderTasks()"> 📅 Показать план-график
+          </label>
+          <input class="search-input" id="task-search" placeholder="🔍 Поиск..." oninput="renderTasks()">
+        </div>
       </div>
+      <div id="task-gantt" style="margin-bottom:12px"></div>
       <div class="card"><div class="table-wrap"><table>
         <thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Статус</th><th>Ответственный</th><th>Дедлайн</th><th></th></tr></thead>
         <tbody id="tasks-table"></tbody>
@@ -1652,13 +1671,19 @@ tbody tr:last-child td { border-bottom: none; }
           <button class="btn btn-primary" id="btn-add-staff" onclick="openModal('staff')">+ Сотрудник</button>
         </div>
       </div>
-      <div class="staff-filters" id="staff-filters">
+      <!-- Step 1: Choose project -->
+      <div class="staff-projects" id="staff-projects">
         <div class="tabs" id="staff-project-tabs"></div>
-        <div class="search-row" style="margin-top:10px">
-          <input type="text" id="staff-search" placeholder="🔍 Поиск по имени, роли..." oninput="renderStaff()" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;color:var(--text);font-family:inherit;font-size:13px;width:100%;max-width:350px">
-        </div>
       </div>
-      <div id="staff-stats" style="margin:12px 0"></div>
+      <!-- Step 2: Choose direction (after project selected) -->
+      <div class="staff-directions" id="staff-direction-tabs" style="margin-top:8px"></div>
+      <!-- Stats & Search -->
+      <div style="display:flex;align-items:center;gap:12px;margin:12px 0;flex-wrap:wrap">
+        <div id="staff-stats" style="flex:1"></div>
+        <input type="text" id="staff-search" placeholder="🔍 Поиск..." oninput="renderStaff()" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 14px;color:var(--text);font-family:inherit;font-size:13px;width:200px">
+      </div>
+      <!-- Pending registrations (CEO only) -->
+      <div id="staff-pending" style="margin-bottom:16px"></div>
       <div id="staff-content"></div>
     </div>
 
@@ -1792,7 +1817,7 @@ const CONFIG = {
   WRITE_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-write',
   AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
   REFRESH: 300000,
-  VERSION: '3.0.0'
+  VERSION: '5.1.0'
 };
 
 let DATA = { partners:[], tasks:[], directions:[], staff:[], projects:[], approvals:[], comms:[], documents:[] };
@@ -2411,6 +2436,28 @@ function renderProjectView() {
     html += renderTaskTable(pt);
   } else if (currentPvTab === 'partners') {
     html += renderPartnerTable(pp);
+  } else if (currentPvTab === 'staff') {
+    // Staff for this project
+    const projName = PROJECTS[currentProject]?.name || '';
+    const projectStaff = getStaffForProject(projName).filter(s => (s['Статус']||'Активный')!=='Ожидает');
+    const roleColors = {CEO:'linear-gradient(135deg,#00d4aa,#4dabf7)','Зам':'linear-gradient(135deg,#b197fc,#7950f2)','Руководитель':'linear-gradient(135deg,#ffa94d,#fd7e14)'};
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px">';
+    const roleOrd = {'CEO':0,'Зам':1,'Руководитель':2};
+    [...projectStaff].sort((a,b)=>(roleOrd[a['Роль']]??9)-(roleOrd[b['Роль']]??9)).forEach(s => {
+      const bg = roleColors[s['Роль']]||'linear-gradient(135deg,var(--text3),var(--text2))';
+      const tc = DATA.tasks.filter(t=>(t['Ответственный']||'').includes(s['Имя']||'___')&&(t['Статус']||'')!=='Готово').length;
+      html += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;gap:12px">';
+      html += '<div style="width:40px;height:40px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--bg);font-size:16px;flex-shrink:0">'+esc((s['Имя']||'?')[0])+'</div>';
+      html += '<div><div style="font-weight:600;font-size:13px">'+esc(s['Имя']||'—')+'</div>';
+      html += '<div style="font-size:11px;color:var(--text2)">'+({CEO:'👑',Зам:'⭐',Руководитель:'📋'}[s['Роль']]||'👤')+' '+esc(s['Роль']||'')+' · '+esc(s['Направление']||'Все')+'</div>';
+      if(tc) html += '<div style="font-size:10px;color:var(--orange)">📋 '+tc+' задач</div>';
+      html += '</div></div>';
+    });
+    if(!projectStaff.length) html += '<div class="empty" style="grid-column:1/-1"><div class="icon">👥</div><p>Нет сотрудников</p></div>';
+    html += '</div>';
+  } else if (currentPvTab === 'timeline') {
+    // Gantt / Timeline
+    html += renderTimeline(pt, dirs);
   } else if (currentPvTab === 'comms') {
     const pNames = pp.map(p => p['Название']).filter(Boolean);
     const dc = (DATA.comms||[]).filter(c => pNames.some(n => (c['Партнёр']||'').includes(n)));
@@ -2574,7 +2621,15 @@ function renderPartnerFilters() {
 function renderTaskFilters() {
   const allDirs = ['Все', ...new Set(DATA.tasks.map(i=>i['Направление']).filter(Boolean))];
   const el = document.getElementById('task-filters');
-  if(el) el.innerHTML = allDirs.map(d => '<button class="filter-chip '+(currentFilters.tasks===d?'active':'')+'" onclick="currentFilters.tasks=\''+escA(d)+'\';renderAll()">'+esc(d)+'</button>').join('');
+  if(el) el.innerHTML = allDirs.map(d => '<button class="filter-chip '+(currentFilters.tasks===d?'active':'')+'" onclick="currentFilters.tasks=\''+escA(d)+'\';renderTasks()">'+esc(d)+'</button>').join('');
+  
+  // Populate person dropdown
+  const personEl = document.getElementById('task-filter-person');
+  if (personEl) {
+    const people = ['Все', ...new Set(DATA.tasks.map(t=>t['Ответственный']).filter(Boolean))];
+    const current = personEl.value;
+    personEl.innerHTML = people.map(p => '<option value="'+esc(p)+'"'+(p===current?' selected':'')+'>'+esc(p==='Все'?'👤 Все сотрудники':p)+'</option>').join('');
+  }
 }
 
 function renderPartners() {
@@ -2587,69 +2642,178 @@ function renderPartners() {
 }
 
 function renderTasks() {
+  renderTaskFilters();
   let d = filterByRole(DATA.tasks);
   d = filterByDir(d, currentFilters.tasks==='Все'?null:currentFilters.tasks);
   d = filterBySearch(d,'task-search',['Описание','Название','Ответственный','Проект']);
+  
+  // Status filter
+  const statusFilter = document.getElementById('task-filter-status')?.value || 'active';
+  if (statusFilter === 'active') d = d.filter(t => (t['Статус']||'') !== '✅ Готово' && (t['Статус']||'') !== 'Готово');
+  else if (statusFilter !== 'Все') d = d.filter(t => (t['Статус']||'').includes(statusFilter.replace(/[^а-яА-Я\s]/g,'').trim()));
+  
+  // Person filter
+  const personFilter = document.getElementById('task-filter-person')?.value || 'Все';
+  if (personFilter !== 'Все') d = d.filter(t => (t['Ответственный']||'') === personFilter);
+  
   const pO = {P1:1,P2:2,P3:3};
   d = [...d].sort((a,b)=>(pO[a['Приоритет']]||9)-(pO[b['Приоритет']]||9));
   const td = today();
+  
   document.getElementById('tasks-table').innerHTML = d.length ? d.map(t => {
-    const od = t['Дедлайн']&&t['Дедлайн']<td&&(t['Статус']||'')!=='Готово';
+    const od = t['Дедлайн']&&t['Дедлайн']<td&&(t['Статус']||'')!=='Готово'&&(t['Статус']||'')!=='✅ Готово';
     return '<tr style="'+(od?'background:rgba(255,107,107,0.05)':'')+'"><td>'+(od?'🔴 ':'')+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Ответственный']||'—')+'</td><td>'+(od?'<span style="color:var(--red);font-weight:700">':'')+esc(t['Дедлайн']||'—')+(od?'</span>':'')+'</td><td>'+actBtns('task',t.ID,t['Описание']||t['Название'])+'</td></tr>';
   }).join('') : emptyRow(7,'Нет задач');
+  
+  // Gantt chart
+  const ganttEl = document.getElementById('task-gantt');
+  if (ganttEl) {
+    const showGantt = document.getElementById('task-show-gantt')?.checked;
+    ganttEl.innerHTML = showGantt ? renderTimeline(d) : '';
+  }
 }
 
+// ============================================================
+// TIMELINE / GANTT CHART
+// ============================================================
+function renderTimeline(tasks, directions) {
+  if (!tasks || !tasks.length) return '<div class="card" style="padding:20px;text-align:center;color:var(--text2)">Нет задач с дедлайнами для отображения</div>';
+  
+  // Filter tasks with deadlines
+  const withDates = tasks.filter(t => t['Дедлайн']);
+  if (!withDates.length) return '<div class="card" style="padding:20px;text-align:center;color:var(--text2)">Задайте дедлайны задачам для отображения план-графика</div>';
+  
+  // Calculate date range
+  const dates = withDates.map(t => t['Дедлайн']).sort();
+  const td = today();
+  let minDate = dates[0] < td ? dates[0] : td;
+  let maxDate = dates[dates.length - 1];
+  
+  // Extend range a bit
+  const minD = new Date(minDate); minD.setDate(minD.getDate() - 7);
+  const maxD = new Date(maxDate); maxD.setDate(maxD.getDate() + 14);
+  const totalDays = Math.max(30, Math.ceil((maxD - minD) / 86400000));
+  
+  // Group by direction
+  const groups = {};
+  withDates.forEach(t => {
+    const dir = t['Направление'] || 'Общее';
+    (groups[dir] = groups[dir] || []).push(t);
+  });
+  
+  // Month labels
+  let months = [];
+  let d = new Date(minD);
+  while (d <= maxD) {
+    const monthNames = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+    const label = monthNames[d.getMonth()] + ' ' + d.getFullYear();
+    const pos = Math.max(0, Math.ceil((d - minD) / 86400000) / totalDays * 100);
+    if (!months.length || months[months.length-1].label !== label) months.push({label, pos});
+    d.setMonth(d.getMonth() + 1); d.setDate(1);
+  }
+  
+  // Today marker position
+  const todayPos = Math.max(0, Math.min(100, Math.ceil((new Date(td) - minD) / 86400000) / totalDays * 100));
+  
+  const prColors = {P1:'var(--red)',P2:'var(--orange)',P3:'var(--accent)'};
+  
+  let h = '<div class="card"><div class="card-header"><h3>📅 План-график</h3></div><div style="padding:16px;overflow-x:auto">';
+  
+  // Month header
+  h += '<div style="position:relative;height:24px;margin-bottom:8px;border-bottom:1px solid var(--border)">';
+  months.forEach(m => { h += '<span style="position:absolute;left:'+m.pos+'%;font-size:10px;color:var(--text3);white-space:nowrap">'+m.label+'</span>'; });
+  h += '</div>';
+  
+  // Rows per direction
+  Object.entries(groups).forEach(([dir, dirTasks]) => {
+    h += '<div style="margin-bottom:12px">';
+    h += '<div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:4px">📂 '+esc(dir)+' ('+dirTasks.length+')</div>';
+    
+    dirTasks.sort((a,b) => (a['Дедлайн']||'').localeCompare(b['Дедлайн']||'')).forEach(t => {
+      const deadline = new Date(t['Дедлайн']);
+      // Task bar: starts 30 days before deadline (or creation), ends at deadline
+      const created = t['Создано'] ? new Date(t['Создано']) : new Date(deadline - 30*86400000);
+      const startPos = Math.max(0, Math.min(100, (created - minD) / 86400000 / totalDays * 100));
+      const endPos = Math.max(startPos+2, Math.min(100, (deadline - minD) / 86400000 / totalDays * 100));
+      const width = endPos - startPos;
+      const color = prColors[t['Приоритет']] || 'var(--accent)';
+      const isDone = (t['Статус']||'').includes('Готово');
+      const isOverdue = t['Дедлайн'] < td && !isDone;
+      
+      h += '<div style="position:relative;height:22px;margin-bottom:2px">';
+      h += '<div style="position:absolute;left:'+startPos+'%;width:'+width+'%;height:18px;background:'+(isDone?'var(--green)':color)+(isDone?'44':'33')+';border:1px solid '+(isDone?'var(--green)':color)+(isDone?'88':'66')+';border-radius:4px;display:flex;align-items:center;padding:0 6px;overflow:hidden;cursor:pointer;transition:all .2s" title="'+esc(t['Описание']||'')+' — '+esc(t['Дедлайн'])+'" onclick="openTaskDetail(\''+escA(t.ID)+'\')"">';
+      h += '<span style="font-size:9px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(isOverdue?'🔴 ':isDone?'✅ ':'')+esc(t['Описание']||t['Название']||'')+'</span>';
+      h += '</div></div>';
+    });
+    h += '</div>';
+  });
+  
+  // Today line
+  h += '<div style="position:absolute;left:'+todayPos+'%;top:0;bottom:0;width:2px;background:var(--accent);opacity:0.5;pointer-events:none;z-index:5"></div>';
+  
+  h += '</div></div>';
+  return h;
+}
+
+
 let staffProjectFilter = 'Все';
+let staffDirFilter = 'Все';
 
 function renderStaffTabs() {
-  // Build project tabs: Все, РКТ, Сайты + dynamic from directions
-  const projects = ['Все'];
-  const projMap = {};
+  // Project tabs
+  const projects = ['Все', 'РКТ', 'Сайты'];
+  const projDirs = {};
   (DATA.directions || []).forEach(d => {
-    const proj = d['Проект'] || '';
-    if (proj && !projects.includes(proj)) {
-      projects.push(proj);
-      projMap[proj] = [];
-    }
-    if (proj) (projMap[proj] = projMap[proj] || []).push(d['Название'] || '');
+    const p = d['Проект'] || '';
+    if (p && !projects.includes(p)) projects.push(p);
+    (projDirs[p] = projDirs[p] || []).push(d['Название'] || '');
   });
-  // Fallback if no directions loaded
-  if (projects.length <= 1) { projects.push('РКТ', 'Сайты'); }
   
   const tabsEl = document.getElementById('staff-project-tabs');
   if (tabsEl) {
     tabsEl.innerHTML = projects.map(p => {
-      const isActive = staffProjectFilter === p;
-      const emoji = p === 'Все' ? '🏠' : p === 'РКТ' ? '🏥' : p === 'Сайты' ? '🌐' : '📂';
-      const count = p === 'Все' ? DATA.staff.length : DATA.staff.filter(s => {
-        const dir = s['Направление'] || '';
-        if (dir === 'Все' || dir === p) return true;
-        return (projMap[p] || []).some(d => dir.includes(d));
-      }).length;
-      return '<div class="tab' + (isActive ? ' active' : '') + '" onclick="filterStaffByProject(\'' + escA(p) + '\')">' + emoji + ' ' + esc(p) + ' <span style="opacity:0.6;font-size:11px">(' + count + ')</span></div>';
+      const emoji = p==='Все'?'🏠':p==='РКТ'?'🏥':p==='Сайты'?'🌐':'📂';
+      const count = getStaffForProject(p).length;
+      return '<div class="tab'+(staffProjectFilter===p?' active':'')+'" onclick="filterStaffProject(\''+escA(p)+'\')">'+emoji+' '+esc(p)+' <span style="opacity:.5;font-size:11px">('+count+')</span></div>';
     }).join('');
+  }
+  
+  // Direction tabs (only when specific project selected)
+  const dirEl = document.getElementById('staff-direction-tabs');
+  if (dirEl) {
+    if (staffProjectFilter === 'Все') {
+      dirEl.innerHTML = '';
+    } else {
+      const dirs = ['Все', ...(projDirs[staffProjectFilter] || [])];
+      dirEl.innerHTML = '<div class="tabs">' + dirs.map(d => {
+        const count = d === 'Все' ? getStaffForProject(staffProjectFilter).length : 
+          DATA.staff.filter(s => (s['Направление']||'')=== d || (d==='Все' && (s['Направление']||'')==='Все')).length;
+        return '<div class="tab tab-sm'+(staffDirFilter===d?' active':'')+'" onclick="filterStaffDir(\''+escA(d)+'\')">'+esc(d)+' <span style="opacity:.5">('+count+')</span></div>';
+      }).join('') + '</div>';
+    }
   }
 }
 
-function filterStaffByProject(proj) {
+function filterStaffProject(proj) {
   staffProjectFilter = proj;
-  renderStaffTabs();
+  staffDirFilter = 'Все';
+  renderStaff();
+}
+function filterStaffDir(dir) {
+  staffDirFilter = dir;
   renderStaff();
 }
 
 function getStaffForProject(proj) {
   if (proj === 'Все') return DATA.staff;
-  
-  // Get all directions for this project
-  const projDirs = (DATA.directions || [])
-    .filter(d => (d['Проект'] || '') === proj)
-    .map(d => d['Название'] || '');
-  
+  const projDirs = (DATA.directions || []).filter(d => (d['Проект']||'') === proj).map(d => d['Название']||'');
   return DATA.staff.filter(s => {
     const dir = s['Направление'] || '';
-    if (dir === 'Все') return true; // CEO/Зам видят всё — показываем везде
-    if (dir === proj) return true;   // Напрямую к проекту
-    return projDirs.some(d => dir === d || dir.includes(d));
+    const role = s['Роль'] || '';
+    if (dir === 'Все' || role === 'CEO') return true;
+    if (role === 'Зам' && (s['Проект']||'') === proj) return true;
+    if (role === 'Зам' && dir === proj) return true;
+    return dir === proj || projDirs.includes(dir);
   });
 }
 
@@ -2659,100 +2823,127 @@ function renderStaff() {
   const p = getUserPerms();
   let staff = getStaffForProject(staffProjectFilter);
   
-  // Search filter
-  const searchEl = document.getElementById('staff-search');
-  const q = (searchEl?.value || '').toLowerCase().trim();
-  if (q) {
-    staff = staff.filter(s => 
-      (s['Имя']||'').toLowerCase().includes(q) || 
-      (s['Роль']||'').toLowerCase().includes(q) ||
-      (s['Направление']||'').toLowerCase().includes(q) ||
-      (s['Email']||'').toLowerCase().includes(q)
-    );
+  // Direction filter
+  if (staffDirFilter !== 'Все') {
+    staff = staff.filter(s => {
+      const d = s['Направление']||'';
+      const role = s['Роль']||'';
+      return d === staffDirFilter || role === 'CEO' || role === 'Зам' || d === 'Все';
+    });
   }
+  
+  // Search
+  const q = (document.getElementById('staff-search')?.value||'').toLowerCase().trim();
+  if (q) staff = staff.filter(s => 
+    (s['Имя']||'').toLowerCase().includes(q) || (s['Роль']||'').toLowerCase().includes(q) ||
+    (s['Направление']||'').toLowerCase().includes(q) || (s['Email']||'').toLowerCase().includes(q));
   
   // Stats
   const roles = {};
-  staff.forEach(s => { const r = s['Роль'] || 'Другое'; roles[r] = (roles[r]||0) + 1; });
+  staff.forEach(s => { const r=s['Роль']||'Другое'; roles[r]=(roles[r]||0)+1; });
   const statsEl = document.getElementById('staff-stats');
   if (statsEl) {
-    const statsHtml = Object.entries(roles).map(([r, c]) => {
-      const emoji = {CEO:'👑',Зам:'⭐',Руководитель:'📋',Менеджер:'💼',Инженер:'⚙️',Разработчик:'💻'}[r] || '👤';
-      return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--bg3);border-radius:20px;font-size:12px;color:var(--text2)">' + emoji + ' ' + esc(r) + ': <b style="color:var(--text)">' + c + '</b></span>';
-    }).join(' ');
-    statsEl.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px">' + statsHtml + 
-      '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--accent-glow);border-radius:20px;font-size:12px;color:var(--accent);font-weight:600">Всего: ' + staff.length + '</span></div>';
+    statsEl.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+      Object.entries(roles).map(([r,c]) => '<span style="padding:3px 10px;background:var(--bg3);border-radius:20px;font-size:11px;color:var(--text2)">' + 
+        ({CEO:'👑',Зам:'⭐',Руководитель:'📋'}[r]||'👤') + ' ' + esc(r) + ': <b style="color:var(--text)">' + c + '</b></span>').join('') +
+      '<span style="padding:3px 10px;background:var(--accent-glow);border-radius:20px;font-size:11px;color:var(--accent);font-weight:600">Всего: ' + staff.length + '</span></div>';
   }
   
-  const roleColors = { 
-    CEO: 'linear-gradient(135deg,#00d4aa,#4dabf7)', 
-    'Зам': 'linear-gradient(135deg,#b197fc,#7950f2)', 
-    'Руководитель': 'linear-gradient(135deg,#ffa94d,#fd7e14)',
-    'Менеджер': 'linear-gradient(135deg,#4dabf7,#228be6)',
-    'Инженер': 'linear-gradient(135deg,#51cf66,#2b8a3e)',
-    'Разработчик': 'linear-gradient(135deg,#f06595,#c2255c)'
-  };
+  // Pending registrations (CEO only)
+  const pendingEl = document.getElementById('staff-pending');
+  if (pendingEl && p.canManageStaff) {
+    const pending = DATA.staff.filter(s => (s['Статус']||'')==='Ожидает');
+    if (pending.length) {
+      let ph = '<div class="card" style="border-color:rgba(255,169,77,.4)"><div class="card-header" style="background:rgba(255,169,77,.05)"><h3>⏳ Ожидают одобрения ('+pending.length+')</h3></div><div style="padding:12px;display:flex;flex-wrap:wrap;gap:10px">';
+      pending.forEach(s => {
+        ph += '<div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px;min-width:200px">';
+        ph += '<div style="font-weight:700">'+esc(s['Имя']||'—')+'</div>';
+        ph += '<div style="font-size:11px;color:var(--text2)">'+esc(s['Роль']||'')+ ' · '+esc(s['Направление']||'')+'</div>';
+        if(s['Telegram_ID']) ph += '<div style="font-size:11px;color:var(--text3)">TG: '+esc(String(s['Telegram_ID']))+'</div>';
+        ph += '<div style="display:flex;gap:6px;margin-top:8px">';
+        ph += '<button class="btn btn-sm btn-primary" onclick="approveStaff(\''+escA(s.ID)+'\')">✅ Принять</button>';
+        ph += '<button class="btn btn-sm btn-danger" onclick="confirmDelete(\'staff\',\''+escA(s.ID)+'\',\''+escA(s['Имя'])+'\')">❌ Отклонить</button>';
+        ph += '</div></div>';
+      });
+      ph += '</div></div>';
+      pendingEl.innerHTML = ph;
+    } else { pendingEl.innerHTML = ''; }
+  }
   
-  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px">';
+  // Sort: CEO → Зам → Руководитель → rest
+  const roleOrder = {'CEO':0,'Зам':1,'Руководитель':2,'Менеджер':3,'Инженер':4};
+  staff = [...staff].filter(s=>(s['Статус']||'Активный')!=='Ожидает').sort((a,b)=>(roleOrder[a['Роль']]??9)-(roleOrder[b['Роль']]??9));
+  
+  const roleColors = { CEO:'linear-gradient(135deg,#00d4aa,#4dabf7)','Зам':'linear-gradient(135deg,#b197fc,#7950f2)',
+    'Руководитель':'linear-gradient(135deg,#ffa94d,#fd7e14)','Менеджер':'linear-gradient(135deg,#4dabf7,#228be6)' };
+  
+  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px">';
   if (staff.length) {
-    // Sort: CEO first, then Зам, then Руководитель, then others
-    const roleOrder = {'CEO':0,'Зам':1,'Руководитель':2,'Менеджер':3};
-    staff = [...staff].sort((a,b) => (roleOrder[a['Роль']]??9) - (roleOrder[b['Роль']]??9));
-    
     staff.forEach(s => {
-      const re = (ROLES[s['Роль']]||{}).emoji||'👤';
       const bg = roleColors[s['Роль']] || 'linear-gradient(135deg,var(--text3),var(--text2))';
       const initial = (s['Имя']||'?').charAt(0).toUpperCase();
-      const dirLabel = s['Направление'] || 'Все';
+      const dir = s['Направление'] || 'Все';
+      const role = s['Роль'] || '';
+      const taskCount = DATA.tasks.filter(t => (t['Ответственный']||'').includes(s['Имя']||'___') && (t['Статус']||'')!=='Готово').length;
       
-      // Direction badge color
-      const dirBadgeColor = dirLabel === 'Все' ? 'var(--accent)' : 
-        dirLabel === 'КТ' ? 'var(--blue)' : 
-        dirLabel.includes('Рентген') ? 'var(--purple)' : 'var(--orange)';
-      
-      h += '<div class="staff-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:all .2s;position:relative">';
-      
-      // Header with avatar
-      h += '<div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">';
-      h += '<div style="width:52px;height:52px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:var(--bg);flex-shrink:0">'+esc(initial)+'</div>';
-      h += '<div style="flex:1;min-width:0"><div style="font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(s['Имя']||'—')+'</div>';
-      h += '<div style="font-size:12px;color:var(--text2)">'+re+' '+esc(s['Роль']||'—')+'</div></div>';
+      h += '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:all .2s">';
+      h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">';
+      h += '<div style="width:44px;height:44px;border-radius:50%;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--bg);flex-shrink:0">'+esc(initial)+'</div>';
+      h += '<div><div style="font-weight:700;font-size:14px">'+esc(s['Имя']||'—')+'</div>';
+      h += '<div style="font-size:11px;color:var(--text2)">'+({CEO:'👑',Зам:'⭐',Руководитель:'📋'}[role]||'👤')+' '+esc(role)+'</div></div>';
       h += '</div>';
       
-      // Direction badge
-      h += '<div style="margin-bottom:10px"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;background:'+dirBadgeColor+'22;color:'+dirBadgeColor+';border-radius:20px;font-size:11px;font-weight:600">📂 '+esc(dirLabel)+'</span></div>';
+      // Badges
+      h += '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">';
+      if (role==='Зам') h += '<span style="padding:2px 8px;background:var(--purple-glow);color:var(--purple);border-radius:12px;font-size:10px;font-weight:600">Весь проект</span>';
+      else h += '<span style="padding:2px 8px;background:var(--blue-glow);color:var(--blue);border-radius:12px;font-size:10px;font-weight:600">📂 '+esc(dir)+'</span>';
+      if (taskCount) h += '<span style="padding:2px 8px;background:var(--orange-glow);color:var(--orange);border-radius:12px;font-size:10px;font-weight:600">📋 '+taskCount+' задач</span>';
+      h += '</div>';
       
-      // Details
-      h += '<div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--text2)">';
-      if(s['Telegram_ID']) h += '<span>📱 TG: '+esc(String(s['Telegram_ID']))+'</span>';
-      if(s['Username']) h += '<span>👤 @'+esc(s['Username'])+'</span>';
+      h += '<div style="display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--text3)">';
+      if(s['Telegram_ID']) h += '<span>📱 '+esc(String(s['Telegram_ID']))+'</span>';
       if(s['Email']) h += '<span>✉️ '+esc(s['Email'])+'</span>';
       if(s['Телефон']) h += '<span>📞 '+esc(s['Телефон'])+'</span>';
-      
-      // Task count for this person
-      const taskCount = DATA.tasks.filter(t => (t['Ответственный']||'').includes(s['Имя']||'___') && (t['Статус']||'')!=='Готово').length;
-      if (taskCount) h += '<span>📋 Активных задач: <b style="color:var(--text)">'+taskCount+'</b></span>';
-      
       h += '</div>';
       
-      // Status
-      h += '<div style="margin-top:10px">'+statusBadge(s['Статус']||'Активный')+'</div>';
-      
-      // Actions
       if(p.canManageStaff) {
-        h += '<div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)">';
-        h += '<button class="btn btn-sm btn-secondary" onclick="editItem(\'staff\',\''+escA(s.ID)+'\')">✏️ Редакт.</button>';
+        h += '<div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+        h += '<button class="btn btn-sm btn-secondary" onclick="editItem(\'staff\',\''+escA(s.ID)+'\')">✏️</button>';
         h += '<button class="btn btn-sm btn-danger" onclick="confirmDelete(\'staff\',\''+escA(s.ID)+'\',\''+escA(s['Имя'])+'\')">🗑</button>';
         h += '</div>';
       }
       h += '</div>';
     });
   } else {
-    h += '<div class="empty" style="grid-column:1/-1"><div class="icon">👥</div><p>Нет сотрудников' + (staffProjectFilter !== 'Все' ? ' в проекте «'+esc(staffProjectFilter)+'»' : '') + '</p>' +
-      '<p style="font-size:12px;color:var(--text3);margin-top:6px">Добавьте сотрудника кнопкой «+ Сотрудник»</p></div>';
+    h += '<div class="empty" style="grid-column:1/-1"><div class="icon">👥</div><p>Нет сотрудников'+(staffProjectFilter!=='Все'?' в «'+esc(staffProjectFilter)+'»':'')+'</p></div>';
   }
   h += '</div>';
   document.getElementById('staff-content').innerHTML = h;
+}
+
+async function approveStaff(id) {
+  const staff = DATA.staff.find(s => s.ID === id);
+  if (!staff) return;
+  staff['Статус'] = 'Активный';
+  const ok = await apiWrite('Сотрудники', { ID: id, 'Статус': 'Активный' });
+  if (ok) { toast('✅ '+esc(staff['Имя'])+' одобрен!','success'); renderStaff(); }
+}
+
+// Self-registration function (from Telegram bot or web)
+async function selfRegister(data) {
+  const row = {
+    ID: 'S' + String(Date.now()).slice(-5),
+    'Имя': data.name || '',
+    'Роль': data.role || 'Сотрудник',
+    'Проект': data.project || '',
+    'Направление': data.direction || '',
+    'Telegram_ID': data.telegram_id || '',
+    'Email': data.email || '',
+    'Телефон': data.phone || '',
+    'Статус': 'Ожидает',
+    'Дата_добавления': today()
+  };
+  return await apiWrite('Сотрудники', row);
 }
 
 function renderApprovals() {
@@ -2917,11 +3108,13 @@ async function generateSite() {
     try {
       response = await fetch(CONFIG.AI_URL, {
         method: 'POST', signal: ctrl.signal,
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.API_KEY },
-        body: JSON.stringify({ message: prompt, direction: currentSubproject, user: USER.name })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt, direction: currentSubproject, user: USER?.name || '' })
       });
+      if (!response.ok) throw new Error('HTTP ' + response.status);
     } catch(e) {
-      response = await fetch(CONFIG.AI_URL + '?message=' + encodeURIComponent(prompt) + '&direction=' + encodeURIComponent(currentSubproject), { signal: ctrl.signal });
+      // For site generation, GET won't work (URL too long) — only POST
+      throw new Error('Сервер недоступен. Проверьте что Web AI workflow активирован в n8n. (' + e.message + ')');
     }
     clearTimeout(tmr);
 
@@ -3105,7 +3298,7 @@ async function handleFileUpload(input) {
       
       await fetch(CONFIG.WRITE_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CONFIG.API_KEY },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(writeData)
       });
       
