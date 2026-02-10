@@ -4387,8 +4387,9 @@ async function generateSite() {
     }
     clearTimeout(tmr);
 
-    const data = await response.json();
-    let html = data.reply || data.response || data.text || '';
+    const raw2 = await response.json();
+    let data2 = raw2; if (Array.isArray(raw2)) data2 = raw2[0]||{}; if (data2.json) data2 = data2.json;
+    let html = data2.reply || data2.response || data2.text || '';
     
     // Extract HTML from response (Claude may wrap it in ```html blocks)
     const htmlMatch = html.match(/```html\s*([\s\S]*?)```/);
@@ -4790,9 +4791,10 @@ async function callAI(userMsg, context) {
     clearTimeout(timeout);
 
     if (response.ok) {
-      const data = await response.json();
-      aiResponse = data.reply || data.response || data.text || data.message || '';
-      if (!aiResponse && data.content) { try { aiResponse = data.content[0].text; } catch(e) {} }
+      const raw3 = await response.json();
+      let data3 = raw3; if (Array.isArray(raw3)) data3 = raw3[0]||{}; if (data3.json) data3 = data3.json;
+      aiResponse = data3.reply || data3.response || data3.text || data3.message || '';
+      if (!aiResponse && data3.content) { try { aiResponse = data3.content[0].text; } catch(e) {} }
     }
     if (!aiResponse) throw new Error('Empty response');
   } catch(e) {
@@ -4946,10 +4948,15 @@ async function sendGlobalAi() {
     });
     clearTimeout(timeout);
     if (!response.ok) throw new Error('HTTP ' + response.status);
-    const data = await response.json();
-    aiText = data.reply || data.response || data.text || data.message || '';
+    const raw = await response.json();
+    // Handle ANY format: {reply:""}, [{reply:""}], [{json:{reply:""}}], {content:[{text:""}]}
+    let data = raw;
+    if (Array.isArray(raw)) data = raw[0] || {};
+    if (data.json) data = data.json;
+    aiText = data.reply || data.response || data.text || data.message || data.output || '';
     if (!aiText && data.content) { try { aiText = data.content[0].text; } catch(e) {} }
-    if (!aiText) throw new Error('Empty response');
+    if (!aiText && typeof raw === 'string') aiText = raw;
+    if (!aiText) throw new Error('Empty response. Raw: ' + JSON.stringify(raw).slice(0,200));
   } catch(e) {
     console.error('AI API error:', e.message, e);
     aiText = '❌ Ошибка подключения к AI: ' + e.message + '\n\nПроверьте:\n1. Workflow активирован в n8n\n2. URL: ' + CONFIG.AI_URL;
@@ -5762,7 +5769,8 @@ async function generateFullSite(dirName) {
       body: JSON.stringify({ message: prompt, userId: USER?.tgId||'', context: 'site_generator' })
     });
     const result = await resp.json();
-    let siteCode = result.reply || result.response || result.output || '';
+    let r4 = result; if (Array.isArray(result)) r4 = result[0]||{}; if (r4.json) r4 = r4.json;
+    let siteCode = r4.reply || r4.response || r4.output || r4.text || '';
     
     // Clean up markdown wrapper if present
     siteCode = siteCode.replace(/^```html?\n?/i, '').replace(/\n?```$/,'').trim();
