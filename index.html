@@ -1405,6 +1405,7 @@ tbody tr:last-child td { border-bottom: none; }
   }
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -1756,10 +1757,10 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="page-header"><h2>⚙️ Настройки</h2></div>
       <div class="card" style="padding:28px">
         <h3 style="margin-bottom:20px;font-size:15px">🔗 Подключения</h3>
-        <div class="form-group"><label>API URL</label><input type="text" id="settingsApiUrl" onchange="updateConfig('API_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
+        <div class="form-group"><label>🔗 Supabase URL</label><input type="text" id="settingsApiUrl" readonly onchange="updateConfig('API_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
         <div class="form-group"><label>AI URL</label><input type="text" id="settingsAiUrl" onchange="updateConfig('AI_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
-        <div class="form-group"><label>Write URL</label><input type="text" id="settingsWriteUrl" onchange="updateConfig('WRITE_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
-        <div class="form-group"><label>📋 Google Sheet ID</label><input type="text" id="settingsSheetId" onchange="updateConfig('SHEET_ID',this.value)" placeholder="1Te4CsdcN1rvpznHNyPa24MuH5ZSx45DUUDREWO5mtoE" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--accent);width:100%;font-family:monospace;font-size:12px;font-weight:600"></div>
+        <div class="form-group"><label>📦 База данных</label><input type="text" id="settingsWriteUrl" value="Supabase PostgreSQL" readonly onchange="updateConfig('WRITE_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
+        <div class="form-group"><label>📋 Статус</label><input type="text" id="settingsSheetId" value="✅ Supabase подключена" readonly onchange="updateConfig('SHEET_ID',this.value)" placeholder="1Te4CsdcN1rvpznHNyPa24MuH5ZSx45DUUDREWO5mtoE" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--accent);width:100%;font-family:monospace;font-size:12px;font-weight:600"></div>
         <p style="font-size:11px;color:var(--text3);margin-top:-8px">Скопируйте ID из URL таблицы: docs.google.com/spreadsheets/d/<b style="color:var(--accent)">ВОТ_ЭТОТ_ID</b>/edit</p>
         <div style="display:flex;gap:8px;margin-top:12px">
           <button class="btn btn-primary" onclick="saveSettings()">💾 Сохранить</button>
@@ -1867,13 +1868,102 @@ tbody tr:last-child td { border-bottom: none; }
 // CONFIG & STATE
 // ============================================================
 const CONFIG = {
-  API_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-api',
-  WRITE_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-write',
+  SUPABASE_URL: 'https://prparzgqevfelwsndmkc.supabase.co',
+  SUPABASE_KEY: 'sb_publishable_gFeXATQGYxKx08BpeOedZg_7buTwVJq',
   AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
-  SHEET_ID: '1Te4CsdcN1rvpznHNyPa24MuH5ZSx45DUUDREWO5mtoE',
-  REFRESH: 300000,
-  VERSION: '7.1.0'
+  REFRESH: 60000,
+  VERSION: '8.0.0'
 };
+
+// Supabase client — ЗАМЕНИ SUPABASE_KEY на свой anon/publishable ключ!
+// Найди его: Supabase → Settings → API → anon public
+const SB = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+
+// ============================================================
+// COLUMN MAPPING: Supabase (English) ↔ Frontend (Russian)
+// ============================================================
+const COL_MAP = {
+  staff: {
+    id:'ID', name:'Имя', role:'Роль', project:'Проект', direction:'Направление',
+    telegram_id:'Telegram_ID', phone:'Телефон', email:'Email', hire_date:'Дата_найма',
+    status:'Статус', created_at:'Дата_добавления', updated_at:'Обновлено'
+  },
+  partners: {
+    id:'ID', name:'Название', country:'Страна', direction:'Направление', product:'Продукт',
+    status:'Статус', contact:'Контакт', website:'Сайт', notes:'Примечания',
+    created_at:'Дата_добавления'
+  },
+  directions: {
+    id:'ID', name:'Название', project:'Проект', status:'Статус', stage:'Этап',
+    manager:'Менеджер', description:'Описание', link:'Ссылка', phone:'Телефон', city:'Город',
+    site_type:'Тип_сайта', price:'Цена', paid:'Оплачено', business_type:'Тип_бизнеса',
+    style:'Стиль', questionnaire:'Анкета', client_name:'Клиент', created_at:'Дата_добавления'
+  },
+  tasks: {
+    id:'ID', description:'Описание', direction:'Направление', project:'Проект',
+    priority:'Приоритет', status:'Статус', deadline:'Дедлайн', assignee:'Ответственный',
+    notes:'Примечания', link:'Ссылка', comment:'Комментарий', created_at:'Дата_добавления'
+  },
+  projects: {
+    id:'ID', name:'Название', direction:'Направление', status:'Статус', priority:'Приоритет',
+    progress:'Прогресс', partner:'Партнёр', budget:'Бюджет', deadline:'Дедлайн',
+    description:'Описание', created_at:'Создано', updated_at:'Обновлено'
+  },
+  approvals: {
+    id:'ID', type:'Тип', description:'Описание', from_name:'От_кого', from_role:'Роль',
+    telegram_id:'Telegram_ID', direction:'Направление', project:'Проект', sheet:'Лист',
+    status:'Статус', request_date:'Дата_запроса', decision_date:'Дата_решения',
+    ceo_decision:'Решение_CEO', data:'Данные', created_at:'Дата_добавления'
+  },
+  communications: {
+    id:'ID', partner:'Партнёр', type:'Тип', subject:'Тема', comm_date:'Дата',
+    author:'Автор', result:'Результат', created_at:'Дата_добавления'
+  },
+  documents: {
+    id:'ID', filename:'Файл', folder:'Папка', uploaded_by:'Загрузил',
+    upload_date:'Дата', link:'Ссылка', drive_id:'Drive_ID', size:'Размер',
+    created_at:'Дата_добавления'
+  }
+};
+
+// Reverse maps (Russian → English) for writing
+const COL_MAP_REV = {};
+for (const [table, map] of Object.entries(COL_MAP)) {
+  COL_MAP_REV[table] = {};
+  for (const [en, ru] of Object.entries(map)) { COL_MAP_REV[table][ru] = en; }
+}
+
+function mapFromDb(table, rows) {
+  const map = COL_MAP[table];
+  if (!map) return rows;
+  return rows.map(row => {
+    const out = {};
+    for (const [key, val] of Object.entries(row)) {
+      out[map[key] || key] = val;
+    }
+    return out;
+  });
+}
+
+function mapToDb(table, row) {
+  const map = COL_MAP_REV[table];
+  if (!map) return row;
+  const out = {};
+  for (const [key, val] of Object.entries(row)) {
+    const dbKey = map[key] || key.toLowerCase();
+    if (dbKey !== 'дата_добавления' && dbKey !== 'обновлено') { // auto-managed
+      out[dbKey] = val;
+    }
+  }
+  return out;
+}
+
+function tableForSheet(sheet) {
+  const m = {'Партнёры':'partners','Задачи':'tasks','Направления':'directions',
+    'Сотрудники':'staff','Проекты':'projects','Согласования':'approvals',
+    'Коммуникации':'communications','Документы':'documents'};
+  return m[sheet] || sheet;
+}
 
 let DATA = { partners:[], tasks:[], directions:[], staff:[], projects:[], approvals:[], comms:[], documents:[] };
 let USER = null;
@@ -2291,12 +2381,12 @@ async function doLogin() {
   document.getElementById('loginError').style.display = 'none';
 
   try {
-    const url = CONFIG.SHEET_ID ? CONFIG.API_URL + '?sheetId=' + encodeURIComponent(CONFIG.SHEET_ID) : CONFIG.API_URL;
-    const r = await fetch(url);
-    if (!r.ok) throw new Error('HTTP '+r.status);
-    DATA = normData(await r.json());
-
-    const staff = DATA.staff.find(s => String(s.Telegram_ID).trim() === String(tgId).trim());
+    // Fetch staff directly from Supabase
+    const { data: staffRows, error: staffErr } = await SB.from('staff').select('*').eq('telegram_id', tgId.trim());
+    if (staffErr) throw staffErr;
+    
+    const mappedStaff = mapFromDb('staff', staffRows || []);
+    const staff = mappedStaff[0];
     if (!staff) { showLoginErr('⛔ ID «'+tgId+'» не найден. Обратитесь к администратору.'); resetLogin(); return; }
 
     USER = {
@@ -2374,10 +2464,10 @@ function showApp() {
   document.getElementById('userName').textContent = USER.name;
   document.getElementById('userRoleText').textContent = p.emoji+' '+USER.role;
   document.getElementById('userAvatar').textContent = USER.name.charAt(0).toUpperCase();
-  document.getElementById('settingsApiUrl').value = CONFIG.API_URL;
+  document.getElementById('settingsApiUrl').value = CONFIG.SUPABASE_URL;
   document.getElementById('settingsAiUrl').value = CONFIG.AI_URL;
-  document.getElementById('settingsWriteUrl').value = CONFIG.WRITE_URL;
-  document.getElementById('settingsSheetId').value = CONFIG.SHEET_ID;
+  // Supabase — no separate write URL needed
+  // Supabase — no sheet ID needed
   document.getElementById('s-name').textContent = USER.name;
   document.getElementById('s-role').textContent = p.emoji+' '+USER.role;
   document.getElementById('s-dir').textContent = USER.direction;
@@ -2388,6 +2478,15 @@ function showApp() {
   if(refreshTimer) clearInterval(refreshTimer);
   refreshTimer = setInterval(loadData, CONFIG.REFRESH);
   updateStatusTime(); setInterval(updateStatusTime, 60000);
+  
+  // Supabase Realtime — auto-reload on changes
+  SB.channel('rkt-hub-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadData())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, () => loadData())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'directions' }, () => loadData())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'partners' }, () => loadData())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'approvals' }, () => loadData())
+    .subscribe();
 }
 
 // ============================================================
@@ -2414,37 +2513,68 @@ function normData(d) {
 async function loadData() {
   setStatus('loading');
   try {
-    const r = await fetch(CONFIG.API_URL);
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    DATA = normData(await r.json());
+    const [staff, partners, tasks, directions, projects, approvals, comms, docs] = await Promise.all([
+      SB.from('staff').select('*'),
+      SB.from('partners').select('*'),
+      SB.from('tasks').select('*'),
+      SB.from('directions').select('*'),
+      SB.from('projects').select('*'),
+      SB.from('approvals').select('*'),
+      SB.from('communications').select('*'),
+      SB.from('documents').select('*')
+    ]);
+    
+    DATA = normData({
+      staff: mapFromDb('staff', staff.data || []),
+      partners: mapFromDb('partners', partners.data || []),
+      tasks: mapFromDb('tasks', tasks.data || []),
+      directions: mapFromDb('directions', directions.data || []),
+      projects: mapFromDb('projects', projects.data || []),
+      approvals: mapFromDb('approvals', approvals.data || []),
+      comms: mapFromDb('communications', comms.data || []),
+      documents: mapFromDb('documents', docs.data || [])
+    });
     renderAll();
     setStatus('connected');
-    toast('✅ Данные обновлены','success');
   } catch(e) {
-    console.error(e);
+    console.error('loadData error:', e);
     setStatus('error');
-    toast('⚠️ Ошибка загрузки','error');
+    toast('⚠️ Ошибка загрузки: '+e.message,'error');
   }
 }
 
-async function apiWrite(sheet, row) {
+async function apiWrite(sheet, row, action) {
   try {
-    // POST body (for updated API)
-    const r = await fetch(CONFIG.WRITE_URL, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ sheet, data: row, sheetId: CONFIG.SHEET_ID })
-    });
-    if(!r.ok) throw new Error('POST HTTP '+r.status);
+    const table = tableForSheet(sheet);
+    const dbRow = mapToDb(table, row);
+    
+    // Ensure ID
+    if (!dbRow.id && row.ID) dbRow.id = row.ID;
+    if (!dbRow.id) dbRow.id = genId(table.charAt(0).toUpperCase());
+    
+    if (action === 'delete') {
+      const { error } = await SB.from(table).delete().eq('id', dbRow.id);
+      if (error) throw error;
+    } else if (dbRow.id && action === 'update') {
+      const id = dbRow.id;
+      delete dbRow.id;
+      const { error } = await SB.from(table).update(dbRow).eq('id', id);
+      if (error) throw error;
+    } else {
+      // Upsert: insert or update by id
+      const { error } = await SB.from(table).upsert(dbRow, { onConflict: 'id' });
+      if (error) throw error;
+    }
     return true;
   } catch(e) {
-    // Fallback: GET with base64 (legacy)
-    try {
-      const b64 = btoa(unescape(encodeURIComponent(JSON.stringify({sheet,row}))));
-      const r2 = await fetch(CONFIG.WRITE_URL+'?b64='+b64);
-      if(!r2.ok) throw new Error('GET HTTP '+r2.status);
-      return true;
-    } catch(e2) { toast('❌ Ошибка записи: '+e2.message,'error'); return false; }
+    console.error('apiWrite error:', e);
+    toast('❌ Ошибка записи: '+(e.message||e),'error');
+    return false;
   }
+}
+
+function genId(prefix) {
+  return (prefix||'X') + Date.now().toString(36).toUpperCase();
 }
 
 // ============================================================
@@ -3476,7 +3606,7 @@ function updateDirectionOptions(projName) {
 
 function saveSettings() {
   localStorage.setItem('rkt_config', JSON.stringify({
-    API_URL: CONFIG.API_URL, AI_URL: CONFIG.AI_URL, WRITE_URL: CONFIG.WRITE_URL, SHEET_ID: CONFIG.SHEET_ID
+    AI_URL: CONFIG.AI_URL
   }));
   toast('✅ Настройки сохранены', 'success');
 }
@@ -3484,22 +3614,19 @@ function saveSettings() {
 function loadSavedSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem('rkt_config') || '{}');
-    if (saved.API_URL) CONFIG.API_URL = saved.API_URL;
-    if (saved.AI_URL) CONFIG.AI_URL = saved.AI_URL;
-    if (saved.WRITE_URL) CONFIG.WRITE_URL = saved.WRITE_URL;
-    if (saved.SHEET_ID) CONFIG.SHEET_ID = saved.SHEET_ID;
-  } catch(e) {}
+        if (saved.AI_URL) CONFIG.AI_URL = saved.AI_URL;
+          } catch(e) {}
 }
 
 async function testConnection() {
   const el = document.getElementById('settings-status');
   el.innerHTML = '⏳ Проверяю...';
   try {
-    const url = CONFIG.API_URL;
+    // loadData now uses Supabase directly
     if (!url || !url.startsWith('http')) throw new Error('Невалидный URL');
     const ctrl = new AbortController();
     const tmr = setTimeout(() => ctrl.abort(), 10000);
-    const fullUrl = CONFIG.SHEET_ID ? url + '?sheetId=' + encodeURIComponent(CONFIG.SHEET_ID) : url;
+    
     const r = await fetch(fullUrl, { signal: ctrl.signal });
     clearTimeout(tmr);
     if (r.ok) {
@@ -4011,7 +4138,7 @@ async function generateSite() {
       response = await fetch(CONFIG.AI_URL, {
         method: 'POST', signal: ctrl.signal,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt, direction: currentSubproject, user: USER?.name || '', sheetId: CONFIG.SHEET_ID })
+        body: JSON.stringify({ message: prompt, direction: currentSubproject, user: USER?.name || '', source: 'web' })
       });
       if (!response.ok) throw new Error('HTTP ' + response.status);
     } catch(e) {
@@ -4217,7 +4344,7 @@ async function handleFileUpload(input) {
         }
       };
       
-      await fetch(CONFIG.WRITE_URL, {
+      await fetch(CONFIG.AI_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(writeData)
@@ -4414,7 +4541,7 @@ async function callAI(userMsg, context) {
       body: JSON.stringify({
         message: userMsg,
         context: context,
-        sheetId: CONFIG.SHEET_ID,
+        source: 'web',
         history: aiMessages.filter(m=>m.role==='user'||m.role==='assistant').slice(-10),
         user: USER ? USER['Имя'] : ''
       }),
@@ -4571,7 +4698,7 @@ async function sendGlobalAi() {
       body: JSON.stringify({
         message: msg,
         context: '',
-        sheetId: CONFIG.SHEET_ID,
+        source: 'web',
         history: globalAiMessages.filter(m=>m.role==='user'||m.role==='assistant').slice(-10)
       }),
       signal: controller.signal
