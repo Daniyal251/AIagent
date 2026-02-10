@@ -2970,15 +2970,92 @@ function renderProjectView() {
   const avgPr = ppr.length ? Math.round(ppr.reduce((s,p) => s+(parseInt(p['Прогресс'])||0),0)/ppr.length) : 0;
 
   // Metrics
+  if (proj.canAddSub) {
+    const allDirsM = (DATA.directions||[]).filter(d => d['Проект'] === 'Сайты');
+    const activeM = allDirsM.filter(d => (d['stage']||'lead')!=='done');
+    const revenue = allDirsM.filter(d=>d['Оплачено']).reduce((s,d)=>s+(Number(d['Цена'])||0),0);
+    document.getElementById('pv-metrics').innerHTML =
+      '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">'+allDirsM.length+'</div><div class="m-label">Клиентов</div><div class="m-sub">'+activeM.length+' в работе</div></div>'+
+      '<div class="metric-card"><div class="m-icon">💰</div><div class="m-value">'+revenue.toLocaleString('ru')+'₽</div><div class="m-label">Выручка</div></div>'+
+      '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+ptActive.length+'</div><div class="m-label">Задач</div><div class="m-sub">'+(ptOverdue.length?'🔴 '+ptOverdue.length+' просроч.':'в работе')+'</div></div>'+
+      '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:'+(ptOverdue.length?'var(--red)':'var(--green)')+'">'+ptOverdue.length+'</div><div class="m-label">Просрочено</div></div>';
+  } else {
   document.getElementById('pv-metrics').innerHTML =
     '<div class="metric-card"><div class="m-icon">📂</div><div class="m-value">'+Object.keys(proj.subprojects).length+'</div><div class="m-label">Подпроектов</div></div>'+
     '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+pp.length+'</div><div class="m-label">Партнёров</div></div>'+
     '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+ptActive.length+'</div><div class="m-label">Задач</div><div class="m-sub">'+(ptOverdue.length?'🔴 '+ptOverdue.length+' просроч.':'в работе')+'</div></div>'+
     '<div class="metric-card"><div class="m-icon">📈</div><div class="m-value">'+avgPr+'%</div><div class="m-label">Прогресс</div></div>'+
     '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">'+ppr.length+'</div><div class="m-label">Проектов</div></div>';
+  }
 
   // Subproject cards grid
   let sgHtml = '';
+  // CLIENT-ORIENTED CRM for Сайты
+  if (proj.canAddSub) {
+    // Render Kanban pipeline directly
+    const allDirs = (DATA.directions||[]).filter(d => d['Проект'] === 'Сайты');
+    const totalRev = allDirs.filter(d=>d['Оплачено']).reduce((s,d)=>s+(Number(d['Цена'])||0),0);
+    const totalPipe = allDirs.filter(d=>!d['Оплачено']&&(d['stage']||'lead')!=='done').reduce((s,d)=>s+(Number(d['Цена'])||0),0);
+    
+    // CRM Header with stats
+    sgHtml += '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
+    sgHtml += '<div class="card" style="flex:1;min-width:150px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">💰 Выручка</div><div style="font-size:22px;font-weight:700;color:var(--green)">'+totalRev.toLocaleString('ru')+'₽</div></div>';
+    sgHtml += '<div class="card" style="flex:1;min-width:150px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">🔄 В работе</div><div style="font-size:22px;font-weight:700;color:var(--accent)">'+allDirs.filter(d=>(d['stage']||'lead')!=='done').length+'</div></div>';
+    sgHtml += '<div class="card" style="flex:1;min-width:150px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">📊 Pipeline</div><div style="font-size:22px;font-weight:700;color:var(--blue)">'+totalPipe.toLocaleString('ru')+'₽</div></div>';
+    sgHtml += '<div class="card" style="flex:1;min-width:150px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">✅ Завершено</div><div style="font-size:22px;font-weight:700">'+allDirs.filter(d=>(d['stage'])==='done').length+'</div></div>';
+    sgHtml += '</div>';
+    
+    // Kanban Pipeline
+    sgHtml += '<div class="kanban-wrap" id="kanban-inline" style="margin-bottom:16px">';
+    STAGES.forEach(stage => {
+      const deals = allDirs.filter(d => (d['stage']||'lead') === stage.id);
+      const sum = deals.reduce((s,d) => s + (Number(d['Цена'])||0), 0);
+      sgHtml += '<div class="kanban-col" data-stage="'+stage.id+'" ondragover="kanbanDragOver(event)" ondrop="kanbanDrop(event,this)" ondragleave="this.classList.remove(\'drag-over\')">';
+      sgHtml += '<div class="kanban-col-header"><div>'+stage.name+' <span class="k-count">'+deals.length+'</span></div>';
+      sgHtml += '<div class="k-sum">'+(sum?sum.toLocaleString('ru')+'₽':'')+'</div></div>';
+      sgHtml += '<div class="kanban-col-body">';
+      deals.forEach(d => {
+        const id = d['ID']||d.id||'';
+        const overdue = d['Дедлайн'] && d['Дедлайн'] < td && stage.id !== 'done';
+        const clientTasks = ptActive.filter(t => (t['Направление']||'') === (d['Название']||''));
+        sgHtml += '<div class="kanban-card'+(overdue?' overdue':'')+'" draggable="true" data-id="'+id+'" onclick="openClientCard(\''+escA(id)+'\')" ondragstart="kanbanDragStart(event,this)" ondragend="kanbanDragEnd(this)">';
+        sgHtml += '<div class="k-name">'+esc(d['Название']||d['name']||'?')+'</div>';
+        sgHtml += '<div class="k-meta">';
+        if (d['Цена']) sgHtml += '<span class="k-price">'+Number(d['Цена']).toLocaleString('ru')+'₽</span>';
+        if (d['Тип сайта']) sgHtml += '<span class="k-type">'+esc(d['Тип сайта'])+'</span>';
+        if (d['Город']) sgHtml += '<span class="k-city">📍'+esc(d['Город'])+'</span>';
+        sgHtml += d['Оплачено'] ? '<span class="k-paid">💰</span>' : '<span class="k-unpaid">⏳</span>';
+        if (clientTasks.length) sgHtml += '<span style="color:var(--text2)">📋'+clientTasks.length+'</span>';
+        sgHtml += '</div></div>';
+      });
+      sgHtml += '</div></div>';
+    });
+    sgHtml += '</div>';
+    
+    // Add client button
+    sgHtml += '<button class="btn btn-primary" onclick="openAddSubproject()" style="margin-bottom:16px">➕ Добавить клиента</button>';
+    
+    // Client list (collapsed, below kanban)
+    sgHtml += '<div class="card"><div class="card-header" onclick="document.getElementById(\'client-list-body\').style.display=document.getElementById(\'client-list-body\').style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer"><h3>📋 Все клиенты ('+allDirs.length+')</h3></div>';
+    sgHtml += '<div id="client-list-body" style="display:none"><div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Этап</th><th>Тип</th><th>Цена</th><th>Оплата</th><th>📞</th><th>Задачи</th><th></th></tr></thead><tbody>';
+    allDirs.forEach(d => {
+      const stageObj = STAGES.find(s=>s.id===(d['stage']||'lead')) || STAGES[0];
+      const cTasks = ptActive.filter(t => (t['Направление']||'') === (d['Название']||''));
+      sgHtml += '<tr onclick="openClientCard(\''+escA(d['ID']||d.id||'')+'\')" style="cursor:pointer">';
+      sgHtml += '<td><strong>'+esc(d['Название']||'?')+'</strong></td>';
+      sgHtml += '<td><span class="badge" style="background:'+stageObj.color+';color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+stageObj.name+'</span></td>';
+      sgHtml += '<td>'+esc(d['Тип сайта']||'—')+'</td>';
+      sgHtml += '<td>'+(Number(d['Цена'])||0).toLocaleString('ru')+'₽</td>';
+      sgHtml += '<td>'+(d['Оплачено']?'✅':'⏳')+'</td>';
+      sgHtml += '<td>'+esc(d['Телефон']||'—')+'</td>';
+      sgHtml += '<td>'+cTasks.length+'</td>';
+      sgHtml += '<td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();openSubproject(\''+escA(d['Название']||'')+'\')">Открыть</button></td>';
+      sgHtml += '</tr>';
+    });
+    sgHtml += '</tbody></table></div></div></div>';
+    
+  } else {
+  // Standard subproject cards (for РКТ etc.)
   for (const [spName, spMeta] of Object.entries(proj.subprojects)) {
     const spp = pp.filter(p => (p['Направление']||'')===spName);
     const spt = ptActive.filter(t => (t['Направление']||'')===spName);
@@ -2989,35 +3066,13 @@ function renderProjectView() {
     sgHtml += '<span class="sp-emoji">'+spMeta.emoji+'</span>';
     sgHtml += '<h4>'+esc(spName)+'</h4>';
     sgHtml += '<div class="sp-desc">'+esc(spMeta.desc)+'</div>';
-    // Site-specific: show pipeline progress
-    if (proj.canAddSub) {
-      const dirData = (DATA.directions||[]).find(d => d['Название']===spName && d['Проект']==='Сайты');
-      const totalSteps = spt.length || 1;
-      const doneSteps = spt.filter(t => (t['Статус']||'').includes('Готово')).length;
-      const pct = totalSteps > 0 ? Math.round(doneSteps/totalSteps*100) : 0;
-      sgHtml += '<div style="margin:8px 0 4px;height:4px;background:var(--bg);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+spMeta.color+';border-radius:2px"></div></div>';
-      sgHtml += '<div class="sp-stats">';
-      sgHtml += '<span>'+doneSteps+'/'+totalSteps+' задач</span>';
-      if (dirData && dirData['Оплачено']) sgHtml += '<span style="color:var(--green)">💰 Оплачено</span>';
-      else if (dirData && Number(dirData['Цена']||0) > 0) sgHtml += '<span style="color:var(--orange)">💰 '+Number(dirData['Цена']).toLocaleString('ru')+'₽</span>';
-      if (spOverdue.length) sgHtml += '<span style="color:var(--red)">🔴 '+spOverdue.length+'</span>';
-      sgHtml += '</div>';
-    } else {
-      sgHtml += '<div class="sp-stats">';
-      sgHtml += '<span>🤝 '+spp.length+'</span>';
-      sgHtml += '<span>✅ '+spt.length+'</span>';
-      if (spOverdue.length) sgHtml += '<span style="color:var(--red)">🔴 '+spOverdue.length+'</span>';
-      sgHtml += '</div>';
-    }
+    sgHtml += '<div class="sp-stats">';
+    sgHtml += '<span>🤝 '+spp.length+'</span>';
+    sgHtml += '<span>✅ '+spt.length+'</span>';
+    if (spOverdue.length) sgHtml += '<span style="color:var(--red)">🔴 '+spOverdue.length+'</span>';
+    sgHtml += '</div>';
     sgHtml += '</div>';
   }
-
-  // Add subproject card (only for sites etc.)
-  if (proj.canAddSub) {
-    sgHtml += '<div class="subproject-card add-sub" onclick="openAddSubproject()">';
-    sgHtml += '<span class="add-icon" style="font-size:32px;opacity:0.4">➕</span>';
-    sgHtml += '<span style="font-size:12px;color:var(--text2)">Добавить</span>';
-    sgHtml += '</div>';
   }
 
   document.getElementById('subproject-grid').innerHTML = sgHtml;
@@ -5793,6 +5848,147 @@ async function generateFullSite(dirName) {
     toast('❌ Ошибка: ' + err.message, 'error');
   }
   if (spinner) spinner.style.display = 'none';
+}
+
+// ============================================================
+// CLIENT CARD — полная карточка клиента с задачами
+// ============================================================
+function openClientCard(id) {
+  const dir = (DATA.directions||[]).find(d => (d['ID']||d.id) === id);
+  if (!dir) { toast('Клиент не найден','error'); return; }
+  
+  const name = dir['Название']||dir['name']||'?';
+  const stage = dir['stage']||'lead';
+  const stageObj = STAGES.find(s=>s.id===stage)||STAGES[0];
+  const stageIdx = STAGES.findIndex(s=>s.id===stage);
+  const clientTasks = (DATA.tasks||[]).filter(t => (t['Направление']||'') === name);
+  const activeTasks = clientTasks.filter(t => (t['Статус']||'') !== 'Готово');
+  const doneTasks = clientTasks.filter(t => (t['Статус']||'') === 'Готово');
+  const td = today();
+  const p = getUserPerms();
+  
+  // Progress bar
+  let progressHtml = '<div style="display:flex;gap:2px;margin-bottom:16px">';
+  STAGES.forEach((s,i) => {
+    const active = i <= stageIdx;
+    const current = i === stageIdx;
+    progressHtml += '<div style="flex:1;height:6px;border-radius:3px;background:'+(active?s.color:'var(--bg3)')+';'+(current?'box-shadow:0 0 6px '+s.color:'')+'"></div>';
+  });
+  progressHtml += '</div>';
+  progressHtml += '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:20px">';
+  STAGES.forEach((s,i) => {
+    progressHtml += '<span style="'+(i<=stageIdx?'color:'+s.color+';font-weight:600':'')+'">'+(i<=stageIdx?'✓':'')+' '+s.name.replace(/^.+\s/,'')+'</span>';
+  });
+  progressHtml += '</div>';
+  
+  // Workflow step
+  const wfSteps = {
+    lead: {icon:'📞',title:'Свяжитесь с клиентом',desc:'Уточните требования, бюджет, сроки'},
+    anketa: {icon:'📋',title:'Заполните анкету',desc:'Соберите: тип деятельности, услуги, контакты, пожелания'},
+    proto: {icon:'🎨',title:'Создайте сайт',desc:'Откройте генератор → создайте прототип → покажите клиенту'},
+    review: {icon:'📤',title:'Согласуйте с клиентом',desc:'Отправьте ссылку, внесите правки если нужно'},
+    payment: {icon:'💳',title:'Получите оплату',desc:'Выставьте счёт, дождитесь оплаты'},
+    deploy: {icon:'🔧',title:'Задеплойте сайт',desc:'Домен + хостинг + загрузка файлов'},
+    done: {icon:'🎉',title:'Проект завершён!',desc:'Клиент получил готовый сайт'}
+  };
+  const wf = wfSteps[stage]||wfSteps.lead;
+  
+  let wfHtml = '<div class="card" style="padding:16px;margin-bottom:16px;border-left:4px solid '+stageObj.color+'">';
+  wfHtml += '<div style="display:flex;align-items:center;gap:12px">';
+  wfHtml += '<span style="font-size:28px">'+wf.icon+'</span>';
+  wfHtml += '<div><div style="font-weight:700;font-size:14px">Шаг '+(stageIdx+1)+'/7: '+wf.title+'</div>';
+  wfHtml += '<div style="font-size:12px;color:var(--text2)">'+wf.desc+'</div></div>';
+  wfHtml += '</div>';
+  if (stage !== 'done' && p.canEdit) {
+    const nextStage = STAGES[stageIdx+1];
+    if (nextStage) {
+      wfHtml += '<button class="btn btn-primary" onclick="setDealStage(\''+escA(id)+'\',\''+nextStage.id+'\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="margin-top:12px;width:100%">➡️ Перевести: '+nextStage.name+'</button>';
+    }
+  }
+  wfHtml += '</div>';
+  
+  // Client info
+  let infoHtml = '<div class="card" style="padding:16px;margin-bottom:16px">';
+  infoHtml += '<h4 style="font-size:14px;font-weight:700;margin-bottom:12px">👤 Информация</h4>';
+  infoHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">';
+  infoHtml += '<div><span style="color:var(--text2)">📱 Телефон:</span> '+(dir['Телефон']?'<a href="tel:'+dir['Телефон']+'">'+esc(dir['Телефон'])+'</a>':'—')+'</div>';
+  infoHtml += '<div><span style="color:var(--text2)">📍 Город:</span> '+esc(dir['Город']||'—')+'</div>';
+  infoHtml += '<div><span style="color:var(--text2)">💰 Цена:</span> <strong>'+(Number(dir['Цена'])||0).toLocaleString('ru')+'₽</strong></div>';
+  infoHtml += '<div><span style="color:var(--text2)">💳 Оплата:</span> '+(dir['Оплачено']?'<span style="color:var(--green)">✅ Оплачено</span>':'<span style="color:var(--orange)">⏳ Не оплачено</span>')+'</div>';
+  infoHtml += '<div><span style="color:var(--text2)">🌐 Тип:</span> '+esc(dir['Тип сайта']||'—')+'</div>';
+  infoHtml += '<div><span style="color:var(--text2)">👤 Менеджер:</span> '+esc(dir['Менеджер']||'—')+'</div>';
+  if (dir['Ссылка']) infoHtml += '<div style="grid-column:span 2"><span style="color:var(--text2)">🔗 Сайт:</span> <a href="'+esc(dir['Ссылка'])+'" target="_blank">'+esc(dir['Ссылка'])+'</a></div>';
+  infoHtml += '</div>';
+  // Quick actions
+  infoHtml += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">';
+  if (dir['Телефон']) infoHtml += '<a href="tel:'+dir['Телефон']+'" class="btn btn-sm btn-secondary">📞 Позвонить</a>';
+  infoHtml += '<button class="btn btn-sm btn-secondary" onclick="closeClientCard();openSubproject(\''+escA(name)+'\');showSpTab(\'sitegen\')">🎨 Генератор</button>';
+  if (p.canEdit) infoHtml += '<button class="btn btn-sm btn-secondary" onclick="closeClientCard();openModal(\'direction\',\''+escA(id)+'\')">✏️ Редактировать</button>';
+  if (p.canEdit && !dir['Оплачено']) infoHtml += '<button class="btn btn-sm btn-primary" onclick="markPaid(\''+escA(id)+'\');closeClientCard();setTimeout(()=>renderProjectView(),500)">💳 Отметить оплату</button>';
+  infoHtml += '</div></div>';
+  
+  // Tasks section with drill-down
+  let tasksHtml = '<div class="card" style="padding:16px;margin-bottom:16px">';
+  tasksHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  tasksHtml += '<h4 style="font-size:14px;font-weight:700">📋 Задачи ('+clientTasks.length+')</h4>';
+  if (p.canEdit) tasksHtml += '<button class="btn btn-sm btn-primary" onclick="closeClientCard();openModal(\'task\');setTimeout(()=>{const f=document.getElementById(\'field-Направление\');if(f)f.value=\''+escA(name)+'\';},300)">➕ Добавить</button>';
+  tasksHtml += '</div>';
+  
+  if (activeTasks.length) {
+    activeTasks.forEach(t => {
+      const od = t['Дедлайн'] && t['Дедлайн'] < td;
+      const prColor = t['Приоритет']==='P1'?'var(--red)':t['Приоритет']==='P2'?'var(--orange)':'var(--text2)';
+      tasksHtml += '<div style="padding:10px;margin-bottom:6px;background:var(--bg3);border-radius:8px;border-left:3px solid '+prColor+';cursor:pointer" onclick="closeClientCard();openTaskDetail(\''+escA(t.ID||t.id)+'\')">';
+      tasksHtml += '<div style="display:flex;justify-content:space-between;align-items:center">';
+      tasksHtml += '<div style="font-size:13px;font-weight:500">'+(od?'🔴 ':'')+esc(t['Описание']||t['Название']||'?')+'</div>';
+      tasksHtml += '<span style="font-size:10px;padding:2px 6px;border-radius:8px;background:'+(t['Статус']==='В работе'?'rgba(0,212,170,0.1);color:var(--accent)':'rgba(255,255,255,0.05);color:var(--text2)')+'">'+esc(t['Статус']||'—')+'</span>';
+      tasksHtml += '</div>';
+      tasksHtml += '<div style="display:flex;gap:12px;margin-top:4px;font-size:11px;color:var(--text2)">';
+      if (t['Дедлайн']) tasksHtml += '<span style="'+(od?'color:var(--red)':'')+'">📅 '+t['Дедлайн']+'</span>';
+      if (t['Ответственный']) tasksHtml += '<span>👤 '+esc(t['Ответственный'])+'</span>';
+      tasksHtml += '</div></div>';
+    });
+  }
+  if (doneTasks.length) {
+    tasksHtml += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">';
+    tasksHtml += '<div style="font-size:11px;color:var(--text2);margin-bottom:4px">✅ Выполнено ('+doneTasks.length+')</div>';
+    doneTasks.slice(0,5).forEach(t => {
+      tasksHtml += '<div style="padding:4px 0;font-size:12px;color:var(--text2);text-decoration:line-through">'+esc(t['Описание']||t['Название']||'?')+'</div>';
+    });
+    tasksHtml += '</div>';
+  }
+  if (!clientTasks.length) tasksHtml += '<div style="text-align:center;padding:20px;color:var(--text2);font-size:12px">Нет задач. Добавьте первую!</div>';
+  tasksHtml += '</div>';
+  
+  // Build modal
+  const overlay = document.getElementById('client-card-overlay') || createClientCardOverlay();
+  overlay.innerHTML = '<div class="client-card-panel" onclick="event.stopPropagation()">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border)">' +
+    '<h3 style="font-size:18px;font-weight:700">'+esc(name)+'</h3>' +
+    '<button onclick="closeClientCard()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">✕</button>' +
+    '</div>' +
+    '<div style="padding:20px 24px;overflow-y:auto;max-height:calc(100vh - 100px)">' +
+    progressHtml + wfHtml + infoHtml + tasksHtml +
+    '</div></div>';
+  overlay.style.display = 'flex';
+}
+
+function createClientCardOverlay() {
+  const el = document.createElement('div');
+  el.id = 'client-card-overlay';
+  el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;justify-content:flex-end;backdrop-filter:blur(4px)';
+  el.onclick = () => closeClientCard();
+  document.body.appendChild(el);
+  
+  const style = document.createElement('style');
+  style.textContent = '.client-card-panel{width:520px;max-width:90vw;background:var(--bg2);height:100vh;overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,0.3);animation:slideInRight .25s ease}@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}';
+  document.head.appendChild(style);
+  return el;
+}
+
+function closeClientCard() {
+  const el = document.getElementById('client-card-overlay');
+  if (el) el.style.display = 'none';
 }
 
 // ============================================================
