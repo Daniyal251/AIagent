@@ -2015,10 +2015,12 @@ const COL_MAP = {
     created_at:'Дата_добавления'
   },
   directions: {
-    id:'ID', name:'Название', project:'Проект', status:'Статус', stage:'Этап',
+    id:'ID', name:'Название', project:'Проект', status:'Статус', stage:'stage',
     manager:'Менеджер', description:'Описание', link:'Ссылка', phone:'Телефон', city:'Город',
-    site_type:'Тип_сайта', price:'Цена', paid:'Оплачено', business_type:'Тип_бизнеса',
-    style:'Стиль', questionnaire:'Анкета', client_name:'Клиент', created_at:'Дата_добавления'
+    site_type:'Тип сайта', price:'Цена', paid:'Оплачено', business_type:'Тип бизнеса',
+    style:'Стиль', questionnaire:'Анкета', client_name:'Клиент', created_at:'Дата добавления',
+    services:'Услуги', comment:'Комментарий', address:'Адрес', social:'Соцсети',
+    work_hours:'Режим работы', prices:'Цены'
   },
   tasks: {
     id:'ID', description:'Описание', direction:'Направление', project:'Проект',
@@ -2198,7 +2200,7 @@ function syncSubprojectsFromDb(projKey) {
 }
 
 function siteDescFromDir(d) {
-  const type = d['Тип_сайта'] || '';
+  const type = d['Тип сайта'] || '';
   const price = d['Цена'] || d['price'] || 0;
   const paid = d['Оплачено'] === true || d['Оплачено'] === 'TRUE';
   const status = d['Статус'] || '';
@@ -2250,7 +2252,7 @@ function calcSiteFinancials() {
   staff.forEach(s => { staffEarnings[s['Имя']] = { role: s['Роль'], earned: 0, sites: 0 }; });
   
   dirs.forEach(d => {
-    const type = d['Тип_сайта'] || 'Лендинг';
+    const type = d['Тип сайта'] || 'Лендинг';
     const pricing = SITE_PRICING[type] || SITE_PRICING['Лендинг'];
     const status = d['Статус'] || '';
     const isDone = status.includes('Готово') || status.includes('✅') || status.includes('Оплачен');
@@ -5225,7 +5227,7 @@ function openAddSubproject() {
         'Название': name,
         'Проект': 'Сайты',
         'Статус': 'В работе',
-        'Тип_сайта': type,
+        'Тип сайта': type,
         'Цена': pricing.price,
         'Оплачено': false,
         'Клиент': name,
@@ -5274,18 +5276,15 @@ function addDays(dateStr, days) {
 
 function showCustomModal(title, bodyHtml, onSave) {
   window._customModalSave = onSave;
-  const overlay = document.getElementById('modal-overlay');
-  const modal = document.getElementById('modal-container');
   document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalFields').innerHTML = bodyHtml;
+  document.getElementById('modalBody').innerHTML = bodyHtml;
   document.getElementById('modalSaveBtn').onclick = () => { if(window._customModalSave) window._customModalSave(); };
-  overlay.style.display = 'block';
-  modal.style.display = 'block';
+  document.getElementById('modalOverlay').classList.add('show');
 }
 
 function closeCustomModal() {
-  document.getElementById('modal-overlay').style.display = 'none';
-  document.getElementById('modal-container').style.display = 'none';
+  document.getElementById('modalOverlay').classList.remove('show');
+  window._customModalSave = null;
 }
 
 
@@ -5365,7 +5364,7 @@ async function saveModal() {
         'Телефон': phone,
         'Город': city,
         'Бизнес_тип': biztype,
-        'Тип_сайта': siteType,
+        'Тип сайта': siteType,
         'Цена': String(pricing.price),
         'Стиль': style,
         'Анкета': questionnaire,
@@ -6111,17 +6110,17 @@ function openClientCard(id) {
 async function saveAnketa(id) {
   const v = (sel) => { const el = document.getElementById(sel); return el ? el.value.trim() : ''; };
   const updates = {};
-  if (v('cc-biz-type')) updates['Описание'] = v('cc-biz-type');
-  if (v('cc-services')) updates['Услуги'] = v('cc-services');
-  if (v('cc-phone')) updates['Телефон'] = v('cc-phone');
-  if (v('cc-city')) updates['Город'] = v('cc-city');
-  if (v('cc-wishes')) updates['Комментарий'] = v('cc-wishes');
-  if (v('cc-address')) updates['Адрес'] = v('cc-address');
-  if (v('cc-social')) updates['Соцсети'] = v('cc-social');
-  if (v('cc-hours')) updates['Режим работы'] = v('cc-hours');
-  if (v('cc-prices')) updates['Цены'] = v('cc-prices');
+  if (v('cc-biz-type')) updates.description = v('cc-biz-type');
+  if (v('cc-services')) updates.services = v('cc-services');
+  if (v('cc-phone')) updates.phone = v('cc-phone');
+  if (v('cc-city')) updates.city = v('cc-city');
+  if (v('cc-wishes')) updates.comment = v('cc-wishes');
+  if (v('cc-address')) updates.address = v('cc-address');
+  if (v('cc-social')) updates.social = v('cc-social');
+  if (v('cc-hours')) updates.work_hours = v('cc-hours');
+  if (v('cc-prices')) updates.prices = v('cc-prices');
   if (Object.keys(updates).length) {
-    try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Анкета сохранена'); await loadAllData(); }
+    try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Анкета сохранена'); await loadData(); }
     catch(e) { toast('Ошибка: '+e.message,'error'); }
   }
 }
@@ -6138,13 +6137,13 @@ function updateLeadPrice() {
 async function saveLeadData(id) {
   const v = (sel) => { const el = document.getElementById(sel); return el ? el.value.trim() : ''; };
   const updates = {};
-  if (v('cc-lead-phone')) updates['Телефон'] = v('cc-lead-phone');
-  if (v('cc-lead-city')) updates['Город'] = v('cc-lead-city');
-  if (v('cc-lead-type')) updates['Тип сайта'] = v('cc-lead-type');
-  if (v('cc-lead-price')) updates['Цена'] = Number(v('cc-lead-price')) || 0;
-  if (v('cc-lead-manager')) updates['Менеджер'] = v('cc-lead-manager');
+  if (v('cc-lead-phone')) updates.phone = v('cc-lead-phone');
+  if (v('cc-lead-city')) updates.city = v('cc-lead-city');
+  if (v('cc-lead-type')) updates.site_type = v('cc-lead-type');
+  if (v('cc-lead-price')) updates.price = Number(v('cc-lead-price')) || 0;
+  if (v('cc-lead-manager')) updates.manager = v('cc-lead-manager');
   if (Object.keys(updates).length) {
-    try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Данные сохранены'); await loadAllData(); }
+    try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Данные сохранены'); await loadData(); }
     catch(e) { toast('Ошибка: '+e.message,'error'); }
   }
 }
