@@ -4937,7 +4937,7 @@ async function sendGlobalAi() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: msg,
-        userId: currentUser?.telegram_id || '',
+        userId: USER?.tgId || '',
         context: 'chat',
         source: 'web',
         history: globalAiMessages.filter(m=>m.role==='user'||m.role==='assistant').slice(-10)
@@ -5759,7 +5759,7 @@ async function generateFullSite(dirName) {
     const resp = await fetch(CONFIG.AI_URL, {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ message: prompt, userId: currentUser?.telegram_id||'', context: 'site_generator' })
+      body: JSON.stringify({ message: prompt, userId: USER?.tgId||'', context: 'site_generator' })
     });
     const result = await resp.json();
     let siteCode = result.reply || result.response || result.output || '';
