@@ -2616,7 +2616,16 @@ function getProjectDirs(projKey) {
 // Filter data by top-level project (all its subproject directions)
 function filterByProject(arr, projKey) {
   const dirs = getProjectDirs(projKey);
-  return arr.filter(i => dirs.includes(i['Направление']||''));
+  return arr.filter(i => {
+    const dir = i['Направление'] || '';
+    const proj = i['Проект'] || '';
+    // Match by direction belonging to this project
+    if (dirs.includes(dir)) return true;
+    // Match by explicit Проект field
+    const projName = PROJECTS[projKey] ? PROJECTS[projKey].name : '';
+    if (proj === projName || proj === projKey) return true;
+    return false;
+  });
 }
 
 // ============================================================
@@ -3270,10 +3279,15 @@ function getStaffForProject(proj) {
   return DATA.staff.filter(s => {
     const dir = s['Направление'] || '';
     const role = s['Роль'] || '';
-    if (dir === 'Все' || role === 'CEO') return true;
-    if (role === 'Зам' && (s['Проект']||'') === proj) return true;
-    if (role === 'Зам' && dir === proj) return true;
-    return dir === proj || projDirs.includes(dir);
+    const staffProj = s['Проект'] || '';
+    // CEO and staff with Проект=Все → show everywhere
+    if (role === 'CEO') return true;
+    if (staffProj === 'Все') return true;
+    // Staff assigned to this specific project
+    if (staffProj === proj) return true;
+    // Staff whose direction belongs to this project
+    if (projDirs.includes(dir)) return true;
+    return false;
   });
 }
 
