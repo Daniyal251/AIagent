@@ -4928,7 +4928,8 @@ async function sendGlobalAi() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: msg,
-        context: '',
+        userId: currentUser?.telegram_id || '',
+        context: 'chat',
         source: 'web',
         history: globalAiMessages.filter(m=>m.role==='user'||m.role==='assistant').slice(-10)
       }),
@@ -4937,7 +4938,7 @@ async function sendGlobalAi() {
     clearTimeout(timeout);
     if (!response.ok) throw new Error('HTTP ' + response.status);
     const data = await response.json();
-    aiText = data.response || data.text || data.message || '';
+    aiText = data.reply || data.response || data.text || data.message || '';
     if (!aiText && data.content) { try { aiText = data.content[0].text; } catch(e) {} }
     if (!aiText) throw new Error('Empty response');
   } catch(e) {
