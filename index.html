@@ -3677,8 +3677,7 @@ async function approveStaff(id) {
 
 // Self-registration function (from Telegram bot or web)
 async function selfRegister(data) {
-  const row = {
-    ID: 'S' + String(Date.now()).slice(-5),
+  const staffRow = {
     'Имя': data.name || '',
     'Роль': data.role || 'Сотрудник',
     'Проект': data.project || '',
@@ -3686,10 +3685,22 @@ async function selfRegister(data) {
     'Telegram_ID': data.telegram_id || '',
     'Email': data.email || '',
     'Телефон': data.phone || '',
-    'Статус': 'Ожидает',
+    'Статус': 'Активный',
     'Дата_добавления': today()
   };
-  return await apiWrite('Сотрудники', row);
+  // Create approval request for CEO
+  const approval = {
+    ID: 'A' + Date.now().toString(36).toUpperCase(),
+    'Тип': '👤 Регистрация сотрудника',
+    'Описание': (data.name||'?') + ' — ' + (data.role||'Сотрудник') + ' (' + (data.project||'') + ')',
+    'От_кого': data.name || '?',
+    'Роль': data.role || 'Сотрудник',
+    'Статус': '⏳ Ожидает',
+    'Дата_запроса': today(),
+    'Лист': 'Сотрудники',
+    'Данные': JSON.stringify(staffRow)
+  };
+  return await apiWrite('Согласования', approval);
 }
 
 // Quick site task — CEO/Зам вставляет ссылку на Яндекс Карты
@@ -5910,19 +5921,61 @@ function openClientCard(id) {
     const hasPhone = !!dir['Телефон'];
     const hasType = !!dir['Тип сайта'];
     const hasPrice = !!dir['Цена'];
-    html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">📞 Шаг 1: Свяжитесь с клиентом</div>';
-    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Позвоните или напишите, уточните что нужно</div>';
-    html += '<div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:16px">';
-    html += '<div style="font-size:12px;font-weight:600;margin-bottom:8px">Чеклист:</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:6px">';
-    html += '<div style="display:flex;align-items:center;gap:8px;font-size:13px">'+(hasPhone?'<span style="color:var(--green)">✅</span>':'<span style="color:var(--red)">⬜</span>')+' Телефон '+(hasPhone?'<span style="color:var(--text2)">'+esc(dir['Телефон'])+'</span>':'<span style="color:var(--red);font-size:11px">не заполнен</span>')+'</div>';
-    html += '<div style="display:flex;align-items:center;gap:8px;font-size:13px">'+(hasType?'<span style="color:var(--green)">✅</span>':'<span style="color:var(--red)">⬜</span>')+' Тип сайта '+(hasType?'<span style="color:var(--text2)">'+esc(dir['Тип сайта'])+'</span>':'')+'</div>';
-    html += '<div style="display:flex;align-items:center;gap:8px;font-size:13px">'+(hasPrice?'<span style="color:var(--green)">✅</span>':'<span style="color:var(--red)">⬜</span>')+' Цена '+(hasPrice?'<span style="color:var(--text2)">'+Number(dir['Цена']).toLocaleString('ru')+'₽</span>':'')+'</div>';
-    html += '</div></div>';
-    if (hasPhone) html += '<a href="tel:'+esc(dir['Телефон'])+'" class="btn btn-secondary" style="width:100%;margin-bottom:8px;text-align:center;display:block">📞 Позвонить: '+esc(dir['Телефон'])+'</a>';
-    if (!hasPhone || !hasType || !hasPrice) html += '<button class="btn btn-secondary" onclick="closeClientCard();openModal(\'direction\',\''+eid+'\')" style="width:100%;margin-bottom:8px">✏️ Заполнить данные клиента</button>';
-    if (hasPhone && hasType) html += '<button class="btn btn-primary" onclick="setDealStage(\''+eid+'\',\'anketa\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ Контакт установлен → Перейти к Анкете</button>';
-    else html += '<div style="text-align:center;padding:8px;color:var(--text2);font-size:12px;background:var(--bg3);border-radius:8px">⚠️ Заполните телефон и тип сайта чтобы перейти дальше</div>';
+    html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">📞 Шаг 1: Внесите клиента</div>';
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Заполните данные — позвоните — договоритесь</div>';
+    
+    // Quick edit form right in the card
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">Телефон *</label><input id="cc-lead-phone" type="tel" value="'+escA(dir['Телефон']||'')+'" placeholder="+7 900 123-45-67" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">Город</label><input id="cc-lead-city" type="text" value="'+escA(dir['Город']||'')+'" placeholder="Набережные Челны" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '</div>';
+    
+    // Site type DROPDOWN from SITE_PRICING
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">Тип сайта *</label>';
+    html += '<select id="cc-lead-type" onchange="updateLeadPrice()" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">';
+    html += '<option value="">— Выберите тип —</option>';
+    for (const [t, p] of Object.entries(SITE_PRICING)) {
+      html += '<option value="'+escA(t)+'"'+(dir['Тип сайта']===t?' selected':'')+'>'+p.emoji+' '+t+' — '+p.price.toLocaleString('ru')+'₽ ('+p.desc+')</option>';
+    }
+    html += '</select></div>';
+    
+    // Price (auto-filled from dropdown, editable)
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">Цена клиенту ₽ *</label><input id="cc-lead-price" type="number" value="'+(Number(dir['Цена'])||'')+'" placeholder="10000" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">Менеджер</label><select id="cc-lead-manager" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px">';
+    html += '<option value="">— Не назначен —</option>';
+    (DATA.staff||[]).filter(s=>s['Статус']!=='Ожидает'&&s['Статус']!=='❌ Удалён').forEach(s => {
+      html += '<option value="'+escA(s['Имя'])+'"'+(dir['Менеджер']===s['Имя']?' selected':'')+'>'+esc(s['Имя'])+' ('+esc(s['Роль']||'')+')</option>';
+    });
+    html += '</select></div></div>';
+    html += '</div>';
+    
+    // Budget preview
+    const price = Number(dir['Цена'])||0;
+    const pricing = SITE_PRICING[dir['Тип сайта']] || {};
+    if (price > 0) {
+      const devPay = pricing.devPay || Math.round(price*0.3);
+      const mgrPay = Math.round(price * (pricing.managerPct||15) / 100);
+      const profit = price - devPay - mgrPay;
+      html += '<div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px">';
+      html += '<div style="font-weight:600;margin-bottom:6px">💰 Бюджет сделки:</div>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">';
+      html += '<div>💵 Клиент платит:</div><div style="font-weight:600">'+price.toLocaleString('ru')+'₽</div>';
+      html += '<div>👨‍💻 Разработчику:</div><div>'+devPay.toLocaleString('ru')+'₽</div>';
+      html += '<div>👤 Менеджеру ('+(pricing.managerPct||15)+'%):</div><div>'+mgrPay.toLocaleString('ru')+'₽</div>';
+      html += '<div style="font-weight:700;color:var(--green)">📈 Прибыль:</div><div style="font-weight:700;color:var(--green)">'+profit.toLocaleString('ru')+'₽</div>';
+      html += '</div></div>';
+    }
+    
+    html += '<button class="btn btn-secondary" onclick="saveLeadData(\''+eid+'\')" style="width:100%;margin-bottom:8px">💾 Сохранить</button>';
+    
+    // Validation: need phone + type to proceed
+    if (hasPhone && hasType) {
+      html += '<button class="btn btn-primary" onclick="saveLeadData(\''+eid+'\');setDealStage(\''+eid+'\',\'anketa\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ Данные собраны → Анкета / ТЗ</button>';
+    } else {
+      html += '<div style="text-align:center;padding:8px;color:var(--text2);font-size:12px;background:var(--bg3);border-radius:8px">⚠️ Заполните телефон и тип сайта → Сохраните → Далее</div>';
+    }
     
   } else if (stage === 'anketa') {
     html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">📋 Шаг 2: Заполните анкету клиента</div>';
@@ -6022,6 +6075,9 @@ function openClientCard(id) {
   if (p.canEdit) html += '<div style="padding:8px 12px;border:1px solid var(--border);border-top:0;border-radius:0 0 8px 8px"><button class="btn btn-sm btn-secondary" onclick="closeClientCard();openModal(\'direction\',\''+eid+'\')">✏️ Редактировать</button></div>';
   html += '</details>';
   
+  // FINANCE PANEL (all steps except lead — lead has its own inline)
+  if (stage !== 'lead') html += renderClientFinance(dir);
+  
   // TASKS
   html += '<div class="card" style="padding:16px;margin-bottom:16px">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
@@ -6068,6 +6124,54 @@ async function saveAnketa(id) {
     try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Анкета сохранена'); await loadAllData(); }
     catch(e) { toast('Ошибка: '+e.message,'error'); }
   }
+}
+
+function updateLeadPrice() {
+  const sel = document.getElementById('cc-lead-type');
+  const priceEl = document.getElementById('cc-lead-price');
+  if (sel && priceEl && sel.value) {
+    const p = SITE_PRICING[sel.value];
+    if (p && (!priceEl.value || priceEl.value === '0')) priceEl.value = p.price;
+  }
+}
+
+async function saveLeadData(id) {
+  const v = (sel) => { const el = document.getElementById(sel); return el ? el.value.trim() : ''; };
+  const updates = {};
+  if (v('cc-lead-phone')) updates['Телефон'] = v('cc-lead-phone');
+  if (v('cc-lead-city')) updates['Город'] = v('cc-lead-city');
+  if (v('cc-lead-type')) updates['Тип сайта'] = v('cc-lead-type');
+  if (v('cc-lead-price')) updates['Цена'] = Number(v('cc-lead-price')) || 0;
+  if (v('cc-lead-manager')) updates['Менеджер'] = v('cc-lead-manager');
+  if (Object.keys(updates).length) {
+    try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Данные сохранены'); await loadAllData(); }
+    catch(e) { toast('Ошибка: '+e.message,'error'); }
+  }
+}
+
+// Budget/finance block for client card
+function renderClientFinance(dir) {
+  const price = Number(dir['Цена']) || 0;
+  if (!price) return '';
+  const pricing = SITE_PRICING[dir['Тип сайта']] || {};
+  const devPay = pricing.devPay || Math.round(price * 0.3);
+  const mgrPct = pricing.managerPct || 15;
+  const mgrPay = Math.round(price * mgrPct / 100);
+  const profit = price - devPay - mgrPay;
+  const paid = !!dir['Оплачено'];
+  
+  let h = '<div class="card" style="padding:16px;margin-bottom:12px">';
+  h += '<div style="font-size:13px;font-weight:700;margin-bottom:10px">💰 Финансы</div>';
+  h += '<div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;font-size:12px">';
+  h += '<div>💵 Цена клиенту</div><div style="font-weight:700">'+price.toLocaleString('ru')+'₽</div>';
+  h += '<div>👨‍💻 Разработчик</div><div>−'+devPay.toLocaleString('ru')+'₽</div>';
+  h += '<div>👤 Менеджер ('+mgrPct+'%)</div><div>−'+mgrPay.toLocaleString('ru')+'₽</div>';
+  h += '<div style="border-top:1px solid var(--border);padding-top:4px;font-weight:700;color:var(--green)">📈 Прибыль компании</div>';
+  h += '<div style="border-top:1px solid var(--border);padding-top:4px;font-weight:700;color:var(--green)">'+profit.toLocaleString('ru')+'₽</div>';
+  h += '</div>';
+  h += '<div style="margin-top:8px;font-size:11px;text-align:center;padding:6px;border-radius:6px;background:'+(paid?'rgba(0,212,170,0.1)':'rgba(255,170,0,0.1)')+';color:'+(paid?'var(--green)':'var(--orange)')+'">'+(paid?'✅ Оплата получена':'⏳ Ожидает оплаты')+'</div>';
+  h += '</div>';
+  return h;
 }
 
 
