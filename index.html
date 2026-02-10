@@ -4559,9 +4559,26 @@ function initSiteGenerator() {
       }
     }, 200);
   }
-  // Auto-fill name from subproject if empty
-  const nameEl = document.getElementById('sg-name');
-  if (nameEl && !nameEl.value) nameEl.value = currentSubproject || '';
+  // Auto-fill from direction/client record
+  const dir = (DATA.directions||[]).find(d => (d['Название']||d['name']) === currentSubproject && d['Проект']==='Сайты');
+  if (dir) {
+    setTimeout(() => {
+      const fill = (id, val) => { const el = document.getElementById(id); if (el && !el.value && val) el.value = val; };
+      fill('sg-name', dir['Название'] || currentSubproject);
+      fill('sg-type', dir['Описание'] || dir['Вид деятельности'] || '');
+      fill('sg-city', dir['Город'] || '');
+      fill('sg-phone', dir['Телефон'] || '');
+      fill('sg-desc', dir['Услуги'] || '');
+      fill('sg-services', dir['Услуги'] || '');
+      fill('sg-extra', dir['Комментарий'] || dir['Пожелания'] || '');
+      fill('sg-address', dir['Адрес'] || '');
+      fill('sg-social', dir['Соцсети'] || dir['Instagram'] || '');
+      fill('sg-hours', dir['Режим работы'] || dir['График'] || '');
+    }, 100);
+  } else {
+    const nameEl = document.getElementById('sg-name');
+    if (nameEl && !nameEl.value) nameEl.value = currentSubproject || '';
+  }
 }
 
 // ============================================================
@@ -5909,29 +5926,42 @@ function openClientCard(id) {
     
   } else if (stage === 'anketa') {
     html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">📋 Шаг 2: Заполните анкету клиента</div>';
-    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Соберите всю информацию для создания сайта</div>';
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Эти данные автоматически заполнят генератор сайта</div>';
     html += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">';
-    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Название бизнеса</label><input id="cc-biz-name" type="text" value="'+escA(name)+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
-    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Вид деятельности</label><input id="cc-biz-type" type="text" placeholder="Ресторан, салон красоты..." value="'+escA(dir['Описание']||'')+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
-    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Услуги / товары</label><textarea id="cc-services" placeholder="Стрижки, окрашивание..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-height:60px">'+esc(dir['Услуги']||'')+'</textarea></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Название бизнеса *</label><input id="cc-biz-name" type="text" value="'+escA(name)+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
     html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Телефон</label><input id="cc-phone" type="tel" value="'+escA(dir['Телефон']||'')+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
-    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Город</label><input id="cc-city" type="text" value="'+escA(dir['Город']||'')+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Вид деятельности *</label><input id="cc-biz-type" type="text" placeholder="Ресторан, салон красоты..." value="'+escA(dir['Описание']||'')+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Город *</label><input id="cc-city" type="text" value="'+escA(dir['Город']||'')+'" placeholder="Набережные Челны" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
     html += '</div>';
-    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Пожелания клиента</label><textarea id="cc-wishes" placeholder="Цвета, стиль, референсы..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-height:50px">'+esc(dir['Комментарий']||'')+'</textarea></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Адрес</label><input id="cc-address" type="text" value="'+escA(dir['Адрес']||'')+'" placeholder="ул. Ленина, д. 1" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Телефон *</label><input id="cc-phone" type="tel" value="'+escA(dir['Телефон']||'')+'" placeholder="+7 900 123-45-67" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Instagram / Соцсети</label><input id="cc-social" type="text" value="'+escA(dir['Соцсети']||dir['Instagram']||'')+'" placeholder="@my_business" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '</div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Режим работы</label><input id="cc-hours" type="text" value="'+escA(dir['Режим работы']||dir['График']||'')+'" placeholder="Пн-Пт 10:00-22:00, Сб-Вс 11:00-23:00" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Услуги / Меню / Товары *</label><textarea id="cc-services" placeholder="Стрижки, окрашивание, маникюр..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-height:60px">'+esc(dir['Услуги']||'')+'</textarea></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Цены (если есть)</label><input id="cc-prices" type="text" value="'+escA(dir['Цены']||'')+'" placeholder="Стрижка от 500₽, маникюр от 1000₽" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Пожелания клиента по сайту</label><textarea id="cc-wishes" placeholder="Цвета, стиль, референсы, что обязательно добавить..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-height:50px">'+esc(dir['Комментарий']||'')+'</textarea></div>';
     html += '</div>';
     html += '<button class="btn btn-secondary" onclick="saveAnketa(\''+eid+'\')" style="width:100%;margin-bottom:8px">💾 Сохранить анкету</button>';
     html += '<button class="btn btn-primary" onclick="saveAnketa(\''+eid+'\');setDealStage(\''+eid+'\',\'proto\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ Анкета заполнена → Создать прототип</button>';
     
   } else if (stage === 'proto') {
     html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">🎨 Шаг 3: Создайте сайт</div>';
-    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Откройте генератор и создайте сайт для клиента</div>';
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Данные из анкеты автоматически заполнят генератор. Нажмите кнопку — проверьте и запустите генерацию.</div>';
     html += '<div style="background:var(--bg3);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px">';
-    html += '<div style="font-weight:600;margin-bottom:6px">Данные для генерации:</div>';
-    html += '<div>🏢 '+esc(name)+'</div>';
-    if (dir['Тип сайта']) html += '<div>🌐 '+esc(dir['Тип сайта'])+'</div>';
-    if (dir['Город']) html += '<div>📍 '+esc(dir['Город'])+'</div>';
-    if (dir['Услуги']) html += '<div>📋 '+esc(dir['Услуги'])+'</div>';
+    html += '<div style="font-weight:600;margin-bottom:8px">Данные из анкеты:</div>';
+    html += '<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px">';
+    html += '<span style="color:var(--text2)">🏢 Бизнес:</span><span>'+esc(name)+'</span>';
+    if (dir['Описание']) html += '<span style="color:var(--text2)">📂 Вид:</span><span>'+esc(dir['Описание'])+'</span>';
+    if (dir['Город']) html += '<span style="color:var(--text2)">📍 Город:</span><span>'+esc(dir['Город'])+'</span>';
+    if (dir['Адрес']) html += '<span style="color:var(--text2)">🏠 Адрес:</span><span>'+esc(dir['Адрес'])+'</span>';
+    if (dir['Телефон']) html += '<span style="color:var(--text2)">📱 Телефон:</span><span>'+esc(dir['Телефон'])+'</span>';
+    if (dir['Услуги']) html += '<span style="color:var(--text2)">📋 Услуги:</span><span>'+esc(dir['Услуги']).slice(0,80)+(dir['Услуги'].length>80?'...':'')+'</span>';
+    if (dir['Режим работы']||dir['График']) html += '<span style="color:var(--text2)">🕐 Часы:</span><span>'+esc(dir['Режим работы']||dir['График'])+'</span>';
+    if (dir['Комментарий']) html += '<span style="color:var(--text2)">💬 Пожелания:</span><span>'+esc(dir['Комментарий']).slice(0,80)+'</span>';
+    html += '</div>';
+    if (!dir['Описание'] && !dir['Услуги']) html += '<div style="margin-top:8px;color:var(--orange);font-size:12px">⚠️ Мало данных — вернитесь к анкете для лучшего результата</div>';
     html += '</div>';
     html += '<button class="btn btn-primary" onclick="closeClientCard();openSubproject(\''+ename+'\');setTimeout(()=>showSpTab(\'sitegen\'),300)" style="width:100%;font-size:15px;padding:14px;margin-bottom:8px">🎨 Открыть генератор сайта</button>';
     html += '<button class="btn btn-secondary" onclick="setDealStage(\''+eid+'\',\'review\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%">✅ Прототип готов → На согласование</button>';
@@ -6030,6 +6060,10 @@ async function saveAnketa(id) {
   if (v('cc-phone')) updates['Телефон'] = v('cc-phone');
   if (v('cc-city')) updates['Город'] = v('cc-city');
   if (v('cc-wishes')) updates['Комментарий'] = v('cc-wishes');
+  if (v('cc-address')) updates['Адрес'] = v('cc-address');
+  if (v('cc-social')) updates['Соцсети'] = v('cc-social');
+  if (v('cc-hours')) updates['Режим работы'] = v('cc-hours');
+  if (v('cc-prices')) updates['Цены'] = v('cc-prices');
   if (Object.keys(updates).length) {
     try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Анкета сохранена'); await loadAllData(); }
     catch(e) { toast('Ошибка: '+e.message,'error'); }
