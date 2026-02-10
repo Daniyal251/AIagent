@@ -5866,112 +5866,176 @@ function openClientCard(id) {
   const doneTasks = clientTasks.filter(t => (t['Статус']||'') === 'Готово');
   const td = today();
   const p = getUserPerms();
+  const eid = escA(id);
+  const ename = escA(name);
   
-  // Progress bar
-  let progressHtml = '<div style="display:flex;gap:2px;margin-bottom:16px">';
+  let html = '<div style="padding:20px 24px">';
+  
+  // Stepper
+  html += '<div style="display:flex;align-items:center;margin-bottom:24px;gap:0">';
   STAGES.forEach((s,i) => {
-    const active = i <= stageIdx;
-    const current = i === stageIdx;
-    progressHtml += '<div style="flex:1;height:6px;border-radius:3px;background:'+(active?s.color:'var(--bg3)')+';'+(current?'box-shadow:0 0 6px '+s.color:'')+'"></div>';
+    const done = i < stageIdx;
+    const cur = i === stageIdx;
+    const bgC = done ? 'var(--green)' : cur ? stageObj.color : 'var(--bg3)';
+    const txtC = done || cur ? '#fff' : 'var(--text2)';
+    html += '<div style="display:flex;align-items:center">';
+    html += '<div style="width:28px;height:28px;border-radius:50%;background:'+bgC+';color:'+txtC+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;'+(cur?'box-shadow:0 0 12px '+stageObj.color+';transform:scale(1.15)':'')+'">'+(done?'✓':(i+1))+'</div>';
+    if (i < STAGES.length-1) html += '<div style="width:20px;height:2px;background:'+(i<stageIdx?'var(--green)':'var(--bg3)')+'"></div>';
+    html += '</div>';
   });
-  progressHtml += '</div>';
-  progressHtml += '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-bottom:20px">';
-  STAGES.forEach((s,i) => {
-    progressHtml += '<span style="'+(i<=stageIdx?'color:'+s.color+';font-weight:600':'')+'">'+(i<=stageIdx?'✓':'')+' '+s.name.replace(/^.+\s/,'')+'</span>';
-  });
-  progressHtml += '</div>';
+  html += '</div>';
+  html += '<div style="text-align:center;margin-bottom:20px"><span style="background:'+stageObj.color+';color:#fff;padding:4px 14px;border-radius:12px;font-size:12px;font-weight:600">'+stageObj.name+'</span></div>';
   
-  // Workflow step
-  const wfSteps = {
-    lead: {icon:'📞',title:'Свяжитесь с клиентом',desc:'Уточните требования, бюджет, сроки'},
-    anketa: {icon:'📋',title:'Заполните анкету',desc:'Соберите: тип деятельности, услуги, контакты, пожелания'},
-    proto: {icon:'🎨',title:'Создайте сайт',desc:'Откройте генератор → создайте прототип → покажите клиенту'},
-    review: {icon:'📤',title:'Согласуйте с клиентом',desc:'Отправьте ссылку, внесите правки если нужно'},
-    payment: {icon:'💳',title:'Получите оплату',desc:'Выставьте счёт, дождитесь оплаты'},
-    deploy: {icon:'🔧',title:'Задеплойте сайт',desc:'Домен + хостинг + загрузка файлов'},
-    done: {icon:'🎉',title:'Проект завершён!',desc:'Клиент получил готовый сайт'}
-  };
-  const wf = wfSteps[stage]||wfSteps.lead;
+  // MAIN ACTION AREA
+  html += '<div class="card" style="padding:20px;margin-bottom:16px;border:2px solid '+stageObj.color+';border-radius:12px">';
   
-  let wfHtml = '<div class="card" style="padding:16px;margin-bottom:16px;border-left:4px solid '+stageObj.color+'">';
-  wfHtml += '<div style="display:flex;align-items:center;gap:12px">';
-  wfHtml += '<span style="font-size:28px">'+wf.icon+'</span>';
-  wfHtml += '<div><div style="font-weight:700;font-size:14px">Шаг '+(stageIdx+1)+'/7: '+wf.title+'</div>';
-  wfHtml += '<div style="font-size:12px;color:var(--text2)">'+wf.desc+'</div></div>';
-  wfHtml += '</div>';
-  if (stage !== 'done' && p.canEdit) {
-    const nextStage = STAGES[stageIdx+1];
-    if (nextStage) {
-      wfHtml += '<button class="btn btn-primary" onclick="setDealStage(\''+escA(id)+'\',\''+nextStage.id+'\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="margin-top:12px;width:100%">➡️ Перевести: '+nextStage.name+'</button>';
+  if (stage === 'lead') {
+    const hasPhone = !!dir['Телефон'];
+    const hasType = !!dir['Тип сайта'];
+    const hasPrice = !!dir['Цена'];
+    html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">📞 Шаг 1: Свяжитесь с клиентом</div>';
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Позвоните или напишите, уточните что нужно</div>';
+    html += '<div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:16px">';
+    html += '<div style="font-size:12px;font-weight:600;margin-bottom:8px">Чеклист:</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px">';
+    html += '<div style="display:flex;align-items:center;gap:8px;font-size:13px">'+(hasPhone?'<span style="color:var(--green)">✅</span>':'<span style="color:var(--red)">⬜</span>')+' Телефон '+(hasPhone?'<span style="color:var(--text2)">'+esc(dir['Телефон'])+'</span>':'<span style="color:var(--red);font-size:11px">не заполнен</span>')+'</div>';
+    html += '<div style="display:flex;align-items:center;gap:8px;font-size:13px">'+(hasType?'<span style="color:var(--green)">✅</span>':'<span style="color:var(--red)">⬜</span>')+' Тип сайта '+(hasType?'<span style="color:var(--text2)">'+esc(dir['Тип сайта'])+'</span>':'')+'</div>';
+    html += '<div style="display:flex;align-items:center;gap:8px;font-size:13px">'+(hasPrice?'<span style="color:var(--green)">✅</span>':'<span style="color:var(--red)">⬜</span>')+' Цена '+(hasPrice?'<span style="color:var(--text2)">'+Number(dir['Цена']).toLocaleString('ru')+'₽</span>':'')+'</div>';
+    html += '</div></div>';
+    if (hasPhone) html += '<a href="tel:'+esc(dir['Телефон'])+'" class="btn btn-secondary" style="width:100%;margin-bottom:8px;text-align:center;display:block">📞 Позвонить: '+esc(dir['Телефон'])+'</a>';
+    if (!hasPhone || !hasType || !hasPrice) html += '<button class="btn btn-secondary" onclick="closeClientCard();openModal(\'direction\',\''+eid+'\')" style="width:100%;margin-bottom:8px">✏️ Заполнить данные клиента</button>';
+    if (hasPhone && hasType) html += '<button class="btn btn-primary" onclick="setDealStage(\''+eid+'\',\'anketa\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ Контакт установлен → Перейти к Анкете</button>';
+    else html += '<div style="text-align:center;padding:8px;color:var(--text2);font-size:12px;background:var(--bg3);border-radius:8px">⚠️ Заполните телефон и тип сайта чтобы перейти дальше</div>';
+    
+  } else if (stage === 'anketa') {
+    html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">📋 Шаг 2: Заполните анкету клиента</div>';
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Соберите всю информацию для создания сайта</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Название бизнеса</label><input id="cc-biz-name" type="text" value="'+escA(name)+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Вид деятельности</label><input id="cc-biz-type" type="text" placeholder="Ресторан, салон красоты..." value="'+escA(dir['Описание']||'')+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Услуги / товары</label><textarea id="cc-services" placeholder="Стрижки, окрашивание..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-height:60px">'+esc(dir['Услуги']||'')+'</textarea></div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Телефон</label><input id="cc-phone" type="tel" value="'+escA(dir['Телефон']||'')+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Город</label><input id="cc-city" type="text" value="'+escA(dir['Город']||'')+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+    html += '</div>';
+    html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Пожелания клиента</label><textarea id="cc-wishes" placeholder="Цвета, стиль, референсы..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-height:50px">'+esc(dir['Комментарий']||'')+'</textarea></div>';
+    html += '</div>';
+    html += '<button class="btn btn-secondary" onclick="saveAnketa(\''+eid+'\')" style="width:100%;margin-bottom:8px">💾 Сохранить анкету</button>';
+    html += '<button class="btn btn-primary" onclick="saveAnketa(\''+eid+'\');setDealStage(\''+eid+'\',\'proto\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ Анкета заполнена → Создать прототип</button>';
+    
+  } else if (stage === 'proto') {
+    html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">🎨 Шаг 3: Создайте сайт</div>';
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Откройте генератор и создайте сайт для клиента</div>';
+    html += '<div style="background:var(--bg3);border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px">';
+    html += '<div style="font-weight:600;margin-bottom:6px">Данные для генерации:</div>';
+    html += '<div>🏢 '+esc(name)+'</div>';
+    if (dir['Тип сайта']) html += '<div>🌐 '+esc(dir['Тип сайта'])+'</div>';
+    if (dir['Город']) html += '<div>📍 '+esc(dir['Город'])+'</div>';
+    if (dir['Услуги']) html += '<div>📋 '+esc(dir['Услуги'])+'</div>';
+    html += '</div>';
+    html += '<button class="btn btn-primary" onclick="closeClientCard();openSubproject(\''+ename+'\');setTimeout(()=>showSpTab(\'sitegen\'),300)" style="width:100%;font-size:15px;padding:14px;margin-bottom:8px">🎨 Открыть генератор сайта</button>';
+    html += '<button class="btn btn-secondary" onclick="setDealStage(\''+eid+'\',\'review\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%">✅ Прототип готов → На согласование</button>';
+    
+  } else if (stage === 'review') {
+    html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">📤 Шаг 4: Покажите клиенту</div>';
+    html += '<div style="font-size:13px;color:var(--text2);margin-bottom:16px">Отправьте ссылку и соберите обратную связь</div>';
+    if (dir['Ссылка']) {
+      html += '<div style="background:var(--bg3);border-radius:8px;padding:14px;margin-bottom:16px">';
+      html += '<div style="font-size:11px;color:var(--text2);margin-bottom:4px">Ссылка на сайт:</div>';
+      html += '<a href="'+esc(dir['Ссылка'])+'" target="_blank" style="color:var(--blue);word-break:break-all">'+esc(dir['Ссылка'])+'</a></div>';
     }
+    const phone = dir['Телефон']||'';
+    if (phone) {
+      const waLink = 'https://wa.me/'+phone.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent('Здравствуйте! Готов прототип вашего сайта: '+(dir['Ссылка']||'[ссылка]'));
+      html += '<a href="'+waLink+'" target="_blank" class="btn btn-secondary" style="width:100%;margin-bottom:8px;text-align:center;display:block;background:rgba(37,211,102,0.1);color:#25d366;border-color:#25d366">💬 Отправить в WhatsApp</a>';
+    }
+    html += '<button class="btn btn-secondary" onclick="closeClientCard();openSubproject(\''+ename+'\');setTimeout(()=>showSpTab(\'sitegen\'),300)" style="width:100%;margin-bottom:8px">🎨 Внести правки</button>';
+    html += '<button class="btn btn-primary" onclick="setDealStage(\''+eid+'\',\'payment\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ Клиент одобрил → К оплате</button>';
+    
+  } else if (stage === 'payment') {
+    html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">💳 Шаг 5: Получите оплату</div>';
+    html += '<div style="text-align:center;padding:20px;background:var(--bg3);border-radius:12px;margin-bottom:16px">';
+    html += '<div style="font-size:13px;color:var(--text2)">К оплате:</div>';
+    html += '<div style="font-size:32px;font-weight:700;color:var(--accent)">'+(Number(dir['Цена'])||0).toLocaleString('ru')+'₽</div></div>';
+    if (dir['Оплачено']) {
+      html += '<div style="text-align:center;padding:12px;background:rgba(0,212,170,0.1);border-radius:8px;color:var(--green);font-weight:600;margin-bottom:8px">✅ Оплата получена!</div>';
+      html += '<button class="btn btn-primary" onclick="setDealStage(\''+eid+'\',\'deploy\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ → Деплой</button>';
+    } else {
+      html += '<button class="btn btn-primary" onclick="markPaid(\''+eid+'\');closeClientCard();setTimeout(()=>openClientCard(\''+eid+'\'),800)" style="width:100%;font-size:14px;padding:12px">💰 Отметить оплату</button>';
+    }
+    
+  } else if (stage === 'deploy') {
+    html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">🔧 Шаг 6: Опубликуйте сайт</div>';
+    html += '<div style="background:var(--bg3);border-radius:8px;padding:12px;margin-bottom:16px">';
+    html += '<div style="font-size:12px;font-weight:600;margin-bottom:8px">Чеклист:</div>';
+    html += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0"><input type="checkbox"> Домен привязан</label>';
+    html += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0"><input type="checkbox"> Хостинг настроен</label>';
+    html += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0"><input type="checkbox"> Файлы загружены</label>';
+    html += '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;padding:4px 0"><input type="checkbox"> Протестировано</label></div>';
+    html += '<button class="btn btn-secondary" onclick="closeClientCard();openSubproject(\''+ename+'\');setTimeout(()=>showSpTab(\'sitegen\'),300)" style="width:100%;margin-bottom:8px">📥 Скачать файлы</button>';
+    html += '<button class="btn btn-primary" onclick="setDealStage(\''+eid+'\',\'done\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">🎉 Сайт опубликован → Завершить</button>';
+    
+  } else if (stage === 'done') {
+    html += '<div style="text-align:center;padding:20px"><div style="font-size:48px;margin-bottom:8px">🎉</div>';
+    html += '<div style="font-size:18px;font-weight:700">Проект завершён!</div></div>';
+    if (dir['Ссылка']) html += '<a href="'+esc(dir['Ссылка'])+'" target="_blank" class="btn btn-secondary" style="width:100%;text-align:center;display:block">🔗 Открыть сайт</a>';
   }
-  wfHtml += '</div>';
+  html += '</div>';
   
-  // Client info
-  let infoHtml = '<div class="card" style="padding:16px;margin-bottom:16px">';
-  infoHtml += '<h4 style="font-size:14px;font-weight:700;margin-bottom:12px">👤 Информация</h4>';
-  infoHtml += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px">';
-  infoHtml += '<div><span style="color:var(--text2)">📱 Телефон:</span> '+(dir['Телефон']?'<a href="tel:'+dir['Телефон']+'">'+esc(dir['Телефон'])+'</a>':'—')+'</div>';
-  infoHtml += '<div><span style="color:var(--text2)">📍 Город:</span> '+esc(dir['Город']||'—')+'</div>';
-  infoHtml += '<div><span style="color:var(--text2)">💰 Цена:</span> <strong>'+(Number(dir['Цена'])||0).toLocaleString('ru')+'₽</strong></div>';
-  infoHtml += '<div><span style="color:var(--text2)">💳 Оплата:</span> '+(dir['Оплачено']?'<span style="color:var(--green)">✅ Оплачено</span>':'<span style="color:var(--orange)">⏳ Не оплачено</span>')+'</div>';
-  infoHtml += '<div><span style="color:var(--text2)">🌐 Тип:</span> '+esc(dir['Тип сайта']||'—')+'</div>';
-  infoHtml += '<div><span style="color:var(--text2)">👤 Менеджер:</span> '+esc(dir['Менеджер']||'—')+'</div>';
-  if (dir['Ссылка']) infoHtml += '<div style="grid-column:span 2"><span style="color:var(--text2)">🔗 Сайт:</span> <a href="'+esc(dir['Ссылка'])+'" target="_blank">'+esc(dir['Ссылка'])+'</a></div>';
-  infoHtml += '</div>';
-  // Quick actions
-  infoHtml += '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">';
-  if (dir['Телефон']) infoHtml += '<a href="tel:'+dir['Телефон']+'" class="btn btn-sm btn-secondary">📞 Позвонить</a>';
-  infoHtml += '<button class="btn btn-sm btn-secondary" onclick="closeClientCard();openSubproject(\''+escA(name)+'\');showSpTab(\'sitegen\')">🎨 Генератор</button>';
-  if (p.canEdit) infoHtml += '<button class="btn btn-sm btn-secondary" onclick="closeClientCard();openModal(\'direction\',\''+escA(id)+'\')">✏️ Редактировать</button>';
-  if (p.canEdit && !dir['Оплачено']) infoHtml += '<button class="btn btn-sm btn-primary" onclick="markPaid(\''+escA(id)+'\');closeClientCard();setTimeout(()=>renderProjectView(),500)">💳 Отметить оплату</button>';
-  infoHtml += '</div></div>';
+  // CLIENT INFO (collapsed)
+  html += '<details style="margin-bottom:12px"><summary style="padding:12px 16px;background:var(--bg3);border-radius:8px;cursor:pointer;font-size:13px;font-weight:600">👤 Данные клиента</summary>';
+  html += '<div style="padding:12px;border:1px solid var(--border);border-top:0;border-radius:0 0 8px 8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">';
+  html += '<div>📱 '+(dir['Телефон']||'—')+'</div><div>📍 '+esc(dir['Город']||'—')+'</div>';
+  html += '<div>💰 '+(Number(dir['Цена'])||0).toLocaleString('ru')+'₽</div><div>💳 '+(dir['Оплачено']?'✅':'⏳')+'</div>';
+  html += '<div>🌐 '+esc(dir['Тип сайта']||'—')+'</div><div>👤 '+esc(dir['Менеджер']||'—')+'</div>';
+  html += '</div>';
+  if (p.canEdit) html += '<div style="padding:8px 12px;border:1px solid var(--border);border-top:0;border-radius:0 0 8px 8px"><button class="btn btn-sm btn-secondary" onclick="closeClientCard();openModal(\'direction\',\''+eid+'\')">✏️ Редактировать</button></div>';
+  html += '</details>';
   
-  // Tasks section with drill-down
-  let tasksHtml = '<div class="card" style="padding:16px;margin-bottom:16px">';
-  tasksHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
-  tasksHtml += '<h4 style="font-size:14px;font-weight:700">📋 Задачи ('+clientTasks.length+')</h4>';
-  if (p.canEdit) tasksHtml += '<button class="btn btn-sm btn-primary" onclick="closeClientCard();openModal(\'task\');setTimeout(()=>{const f=document.getElementById(\'field-Направление\');if(f)f.value=\''+escA(name)+'\';},300)">➕ Добавить</button>';
-  tasksHtml += '</div>';
-  
+  // TASKS
+  html += '<div class="card" style="padding:16px;margin-bottom:16px">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
+  html += '<div style="font-size:13px;font-weight:700">📋 Задачи ('+activeTasks.length+')</div>';
+  if (p.canEdit) html += '<button class="btn btn-sm btn-primary" onclick="closeClientCard();openModal(\'task\');setTimeout(()=>{const f=document.getElementById(\'field-Направление\');if(f)f.value=\''+ename+'\';},300)">➕</button>';
+  html += '</div>';
   if (activeTasks.length) {
     activeTasks.forEach(t => {
       const od = t['Дедлайн'] && t['Дедлайн'] < td;
-      const prColor = t['Приоритет']==='P1'?'var(--red)':t['Приоритет']==='P2'?'var(--orange)':'var(--text2)';
-      tasksHtml += '<div style="padding:10px;margin-bottom:6px;background:var(--bg3);border-radius:8px;border-left:3px solid '+prColor+';cursor:pointer" onclick="closeClientCard();openTaskDetail(\''+escA(t.ID||t.id)+'\')">';
-      tasksHtml += '<div style="display:flex;justify-content:space-between;align-items:center">';
-      tasksHtml += '<div style="font-size:13px;font-weight:500">'+(od?'🔴 ':'')+esc(t['Описание']||t['Название']||'?')+'</div>';
-      tasksHtml += '<span style="font-size:10px;padding:2px 6px;border-radius:8px;background:'+(t['Статус']==='В работе'?'rgba(0,212,170,0.1);color:var(--accent)':'rgba(255,255,255,0.05);color:var(--text2)')+'">'+esc(t['Статус']||'—')+'</span>';
-      tasksHtml += '</div>';
-      tasksHtml += '<div style="display:flex;gap:12px;margin-top:4px;font-size:11px;color:var(--text2)">';
-      if (t['Дедлайн']) tasksHtml += '<span style="'+(od?'color:var(--red)':'')+'">📅 '+t['Дедлайн']+'</span>';
-      if (t['Ответственный']) tasksHtml += '<span>👤 '+esc(t['Ответственный'])+'</span>';
-      tasksHtml += '</div></div>';
+      const prC = t['Приоритет']==='P1'?'var(--red)':t['Приоритет']==='P2'?'var(--orange)':'var(--text2)';
+      html += '<div style="padding:8px 10px;margin-bottom:4px;background:var(--bg3);border-radius:6px;border-left:3px solid '+prC+';cursor:pointer;font-size:12px" onclick="closeClientCard();openTaskDetail(\''+escA(t.ID||t.id)+'\')">';
+      html += '<div style="font-weight:500">'+(od?'🔴 ':'')+esc(t['Описание']||t['Название']||'?')+'</div>';
+      html += '<div style="display:flex;gap:8px;margin-top:2px;font-size:11px;color:var(--text2)">';
+      if (t['Дедлайн']) html += '<span>📅 '+t['Дедлайн']+'</span>';
+      if (t['Ответственный']) html += '<span>👤 '+esc(t['Ответственный'])+'</span>';
+      html += '</div></div>';
     });
-  }
-  if (doneTasks.length) {
-    tasksHtml += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">';
-    tasksHtml += '<div style="font-size:11px;color:var(--text2);margin-bottom:4px">✅ Выполнено ('+doneTasks.length+')</div>';
-    doneTasks.slice(0,5).forEach(t => {
-      tasksHtml += '<div style="padding:4px 0;font-size:12px;color:var(--text2);text-decoration:line-through">'+esc(t['Описание']||t['Название']||'?')+'</div>';
-    });
-    tasksHtml += '</div>';
-  }
-  if (!clientTasks.length) tasksHtml += '<div style="text-align:center;padding:20px;color:var(--text2);font-size:12px">Нет задач. Добавьте первую!</div>';
-  tasksHtml += '</div>';
+  } else html += '<div style="text-align:center;padding:12px;color:var(--text2);font-size:12px">Нет активных задач</div>';
+  if (doneTasks.length) html += '<div style="margin-top:6px;font-size:11px;color:var(--text2)">✅ Выполнено: '+doneTasks.length+'</div>';
+  html += '</div></div>';
   
-  // Build modal
   const overlay = document.getElementById('client-card-overlay') || createClientCardOverlay();
   overlay.innerHTML = '<div class="client-card-panel" onclick="event.stopPropagation()">' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border)">' +
-    '<h3 style="font-size:18px;font-weight:700">'+esc(name)+'</h3>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--bg3)">' +
+    '<div><h3 style="font-size:16px;font-weight:700;margin:0">'+esc(name)+'</h3><div style="font-size:11px;color:var(--text2);margin-top:2px">'+esc(dir['Тип сайта']||'')+' · '+esc(dir['Город']||'')+'</div></div>' +
     '<button onclick="closeClientCard()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer">✕</button>' +
-    '</div>' +
-    '<div style="padding:20px 24px;overflow-y:auto;max-height:calc(100vh - 100px)">' +
-    progressHtml + wfHtml + infoHtml + tasksHtml +
-    '</div></div>';
+    '</div>' + html + '</div>';
   overlay.style.display = 'flex';
 }
+
+async function saveAnketa(id) {
+  const v = (sel) => { const el = document.getElementById(sel); return el ? el.value.trim() : ''; };
+  const updates = {};
+  if (v('cc-biz-type')) updates['Описание'] = v('cc-biz-type');
+  if (v('cc-services')) updates['Услуги'] = v('cc-services');
+  if (v('cc-phone')) updates['Телефон'] = v('cc-phone');
+  if (v('cc-city')) updates['Город'] = v('cc-city');
+  if (v('cc-wishes')) updates['Комментарий'] = v('cc-wishes');
+  if (Object.keys(updates).length) {
+    try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Анкета сохранена'); await loadAllData(); }
+    catch(e) { toast('Ошибка: '+e.message,'error'); }
+  }
+}
+
 
 function createClientCardOverlay() {
   const el = document.createElement('div');
@@ -5979,7 +6043,6 @@ function createClientCardOverlay() {
   el.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;justify-content:flex-end;backdrop-filter:blur(4px)';
   el.onclick = () => closeClientCard();
   document.body.appendChild(el);
-  
   const style = document.createElement('style');
   style.textContent = '.client-card-panel{width:520px;max-width:90vw;background:var(--bg2);height:100vh;overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,0.3);animation:slideInRight .25s ease}@keyframes slideInRight{from{transform:translateX(100%)}to{transform:translateX(0)}}';
   document.head.appendChild(style);
