@@ -4951,8 +4951,8 @@ async function sendGlobalAi() {
     if (!aiText && data.content) { try { aiText = data.content[0].text; } catch(e) {} }
     if (!aiText) throw new Error('Empty response');
   } catch(e) {
-    console.warn('AI API error, using local fallback:', e.message);
-    aiText = generateGlobalFallback(msg, dataCtx);
+    console.error('AI API error:', e.message, e);
+    aiText = '❌ Ошибка подключения к AI: ' + e.message + '\n\nПроверьте:\n1. Workflow активирован в n8n\n2. URL: ' + CONFIG.AI_URL;
   }
 
   typing.remove();
