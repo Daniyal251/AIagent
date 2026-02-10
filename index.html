@@ -3853,26 +3853,35 @@ async function testConnection() {
   const el = document.getElementById('settings-status');
   el.innerHTML = '⏳ Проверяю...';
   try {
-    // loadData now uses Supabase directly
-    if (!url || !url.startsWith('http')) throw new Error('Невалидный URL');
+    const testUrl = CONFIG.SUPABASE_URL + '/rest/v1/staff?select=id&limit=1';
     const ctrl = new AbortController();
     const tmr = setTimeout(() => ctrl.abort(), 10000);
-    
-    const r = await fetch(fullUrl, { signal: ctrl.signal });
+    const r = await fetch(testUrl, {
+      headers: { 'apikey': CONFIG.SUPABASE_KEY },
+      signal: ctrl.signal
+    });
     clearTimeout(tmr);
     if (r.ok) {
-      const data = await r.json();
-      const p = (data.partners||[]).length;
-      const t = (data.tasks||[]).length;
-      const s = (data.staff||[]).length;
-      el.innerHTML = '<span style="color:var(--green)">✅ Подключено! Партнёров: '+p+', Задач: '+t+', Сотрудников: '+s+'</span>';
+      el.innerHTML = '<span style="color:var(--green)">✅ Supabase подключена! Партнёров: '+(DATA.partners||[]).length+', Задач: '+(DATA.tasks||[]).length+', Сотрудников: '+(DATA.staff||[]).length+'</span>';
     } else {
-      el.innerHTML = '<span style="color:var(--red)">❌ HTTP ' + r.status + ' — проверьте что workflow активирован в n8n</span>';
+      el.innerHTML = '<span style="color:var(--red)">❌ HTTP ' + r.status + '</span>';
+    }
+    // Test AI
+    if (CONFIG.AI_URL) {
+      const aiR = await fetch(CONFIG.AI_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({message:'test',userId:'test',context:'ping'}),
+        signal: AbortSignal.timeout(10000)
+      }).catch(() => null);
+      if (aiR && aiR.ok) {
+        el.innerHTML += '<br><span style="color:var(--green)">✅ AI webhook доступен</span>';
+      } else {
+        el.innerHTML += '<br><span style="color:var(--orange)">⚠️ AI webhook недоступен — проверьте n8n</span>';
+      }
     }
   } catch(e) {
-    const msg = e.name === 'AbortError' ? 'Таймаут — сервер не отвечает' :
-      e.message.includes('pattern') ? 'Webhook не активирован в n8n. Активируйте workflow и повторите.' :
-      e.message.includes('Failed to fetch') ? 'Сервер недоступен. Проверьте URL и что workflow активирован.' : e.message;
+    const msg = e.name === 'AbortError' ? 'Таймаут — сервер не отвечает' : e.message;
     el.innerHTML = '<span style="color:var(--red)">❌ ' + msg + '</span>';
   }
 }
@@ -4379,7 +4388,7 @@ async function generateSite() {
     clearTimeout(tmr);
 
     const data = await response.json();
-    let html = data.response || data.text || '';
+    let html = data.reply || data.response || data.text || '';
     
     // Extract HTML from response (Claude may wrap it in ```html blocks)
     const htmlMatch = html.match(/```html\s*([\s\S]*?)```/);
@@ -4782,7 +4791,7 @@ async function callAI(userMsg, context) {
 
     if (response.ok) {
       const data = await response.json();
-      aiResponse = data.response || data.text || data.message || '';
+      aiResponse = data.reply || data.response || data.text || data.message || '';
       if (!aiResponse && data.content) { try { aiResponse = data.content[0].text; } catch(e) {} }
     }
     if (!aiResponse) throw new Error('Empty response');
