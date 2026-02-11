@@ -75,6 +75,11 @@ a:hover { text-decoration: underline; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text2); }
 
+/* Responsive 2-column */
+@media (max-width: 768px) {
+  .sp-two-col { grid-template-columns: 1fr !important; }
+}
+
 /* ============================================================
    LOGIN SCREEN
    ============================================================ */
@@ -1663,17 +1668,20 @@ tbody tr:last-child td { border-bottom: none; }
       </div>
       <div class="page-header">
         <h2 id="sp-title">📁 Подпроект</h2>
-        <div class="actions">
+        <div class="actions" id="sp-actions">
           <button class="btn btn-primary" onclick="openModal('task')">+ Задача</button>
           <button class="btn btn-primary" onclick="openModal('partner')">+ Партнёр</button>
           <button class="btn btn-secondary" onclick="openModal('comm')">+ Контакт</button>
         </div>
       </div>
+      <!-- Client quick-info bar (for Сайты only) -->
+      <div id="sp-client-bar" style="display:none"></div>
       <div class="metrics" id="sp-metrics"></div>
 
       <div class="tabs" id="sp-tabs">
         <div class="tab active" data-tab="overview" onclick="showSpTab('overview')">📊 Обзор</div>
         <div class="tab" data-tab="tasks" onclick="showSpTab('tasks')">✅ Задачи</div>
+        <div class="tab" data-tab="client-info" onclick="showSpTab('client-info')" style="display:none">📋 Анкета</div>
         <div class="tab" data-tab="partners" onclick="showSpTab('partners')">🤝 Партнёры</div>
         <div class="tab" data-tab="projects" onclick="showSpTab('projects')">📁 Проекты</div>
         <div class="tab" data-tab="comms" onclick="showSpTab('comms')">💬 Коммуникации</div>
@@ -1994,7 +2002,7 @@ const CONFIG = {
   SUPABASE_KEY: 'sb_publishable_gFeXATQGYxKx08BpeOedZg_7buTwVJq',
   AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
   REFRESH: 60000,
-  VERSION: '9.0.0'
+  VERSION: '11.0.0'
 };
 
 // Supabase client — ЗАМЕНИ SUPABASE_KEY на свой anon/publishable ключ!
@@ -2930,14 +2938,76 @@ function openSubproject(spName) {
   currentSpTab = 'overview';
   showPage('subproject');
   const isSites = (currentProject === 'sites');
-  // Show site generator tab only for Сайты
-  const siteGenTab = document.querySelector('.tab-sitegen');
-  if (siteGenTab) siteGenTab.style.display = isSites ? '' : 'none';
-  // Hide partner tab/button in Сайты subproject
-  const spPartnerBtn = document.querySelector('#page-subproject .actions [onclick*="partner"]');
-  if (spPartnerBtn) spPartnerBtn.style.display = isSites ? 'none' : '';
-  const spPartnerTab = document.querySelector('#sp-tabs [data-tab="partners"]');
-  if (spPartnerTab) spPartnerTab.style.display = isSites ? 'none' : '';
+  const dir = isSites ? (DATA.directions||[]).find(d => (d['Название']||d['name']) === spName && d['Проект'] === 'Сайты') : null;
+  
+  // === CONFIGURE TABS ===
+  const tabs = {
+    'overview': true,
+    'tasks': true,
+    'client-info': isSites,
+    'partners': !isSites,
+    'projects': !isSites,
+    'comms': !isSites,
+    'files': true,
+    'sitegen': isSites
+  };
+  document.querySelectorAll('#sp-tabs .tab').forEach(t => {
+    const tab = t.getAttribute('data-tab');
+    t.style.display = (tabs[tab] !== undefined ? tabs[tab] : true) ? '' : 'none';
+  });
+  
+  // === CONFIGURE ACTION BUTTONS ===
+  const actionsEl = document.getElementById('sp-actions');
+  if (isSites && dir) {
+    const phone = dir['Телефон'] || '';
+    const cleanPhone = phone.replace(/[^\d+]/g, '');
+    const eid = escA(dir['ID']||dir.id||'');
+    actionsEl.innerHTML = 
+      (phone ? '<a href="tel:'+esc(cleanPhone)+'" class="btn btn-primary" style="text-decoration:none">📞 Позвонить</a>' +
+               '<a href="https://wa.me/'+esc(cleanPhone.replace('+',''))+'" target="_blank" class="btn btn-secondary" style="text-decoration:none">💬 WhatsApp</a>' : '') +
+      '<button class="btn btn-secondary" onclick="openModal(\'task\')">+ Задача</button>';
+  } else {
+    actionsEl.innerHTML = 
+      '<button class="btn btn-primary" onclick="openModal(\'task\')">+ Задача</button>' +
+      '<button class="btn btn-primary" onclick="openModal(\'partner\')">+ Партнёр</button>' +
+      '<button class="btn btn-secondary" onclick="openModal(\'comm\')">+ Контакт</button>';
+  }
+  
+  // === CLIENT QUICK-INFO BAR (Сайты only) ===
+  const clientBar = document.getElementById('sp-client-bar');
+  if (isSites && dir) {
+    const stage = dir['stage']||'lead';
+    const stObj = STAGES.find(s=>s.id===stage)||STAGES[0];
+    const stIdx = STAGES.findIndex(s=>s.id===stage);
+    const price = Number(dir['Цена'])||0;
+    const paid = !!dir['Оплачено'];
+    
+    clientBar.style.display = 'block';
+    clientBar.innerHTML = '<div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;margin-bottom:12px;flex-wrap:wrap">' +
+      // Stage stepper
+      '<div style="display:flex;align-items:center;gap:2px;flex:1;min-width:300px">' +
+      STAGES.map((s,i) => {
+        const done = i < stIdx;
+        const cur = i === stIdx;
+        const bg = done ? 'var(--green)' : cur ? stObj.color : 'var(--bg4)';
+        const txt = done || cur ? '#fff' : 'var(--text3)';
+        return '<div style="flex:1;height:6px;border-radius:3px;background:'+bg+';position:relative" title="'+s.name+'">' +
+          (cur ? '<div style="position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:10px;white-space:nowrap;color:'+stObj.color+';font-weight:700">'+s.name+'</div>' : '') +
+          '</div>';
+      }).join('') +
+      '</div>' +
+      // Key info chips
+      '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+        '<span style="background:'+stObj.color+';color:#fff;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:600">'+stObj.name+'</span>' +
+        (price ? '<span style="background:var(--bg4);padding:4px 12px;border-radius:10px;font-size:12px;font-weight:600">'+price.toLocaleString('ru')+'₽</span>' : '') +
+        '<span style="color:'+(paid?'var(--green)':'var(--orange)')+';font-size:12px;font-weight:600">'+(paid?'✅ Оплачен':'⏳ Не оплачен')+'</span>' +
+        (dir['Менеджер'] ? '<span style="color:var(--text2);font-size:12px">👤 '+esc(dir['Менеджер'])+'</span>' : '') +
+      '</div>' +
+    '</div>';
+  } else {
+    clientBar.style.display = 'none';
+  }
+  
   renderSubprojectView();
 }
 
@@ -3130,14 +3200,14 @@ function renderProjectView() {
         const id = d['ID']||d.id||'';
         const overdue = d['Дедлайн'] && d['Дедлайн'] < td && stage.id !== 'done';
         const clientTasks = ptActive.filter(t => (t['Направление']||'') === (d['Название']||''));
-        sgHtml += '<div class="kanban-card'+(overdue?' overdue':'')+'" draggable="true" data-id="'+id+'" onclick="openClientCard(\''+escA(id)+'\')" ondragstart="kanbanDragStart(event,this)" ondragend="kanbanDragEnd(this)">';
+        sgHtml += '<div class="kanban-card'+(overdue?' overdue':'')+'" draggable="true" data-id="'+id+'" onclick="openSlideOver(\''+escA(id)+'\')" ondragstart="kanbanDragStart(event,this)" ondragend="kanbanDragEnd(this)">';
         sgHtml += '<div class="k-name">'+esc(d['Название']||d['name']||'?')+'</div>';
         sgHtml += '<div class="k-meta">';
         if (d['Цена']) sgHtml += '<span class="k-price">'+Number(d['Цена']).toLocaleString('ru')+'₽</span>';
         if (d['Тип сайта']) sgHtml += '<span class="k-type">'+esc(d['Тип сайта'])+'</span>';
         if (d['Город']) sgHtml += '<span class="k-city">📍'+esc(d['Город'])+'</span>';
         sgHtml += d['Оплачено'] ? '<span class="k-paid">💰</span>' : '<span class="k-unpaid">⏳</span>';
-        if (clientTasks.length) sgHtml += '<span style="color:var(--text2)">📋'+clientTasks.length+'</span>';
+        if (d['Менеджер']) sgHtml += '<span class="k-manager">👤'+esc(d['Менеджер'].split(' ')[0])+'</span>';
         sgHtml += '</div></div>';
       });
       sgHtml += '</div></div>';
@@ -3148,20 +3218,18 @@ function renderProjectView() {
     sgHtml += '<button class="btn btn-primary" onclick="openAddSubproject()" style="margin-bottom:16px">➕ Добавить клиента</button>';
     
     // Client list (collapsed, below kanban)
-    sgHtml += '<div class="card"><div class="card-header" onclick="document.getElementById(\'client-list-body\').style.display=document.getElementById(\'client-list-body\').style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer"><h3>📋 Все клиенты ('+allDirs.length+')</h3></div>';
-    sgHtml += '<div id="client-list-body" style="display:none"><div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Этап</th><th>Тип</th><th>Цена</th><th>Оплата</th><th>📞</th><th>Задачи</th><th></th></tr></thead><tbody>';
+    sgHtml += '<div class="card"><div class="card-header" onclick="document.getElementById(\'client-list-body\').style.display=document.getElementById(\'client-list-body\').style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer"><h3>📋 Все клиенты ('+allDirs.length+') <span style="font-size:12px;color:var(--text3)">▾</span></h3></div>';
+    sgHtml += '<div id="client-list-body" style="display:none"><div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Этап</th><th>Тип</th><th>Цена</th><th>Менеджер</th><th>Оплата</th><th></th></tr></thead><tbody>';
     allDirs.forEach(d => {
       const stageObj = STAGES.find(s=>s.id===(d['stage']||'lead')) || STAGES[0];
-      const cTasks = ptActive.filter(t => (t['Направление']||'') === (d['Название']||''));
-      sgHtml += '<tr onclick="openClientCard(\''+escA(d['ID']||d.id||'')+'\')" style="cursor:pointer">';
+      sgHtml += '<tr onclick="openSlideOver(\''+escA(d['ID']||d.id||'')+'\')" style="cursor:pointer">';
       sgHtml += '<td><strong>'+esc(d['Название']||'?')+'</strong></td>';
       sgHtml += '<td><span class="badge" style="background:'+stageObj.color+';color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+stageObj.name+'</span></td>';
       sgHtml += '<td>'+esc(d['Тип сайта']||'—')+'</td>';
       sgHtml += '<td>'+(Number(d['Цена'])||0).toLocaleString('ru')+'₽</td>';
+      sgHtml += '<td>'+esc(d['Менеджер']||'—')+'</td>';
       sgHtml += '<td>'+(d['Оплачено']?'✅':'⏳')+'</td>';
-      sgHtml += '<td>'+esc(d['Телефон']||'—')+'</td>';
-      sgHtml += '<td>'+cTasks.length+'</td>';
-      sgHtml += '<td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();openSubproject(\''+escA(d['Название']||'')+'\')">Открыть</button></td>';
+      sgHtml += '<td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();openSubproject(\''+escA(d['Название']||'')+'\')">📂 Карточка</button></td>';
       sgHtml += '</tr>';
     });
     sgHtml += '</tbody></table></div></div></div>';
@@ -3304,6 +3372,7 @@ function renderSubprojectView() {
   const proj = PROJECTS[currentProject];
   const spMeta = proj?.subprojects[currentSubproject] || { emoji:'📌', color:'var(--text2)', desc:'' };
   const td = today();
+  const isSites = (currentProject === 'sites');
 
   document.getElementById('sp-parent').textContent = proj.name;
   document.getElementById('sp-parent').setAttribute('onclick', "openProject('"+currentProject+"')");
@@ -3316,63 +3385,199 @@ function renderSubprojectView() {
   const stActive = st.filter(t => (t['Статус']||'')!=='Готово');
   const stDone = st.filter(t => (t['Статус']||'')==='Готово');
   const stOverdue = stActive.filter(t => t['Дедлайн']&&t['Дедлайн']<td);
-  const avgPr = spr.length ? Math.round(spr.reduce((s,p) => s+(parseInt(p['Прогресс'])||0),0)/spr.length) : 0;
-  const pNames = sp.map(p => p['Название']).filter(Boolean);
-  const sc = (DATA.comms||[]).filter(c => pNames.some(n => (c['Партнёр']||'').includes(n)));
 
-  document.getElementById('sp-metrics').innerHTML =
-    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+sp.length+'</div><div class="m-label">Партнёров</div></div>'+
-    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+stActive.length+'</div><div class="m-label">Задач</div><div class="m-sub">'+stDone.length+' выполнено</div></div>'+
-    '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:'+(stOverdue.length?'var(--red)':'var(--green)')+'">'+stOverdue.length+'</div><div class="m-label">Просрочено</div></div>'+
-    '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">'+spr.length+'</div><div class="m-label">Проектов</div><div class="m-sub">'+avgPr+'% прогресс</div></div>'+
-    '<div class="metric-card"><div class="m-icon">💬</div><div class="m-value">'+sc.length+'</div><div class="m-label">Контактов</div></div>';
+  // === METRICS (role-appropriate) ===
+  if (isSites) {
+    const dir = (DATA.directions||[]).find(d => (d['Название']||d['name']) === currentSubproject && d['Проект'] === 'Сайты');
+    const stage = dir ? (dir['stage']||'lead') : 'lead';
+    const stObj = STAGES.find(s=>s.id===stage)||STAGES[0];
+    const stIdx = STAGES.findIndex(s=>s.id===stage);
+    const progress = Math.round((stIdx / (STAGES.length-1)) * 100);
+    document.getElementById('sp-metrics').innerHTML =
+      '<div class="metric-card"><div class="m-icon">📊</div><div class="m-value" style="color:'+stObj.color+'">'+stObj.name.replace(/[^\wА-Яа-яёЁ\s]/g,'').trim()+'</div><div class="m-label">Этап</div><div class="m-sub">шаг '+(stIdx+1)+'/'+STAGES.length+'</div></div>'+
+      '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+stDone.length+'/'+st.length+'</div><div class="m-label">Задач</div><div class="m-sub">'+stActive.length+' в работе</div></div>'+
+      '<div class="metric-card"><div class="m-icon">'+(stOverdue.length?'🔴':'🟢')+'</div><div class="m-value" style="color:'+(stOverdue.length?'var(--red)':'var(--green)')+'">'+(stOverdue.length?stOverdue.length+' просроч.':'В срок')+'</div><div class="m-label">Дедлайн</div></div>'+
+      '<div class="metric-card"><div class="m-icon">📈</div><div class="m-value">'+progress+'%</div><div class="m-label">Прогресс</div><div class="m-sub" style="width:100%;height:4px;background:var(--bg4);border-radius:2px;margin-top:4px"><div style="width:'+progress+'%;height:100%;background:var(--green);border-radius:2px"></div></div></div>';
+  } else {
+    const avgPr = spr.length ? Math.round(spr.reduce((s,p) => s+(parseInt(p['Прогресс'])||0),0)/spr.length) : 0;
+    const pNames = sp.map(p => p['Название']).filter(Boolean);
+    const sc = (DATA.comms||[]).filter(c => pNames.some(n => (c['Партнёр']||'').includes(n)));
+    document.getElementById('sp-metrics').innerHTML =
+      '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+sp.length+'</div><div class="m-label">Партнёров</div></div>'+
+      '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+stActive.length+'</div><div class="m-label">Задач</div><div class="m-sub">'+stDone.length+' выполнено</div></div>'+
+      '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:'+(stOverdue.length?'var(--red)':'var(--green)')+'">'+stOverdue.length+'</div><div class="m-label">Просрочено</div></div>'+
+      '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">'+spr.length+'</div><div class="m-label">Проектов</div><div class="m-sub">'+avgPr+'% прогресс</div></div>';
+  }
 
   const content = document.getElementById('sp-content');
   let html = '';
 
-  if (currentSpTab==='overview') {
-    // Workflow banner for Сайты project clients
-    if (proj && proj.canAddSub && currentSubproject) {
-      const curDir = (DATA.directions||[]).find(d => (d['Название']||d['name']) === currentSubproject && d['Проект'] === 'Сайты');
-      if (curDir) {
-        html += renderWorkflowBanner(curDir);
-      }
-    }
-    // Pipeline stages for site projects
-    if (proj && proj.canAddSub) {
-      // Match pipeline stages to actual SITE_PIPELINE task descriptions
-      const pipelineStages = SITE_PIPELINE.slice(1).map(p => ({  // Skip step 1 (Поиск клиента)
-        icon: p.name.split(' ')[0] || '📋',
-        name: p.name.replace(/^[^\s]+\s/, '').split(':')[0].trim(),  // Remove emoji prefix
-        stepName: p.name,
-        role: p.role
-      }));
-      html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><h3>📊 Воронка проекта</h3></div>';
-      html += '<div style="display:flex;gap:4px;padding:16px;overflow-x:auto">';
-      pipelineStages.forEach((stage, idx) => {
-        // Match task by SITE_PIPELINE step name in description
-        const matchTask = st.find(t => (t['Описание']||'').includes(stage.stepName.replace(/^[^\s]+\s/, '')));
-        const isDone = matchTask && (matchTask['Статус']||'').includes('Готово');
-        const isActive = matchTask && !isDone && ((matchTask['Статус']||'').includes('В работе') || (matchTask['Статус']||'').includes('Новая'));
-        const isOverdue = matchTask && !isDone && matchTask['Дедлайн'] && matchTask['Дедлайн'] < td;
-        const bg = isDone ? 'var(--green)' : isOverdue ? 'var(--red)' : isActive ? 'var(--accent)' : 'var(--bg3)';
-        const clr = isDone || isActive || isOverdue ? 'white' : 'var(--text2)';
-        html += '<div style="flex:1;min-width:80px;text-align:center;padding:10px 6px;border-radius:10px;background:'+bg+';color:'+clr+';font-size:11px;cursor:pointer" ';
-        if (matchTask) html += 'onclick="openTaskDetail(\''+escA(matchTask['ID']||matchTask.id)+'\')" ';
-        html += 'title="'+(matchTask ? esc((matchTask['Ответственный']||''))+' · '+esc(matchTask['Статус']||'')+' · '+esc(matchTask['Дедлайн']||'') : 'Нет задачи')+'">';
-        html += '<div style="font-size:20px;margin-bottom:4px">'+stage.icon+'</div>';
-        html += '<div style="font-weight:600">'+stage.name+'</div>';
-        // Show assigned person
-        if (matchTask) {
-          html += '<div style="font-size:9px;opacity:0.8;margin-top:2px">👤 '+(matchTask['Ответственный']||'—').split(' ')[0]+'</div>';
-          if (matchTask['Дедлайн']) html += '<div style="font-size:9px;opacity:0.7">'+matchTask['Дедлайн'].slice(5)+'</div>';
-        }
+  // ====== САЙТЫ CLIENT OVERVIEW ======
+  if (isSites && currentSpTab === 'overview') {
+    const dir = (DATA.directions||[]).find(d => (d['Название']||d['name']) === currentSubproject && d['Проект'] === 'Сайты');
+    if (dir) {
+      const eid = escA(dir['ID']||dir.id||'');
+      const stage = dir['stage']||'lead';
+      const stObj = STAGES.find(s=>s.id===stage)||STAGES[0];
+      const stIdx = STAGES.findIndex(s=>s.id===stage);
+      const wf = getWorkflowStep(dir);
+      
+      // === NEXT ACTION CARD (most important!) ===
+      if (stage !== 'done') {
+        const nextActions = {
+          'lead':    { icon:'📞', title:'Свяжитесь с клиентом', desc:'Позвоните, узнайте требования, заполните данные', btn:'Заполнить данные →', fn:'openClientCard(\''+eid+'\')' },
+          'anketa':  { icon:'📋', title:'Заполните анкету', desc:'Соберите информацию о бизнесе для генерации сайта', btn:'Заполнить анкету →', fn:'openClientCard(\''+eid+'\')' },
+          'proto':   { icon:'🎨', title:'Создайте сайт', desc:'Откройте генератор и создайте прототип', btn:'Открыть генератор →', fn:'showSpTab(\'sitegen\')' },
+          'review':  { icon:'📤', title:'Согласуйте с клиентом', desc:'Отправьте ссылку, соберите обратную связь', btn:'Далее → Ожидание оплаты', fn:'setDealStage(\''+eid+'\',\'payment\')' },
+          'payment': { icon:'💳', title:'Получите оплату', desc:'Выставьте счёт, дождитесь перевода', btn:'💰 Отметить оплату', fn:'markPaid(\''+eid+'\');setTimeout(()=>renderSubprojectView(),500)' },
+          'deploy':  { icon:'🔧', title:'Задеплойте сайт', desc:'Привяжите домен, настройте хостинг', btn:'✅ Сдать проект', fn:'setDealStage(\''+eid+'\',\'done\')' }
+        };
+        const na = nextActions[stage] || nextActions['lead'];
+        html += '<div class="card" style="border:2px solid '+stObj.color+';margin-bottom:16px;overflow:hidden">';
+        html += '<div style="padding:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">';
+        html += '<div style="font-size:40px;line-height:1">'+na.icon+'</div>';
+        html += '<div style="flex:1;min-width:200px">';
+        html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">'+na.title+'</div>';
+        html += '<div style="font-size:13px;color:var(--text2)">'+na.desc+'</div>';
         html += '</div>';
-        if (idx < pipelineStages.length - 1) html += '<div style="display:flex;align-items:center;color:var(--text3)">→</div>';
+        const perm = getUserPerms();
+        // Show action button: always for view/edit actions, only canWrite for stage changes
+        const isStageChange = ['review','payment','deploy'].includes(stage);
+        if (!isStageChange || perm.canWrite) {
+          html += '<button class="btn btn-primary" onclick="'+na.fn+'" style="font-size:14px;padding:12px 24px;white-space:nowrap">'+na.btn+'</button>';
+        }
+        html += '</div></div>';
+      } else {
+        html += '<div class="card" style="border:2px solid var(--green);margin-bottom:16px;padding:20px;text-align:center;background:rgba(0,212,170,.04)">';
+        html += '<div style="font-size:40px;margin-bottom:8px">🎉</div>';
+        html += '<div style="font-size:18px;font-weight:700;color:var(--green)">Проект завершён!</div>';
+        html += '<div style="color:var(--text2);margin-top:4px">Клиент получил готовый сайт</div>';
+        html += '</div>';
+      }
+      
+      // === CLIENT INFO + TASK CHECKLIST (2-column layout) ===
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px" class="sp-two-col">';
+      
+      // Left: Client info card
+      html += '<div class="card" style="padding:0;overflow:hidden">';
+      html += '<div class="card-header" style="display:flex;justify-content:space-between;align-items:center"><h3>📇 Клиент</h3>';
+      html += '<button class="btn btn-sm btn-secondary" onclick="openClientCard(\''+eid+'\')">✏️</button></div>';
+      html += '<div style="padding:12px 16px">';
+      const fields = [
+        ['📱 Телефон', dir['Телефон']],
+        ['📍 Город', dir['Город']],
+        ['🌐 Тип сайта', dir['Тип сайта']],
+        ['💰 Цена', dir['Цена'] ? Number(dir['Цена']).toLocaleString('ru')+'₽' : null],
+        ['👤 Менеджер', dir['Менеджер']],
+        ['💼 Тип бизнеса', dir['Тип бизнеса'] || dir['Описание']],
+        ['💳 Оплата', dir['Оплачено'] ? '✅ Оплачен' : '⏳ Не оплачен']
+      ];
+      fields.forEach(([label, val]) => {
+        if (val) {
+          html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px">';
+          html += '<span style="color:var(--text2)">'+label+'</span>';
+          if (label.includes('Телефон') && val) {
+            const clean = val.replace(/[^\d+]/g,'');
+            html += '<span><a href="tel:'+esc(clean)+'" style="color:var(--accent)">'+esc(val)+'</a></span>';
+          } else if (label.includes('Оплата')) {
+            html += '<span style="color:'+(val.includes('✅')?'var(--green)':'var(--orange)')+'">'+val+'</span>';
+          } else {
+            html += '<span style="font-weight:500">'+esc(val)+'</span>';
+          }
+          html += '</div>';
+        }
       });
+      if (dir['Ссылка']) {
+        html += '<div style="padding:6px 0;font-size:13px"><span style="color:var(--text2)">🔗 Ссылка</span> <a href="'+esc(dir['Ссылка'])+'" target="_blank" style="color:var(--accent);word-break:break-all">'+esc(dir['Ссылка'])+'</a></div>';
+      }
+      html += '</div></div>';
+      
+      // Right: Task checklist
+      html += '<div class="card" style="padding:0;overflow:hidden">';
+      html += '<div class="card-header"><h3>✅ Задачи ('+stDone.length+'/'+st.length+')</h3></div>';
+      html += '<div style="padding:8px 16px;max-height:300px;overflow-y:auto">';
+      if (st.length) {
+        // Sort: active first, then done
+        const sortedTasks = [...stActive, ...stDone];
+        sortedTasks.forEach(t => {
+          const done = (t['Статус']||'')==='Готово';
+          const od = !done && t['Дедлайн'] && t['Дедлайн'] < td;
+          const tid = t['ID']||t.id;
+          html += '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;'+(done?'opacity:0.5':'')+(od?';background:rgba(255,107,107,0.05);margin:0 -16px;padding:8px 16px':'')+'" onclick="openTaskDetail(\''+escA(tid)+'\')">';
+          html += '<div style="width:22px;height:22px;border-radius:6px;border:2px solid '+(done?'var(--green)':od?'var(--red)':'var(--border2)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;font-size:12px" onclick="event.stopPropagation();toggleTaskDone(\''+escA(tid)+'\')">'+(done?'✓':'')+'</div>';
+          html += '<div style="flex:1;min-width:0">';
+          html += '<div style="font-size:12px;'+(done?'text-decoration:line-through;color:var(--text3)':'')+(od?';color:var(--red)':'')+'">'+(od?'🔴 ':'')+esc(t['Описание']||t['Название']||'?')+'</div>';
+          html += '<div style="font-size:10px;color:var(--text3);display:flex;gap:8px;margin-top:2px">';
+          if (t['Ответственный']) html += '<span>👤 '+esc(t['Ответственный'].split(' ')[0])+'</span>';
+          if (t['Дедлайн']) html += '<span style="'+(od?'color:var(--red);font-weight:600':'')+'">📅 '+t['Дедлайн'].slice(5)+'</span>';
+          html += '</div></div></div>';
+        });
+      } else {
+        html += '<div style="text-align:center;padding:20px;color:var(--text3)">Задач пока нет</div>';
+      }
+      html += '</div></div>';
+      html += '</div>'; // end 2-col
+      
+      // === BUDGET CARD (for Зам / CEO) ===
+      const p = getUserPerms();
+      if (p.canViewFinance && dir['Цена']) {
+        const price = Number(dir['Цена'])||0;
+        const pricing = SITE_PRICING[dir['Тип сайта']] || {};
+        const devPay = pricing.devPay || Math.round(price*0.3);
+        const mgrPay = Math.round(price * (pricing.managerPct||15) / 100);
+        const profit = price - devPay - mgrPay;
+        html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><h3>💰 Бюджет сделки</h3></div>';
+        html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px;text-align:center">';
+        html += '<div><div style="font-size:11px;color:var(--text2)">Клиент платит</div><div style="font-size:18px;font-weight:700">'+price.toLocaleString('ru')+'₽</div></div>';
+        html += '<div><div style="font-size:11px;color:var(--text2)">Разработчику</div><div style="font-size:18px;font-weight:700;color:var(--blue)">'+devPay.toLocaleString('ru')+'₽</div></div>';
+        html += '<div><div style="font-size:11px;color:var(--text2)">Менеджеру '+(pricing.managerPct||15)+'%</div><div style="font-size:18px;font-weight:700;color:var(--orange)">'+mgrPay.toLocaleString('ru')+'₽</div></div>';
+        html += '<div><div style="font-size:11px;color:var(--text2)">Прибыль</div><div style="font-size:18px;font-weight:700;color:var(--green)">'+profit.toLocaleString('ru')+'₽</div></div>';
+        html += '</div></div>';
+      }
+      
+    } else {
+      html += '<div class="empty"><div class="icon">🚀</div><p>Клиент «'+esc(currentSubproject)+'» не найден в базе</p></div>';
+    }
+    
+  // ====== САЙТЫ CLIENT INFO (Anketa tab) ======
+  } else if (isSites && currentSpTab === 'client-info') {
+    const dir = (DATA.directions||[]).find(d => (d['Название']||d['name']) === currentSubproject && d['Проект'] === 'Сайты');
+    if (dir) {
+      const eid = escA(dir['ID']||dir.id||'');
+      html += '<div class="card" style="padding:20px">';
+      html += '<h3 style="margin-bottom:16px">📋 Анкета клиента: '+esc(currentSubproject)+'</h3>';
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" class="sp-two-col">';
+      const anketaFields = [
+        {id:'cc-biz-type', label:'Тип бизнеса', val:dir['Тип бизнеса']||dir['Описание']||'', type:'text', ph:'Ресторан, салон красоты...'},
+        {id:'cc-phone', label:'Телефон', val:dir['Телефон']||'', type:'tel', ph:'+7 900 123-45-67'},
+        {id:'cc-city', label:'Город', val:dir['Город']||'', type:'text', ph:'Набережные Челны'},
+        {id:'cc-address', label:'Адрес', val:dir['Адрес']||'', type:'text', ph:'ул. Ленина 1'},
+        {id:'cc-social', label:'Соцсети', val:dir['Соцсети']||'', type:'text', ph:'@instagram, vk.com/...'},
+        {id:'cc-hours', label:'Режим работы', val:dir['Режим работы']||'', type:'text', ph:'Пн-Пт 9:00-18:00'},
+      ];
+      anketaFields.forEach(f => {
+        html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">'+f.label+'</label>';
+        html += '<input id="'+f.id+'" type="'+f.type+'" value="'+escA(f.val)+'" placeholder="'+f.ph+'" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px"></div>';
+      });
+      html += '</div>';
+      // Full-width fields
+      html += '<div style="margin-top:12px"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">Услуги / Меню</label>';
+      html += '<textarea id="cc-services" rows="3" placeholder="Перечислите услуги или позиции меню" style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical">'+(dir['Услуги']||'')+'</textarea></div>';
+      html += '<div style="margin-top:12px"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">Цены на услуги</label>';
+      html += '<textarea id="cc-prices" rows="3" placeholder="Стрижка — 500₽, Маникюр — 1000₽..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical">'+(dir['Цены']||'')+'</textarea></div>';
+      html += '<div style="margin-top:12px"><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:3px">Пожелания по дизайну</label>';
+      html += '<textarea id="cc-wishes" rows="2" placeholder="Цвета, стиль, референсы..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;resize:vertical">'+(dir['Комментарий']||'')+'</textarea></div>';
+      html += '<div style="margin-top:16px;display:flex;gap:8px">';
+      html += '<button class="btn btn-primary" onclick="saveAnketa(\''+eid+'\')" style="flex:1">💾 Сохранить анкету</button>';
+      const stage = dir['stage']||'lead';
+      if (stage === 'anketa') {
+        html += '<button class="btn btn-secondary" onclick="advanceAnketaToProto(\''+eid+'\')" style="flex:1">🎨 Сохранить и создать сайт →</button>';
+      }
       html += '</div></div>';
     }
 
+  // ====== STANDARD OVERVIEW (РКТ etc.) ======
+  } else if (!isSites && currentSpTab === 'overview') {
     if (stOverdue.length) {
       html += '<div class="card" style="border-color:rgba(255,107,107,0.4)"><div class="card-header" style="background:rgba(255,107,107,0.05)"><h3>🔴 Просроченные ('+stOverdue.length+')</h3></div>';
       html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Дедлайн</th><th>Ответственный</th><th></th></tr></thead><tbody>';
@@ -3390,7 +3595,7 @@ function renderSubprojectView() {
     html += topT.length ? topT.map(t => {
       const od = t['Дедлайн']&&t['Дедлайн']<td&&(t['Статус']||'')!=='Готово';
       return '<tr style="'+(od?'background:rgba(255,107,107,0.03)':'')+'"><td>'+(od?'🔴 ':'')+esc(t['Описание']||t['Название'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Ответственный']||'—')+'</td><td>'+esc(t['Дедлайн']||'—')+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>';
-    }).join('') : emptyRow(6,'Нет задач'); 
+    }).join('') : emptyRow(6,'Нет задач');
     html += '</tbody></table></div></div>';
     if(sp.length) {
       html += '<div class="card"><div class="card-header"><h3>🤝 Партнёры ('+sp.length+')</h3></div><div class="table-wrap"><table><thead><tr><th>Название</th><th>Страна</th><th>Статус</th><th>Продукт</th><th>Контакт</th></tr></thead><tbody>';
@@ -3399,15 +3604,18 @@ function renderSubprojectView() {
     }
     if(!html) html = '<div class="empty"><div class="icon">🚀</div><p>Направление «'+esc(currentSubproject)+'» пока пустое.</p></div>';
 
+  // ====== SHARED TABS ======
   } else if (currentSpTab==='tasks') { html += renderTaskTable(st);
   } else if (currentSpTab==='partners') { html += renderPartnerTable(sp);
   } else if (currentSpTab==='projects') {
     html += '<div class="card"><div class="table-wrap"><table><thead><tr><th>Проект</th><th>Статус</th><th>Приоритет</th><th>Прогресс</th><th>Партнёр</th><th>Бюджет</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
     html += spr.length ? spr.map(p => '<tr><td><strong>'+esc(p['Название'])+'</strong></td><td>'+statusBadge(p['Статус'])+'</td><td>'+prBadge(p['Приоритет'])+'</td><td>'+progBar(p['Прогресс'])+'</td><td>'+esc(p['Партнёр']||'')+'</td><td>'+esc(p['Бюджет']||'—')+'</td><td>'+esc(p['Дедлайн']||'—')+'</td><td>'+actBtns('project',p.ID,p['Название'])+'</td></tr>').join('') : emptyRow(8,'Нет проектов');
     html += '</tbody></table></div></div>';
-  } else if (currentSpTab==='comms') { html += renderCommTable(sc); 
+  } else if (currentSpTab==='comms') {
+    const pNames = sp.map(p => p['Название']).filter(Boolean);
+    const sc = (DATA.comms||[]).filter(c => pNames.some(n => (c['Партнёр']||'').includes(n)));
+    html += renderCommTable(sc);
   } else if (currentSpTab==='sitegen') {
-    // Check cache before rendering
     const sgCheck = getSiteGenData();
     if (sgCheck.html) siteGenStep = 'preview';
     else if (siteGenStep !== 'loading') siteGenStep = 'form';
@@ -3415,8 +3623,6 @@ function renderSubprojectView() {
   } else if (currentSpTab==='files') { html += renderFilesSection(); }
 
   content.innerHTML = html;
-  
-  // Init site generator if needed
   if (currentSpTab==='sitegen') initSiteGenerator();
   if (currentSpTab==='files') initFileUpload();
 }
@@ -6748,10 +6954,12 @@ function openSlideOver(id) {
 
   // Actions
   const p = getUserPerms();
+  const cleanPh = (dir['Телефон']||'').replace(/[^\d+]/g,'');
   document.getElementById('so-actions').innerHTML = `
-    ${dir['Телефон']?'<button onclick="window.open(\'tel:'+esc(dir['Телефон'])+'\')">📞 Позвонить</button>':''}
-    <button onclick="openSubproject('${escA(dir['Название']||'')}')">🌐 Генератор сайта</button>
-    ${p.canWrite?'<button onclick="closeSlideOver();editItem(\'directions\',\''+(dir['ID']||dir.id)+'\')">✏️ Редактировать</button>':''}
+    ${cleanPh?'<button onclick="window.open(\'tel:'+cleanPh+'\')">📞 Позвонить</button>':''}
+    ${cleanPh?'<button onclick="window.open(\'https://wa.me/'+cleanPh.replace('+','')+'\',\'_blank\')">💬 WhatsApp</button>':''}
+    <button onclick="closeSlideOver();openSubproject('${escA(dir['Название']||'')}')">📂 Открыть карточку</button>
+    ${p.canWrite?'<button onclick="closeSlideOver();openClientCard(\\'${escA(id)}\\')">✏️ Редактировать</button>':''}
     ${!dir['Оплачено']&&p.canWrite?'<button onclick="markPaid(\''+id+'\')">💰 Отметить оплату</button>':''}
   `;
 
