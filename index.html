@@ -2809,6 +2809,7 @@ async function doPasswordRegister() {
   const pass2 = document.getElementById('regPass2').value;
   const errEl = document.getElementById('regError');
   errEl.style.display = 'none';
+  errEl.style.color = '';
   
   if (!SB) { errEl.textContent='⚠️ Нет подключения к базе. Обновите страницу.'; errEl.style.display='block'; return; }
   
@@ -2825,70 +2826,68 @@ async function doPasswordRegister() {
     if (!_staffCache.length) await loadStaffCache();
     
     // Check duplicates
+    const cleanPhone = phone.replace(/[\s\-()]/g, '');
     const dup = _staffCache.find(s => {
       const sp = (s['Телефон']||'').replace(/[\s\-()]/g, '');
-      const cp = phone.replace(/[\s\-()]/g, '');
-      return (sp && cp && (sp === cp || sp.endsWith(cp.slice(-10)))) ||
+      return (sp && cleanPhone && (sp === cleanPhone || sp.endsWith(cleanPhone.slice(-10)) || cleanPhone.endsWith(sp.slice(-10)))) ||
              (username && (s['Username']||'').toLowerCase().replace('@','') === username.toLowerCase());
     });
     if (dup) {
-      errEl.textContent = 'Пользователь с таким '+(dup['Телефон']?'телефоном':'тегом')+' уже существует. Войдите.';
+      errEl.textContent = 'Пользователь с таким '+(username && (dup['Username']||'').toLowerCase().replace('@','')===username.toLowerCase() ?'тегом':'телефоном')+' уже есть. Перейдите во вкладку Вход.';
       errEl.style.display = 'block';
       document.getElementById('regBtnText').textContent = 'Зарегистрироваться';
       return;
     }
     
     const passHash = await hashPassword(pass);
+    const newId = 'S' + Date.now().toString(36).toUpperCase();
     
-    const staffRow = {
-      'Имя': name, 'Роль': 'Сотрудник', 'Проект': project, 'Направление': '',
-      'Telegram_ID': '', 'Username': username, 'Email': '', 'Телефон': phone,
-      'Статус': 'Активный', 'Дата_добавления': today(), 'pin_hash': passHash
+    // Direct Supabase INSERT — try with pin_hash first
+    const baseRow = {
+      id: newId, name: name, role: 'Сотрудник', project: project,
+      direction: '', telegram_id: '', username: username, email: '',
+      phone: phone, status: 'Активный'
     };
     
-    let writeOk = await apiWrite('Сотрудники', staffRow);
+    // Attempt 1: with pin_hash
+    let result = await SB.from('staff').insert({ ...baseRow, pin_hash: passHash });
     
-    // If failed — maybe pin_hash column doesn't exist yet, retry without it
-    if (!writeOk) {
-      console.warn('Retrying registration without pin_hash...');
-      delete staffRow['pin_hash'];
-      writeOk = await apiWrite('Сотрудники', staffRow);
-      if (writeOk) {
-        // Try to add pin_hash directly
-        try {
-          await loadStaffCache();
-          const newRec = _staffCache.find(s => (s['Телефон']||'') === phone);
-          if (newRec) {
-            await SB.from('staff').update({ pin_hash: passHash }).eq('id', newRec.ID||newRec.id);
-          }
-        } catch(e2) { console.warn('pin_hash column may not exist:', e2); }
-      }
+    // Attempt 2: without pin_hash on ANY error
+    if (result.error) {
+      console.warn('Insert attempt 1 failed:', result.error.message, '— retrying without pin_hash');
+      result = await SB.from('staff').insert(baseRow);
     }
-    if (!writeOk) throw new Error('Не удалось создать аккаунт. Проверьте подключение.');
     
-    // Send approval request for role upgrade
-    await selfRegister({ name, phone, username, email:'', role:'Менеджер', project, telegram_id:'' });
+    if (result.error) {
+      console.error('Registration insert error:', result.error);
+      errEl.textContent = '❌ ' + (result.error.message || 'Ошибка базы данных');
+      errEl.style.display = 'block';
+      document.getElementById('regBtnText').textContent = 'Зарегистрироваться';
+      return;
+    }
+    
+    // Success! Send approval request for role upgrade
+    try { await selfRegister({ name, phone, username, email:'', role:'Менеджер', project, telegram_id:'' }); } catch(e2) { console.warn('Approval request failed:', e2); }
     
     // Reload cache and auto-login
     await loadStaffCache();
-    const newStaff = _staffCache.find(s => (s['Телефон']||'') === phone);
+    const newStaff = _staffCache.find(s => (s.ID||s.id) === newId || (s['Телефон']||'').replace(/[\s\-()]/g,'') === cleanPhone);
+    
+    errEl.style.display = 'block';
+    errEl.style.color = 'var(--green)';
     
     if (newStaff) {
-      errEl.style.display = 'block';
-      errEl.style.color = 'var(--green)';
-      errEl.textContent = '✅ Успешная регистрация! Входим...';
+      errEl.textContent = '✅ Добро пожаловать! Входим...';
       setTimeout(() => completeLogin(newStaff), 600);
     } else {
-      errEl.style.display = 'block';
-      errEl.style.color = 'var(--green)';
-      errEl.textContent = '✅ Зарегистрированы! Теперь войдите.';
+      errEl.textContent = '✅ Зарегистрированы! Войдите с вашим паролем.';
       document.getElementById('regBtnText').textContent = 'Зарегистрироваться';
       setTimeout(() => showAuthTab('login'), 1500);
     }
     
   } catch(e) {
     console.error('Register error:', e);
-    errEl.textContent = '❌ Ошибка: '+e.message;
+    errEl.textContent = '❌ ' + (e.message||'Неизвестная ошибка');
     errEl.style.display = 'block';
     document.getElementById('regBtnText').textContent = 'Зарегистрироваться';
   }
