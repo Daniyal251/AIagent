@@ -2093,6 +2093,7 @@ let DATA = { partners:[], tasks:[], directions:[], staff:[], projects:[], approv
 let USER = null;
 
 function normalizeRole(role) {
+  const r = (role||'').toLowerCase().trim();
   const map = {
     'генеральный директор': 'CEO', 'гендиректор': 'CEO', 'гендир': 'CEO', 'гд': 'CEO', 'директор': 'CEO',
     'заместитель': 'Зам', 'заместитель директора': 'Зам', 'замдир': 'Зам', 'зам': 'Зам',
@@ -2101,7 +2102,18 @@ function normalizeRole(role) {
     'инженер': 'Инженер', 'руководитель': 'Руководитель', 'сотрудник': 'Сотрудник',
     'ceo': 'CEO'
   };
-  return map[(role||'').toLowerCase()] || role || 'Сотрудник';
+  // Exact match first
+  if (map[r]) return map[r];
+  // Prefix match: "зам по сайтам" starts with "зам" → Зам
+  if (r.startsWith('зам')) return 'Зам';
+  if (r.startsWith('руковод')) return 'Руководитель';
+  if (r.startsWith('менеджер')) return 'Менеджер';
+  if (r.startsWith('директор') || r.startsWith('генеральн') || r.startsWith('генд') || r === 'ceo') return 'CEO';
+  if (r.startsWith('разраб') || r.startsWith('программ') || r.startsWith('dev')) return 'Разработчик';
+  if (r.startsWith('инженер')) return 'Инженер';
+  // Check if role is already a valid ROLES key
+  if (ROLES[role]) return role;
+  return role || 'Сотрудник';
 }
 let currentModal = '';
 let editingItem = null;
@@ -2544,7 +2556,7 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function checkSavedLogin() {
   loadSavedSettings();
   const s = localStorage.getItem('rkt_user');
-  if (s) { try { USER=JSON.parse(s); if(USER&&USER.tgId){showApp();return;} } catch(e){} localStorage.removeItem('rkt_user'); }
+  if (s) { try { USER=JSON.parse(s); if(USER&&USER.tgId){USER.role=normalizeRole(USER.role);showApp();return;} } catch(e){} localStorage.removeItem('rkt_user'); }
 }
 
 async function doLogin() {
@@ -2568,8 +2580,9 @@ async function doLogin() {
     USER = {
       id: staff.ID||'', tgId: String(staff.Telegram_ID).trim(),
       name: staff['Имя']||'Сотрудник', role: normalizeRole(staff['Роль']||'Сотрудник'),
-      direction: staff['Направление']||'Все', email: staff['Email']||'',
-      phone: staff['Телефон']||'', username: staff['Username']||''
+      originalRole: staff['Роль']||'',
+      direction: staff['Направление']||'Все', project: staff['Проект']||'',
+      email: staff['Email']||'', phone: staff['Телефон']||'', username: staff['Username']||''
     };
     localStorage.setItem('rkt_user', JSON.stringify(USER));
     showApp();
@@ -2772,32 +2785,67 @@ function genId(prefix) {
 function filterByRole(arr) {
   const p = getUserPerms();
   if (p.seeAll || !USER) return arr;
-  if (USER.direction === 'Все' || !USER.direction) return arr;
+  
+  // Determine user's project key
+  const userProjKey = getUserProjectKey();
+  
+  // If user has no specific project/direction restriction, show all
+  if (!userProjKey && (USER.direction === 'Все' || !USER.direction)) return arr;
   
   // Build list of all directions this user can see
-  const myDirs = new Set(['Все', 'Общее', '', USER.direction]);
+  const myDirs = new Set(['Все', 'Общее', '']);
+  if (USER.direction && USER.direction !== 'Все') myDirs.add(USER.direction);
+  if (USER.project) myDirs.add(USER.project);
   
-  // If user is Зам or Руководитель, they see all directions in their project
-  if (p.level >= 2) {
-    const projKey = Object.keys(PROJECTS).find(k => {
-      const pd = getProjectDirs(k);
-      return pd.includes(USER.direction) || PROJECTS[k].name === USER.direction;
-    });
-    if (projKey) {
-      getProjectDirs(projKey).forEach(d => myDirs.add(d));
-      myDirs.add(PROJECTS[projKey].name);
-    }
+  // Зам/Руководитель: see all directions in their project
+  if (p.level >= 2 && userProjKey) {
+    getProjectDirs(userProjKey).forEach(d => myDirs.add(d));
+    myDirs.add(PROJECTS[userProjKey].name);
   }
   
   return arr.filter(i => {
     const d = i['Направление'] || '';
     const proj = i['Проект'] || '';
-    // If item matches user's visible directions or project
     if (myDirs.has(d) || myDirs.has(proj)) return true;
     // Менеджер/Сотрудник: also show items assigned to them
-    if (p.level <= 1 && (i['Ответственный']||'').includes(USER.name)) return true;
+    if (p.level <= 1 && USER.name && (i['Ответственный']||'').includes(USER.name)) return true;
     return false;
   });
+}
+
+// Find which PROJECTS key this user belongs to
+function getUserProjectKey() {
+  if (!USER) return null;
+  // 1. Check explicit project field
+  if (USER.project && USER.project !== 'Все' && USER.project !== '') {
+    // Match against project names
+    const byName = Object.keys(PROJECTS).find(k => PROJECTS[k].name === USER.project);
+    if (byName) return byName;
+    // Match against project keys directly
+    if (PROJECTS[USER.project]) return USER.project;
+    // Fuzzy match (case-insensitive)
+    const byNameLower = Object.keys(PROJECTS).find(k => PROJECTS[k].name.toLowerCase() === USER.project.toLowerCase());
+    if (byNameLower) return byNameLower;
+  }
+  // 2. Check direction → which project has this as subproject
+  if (USER.direction && USER.direction !== 'Все' && USER.direction !== '') {
+    // Direct match against project names (e.g. direction='Сайты')
+    const byProjName = Object.keys(PROJECTS).find(k => PROJECTS[k].name === USER.direction);
+    if (byProjName) return byProjName;
+    // Match against subproject names
+    const byDir = Object.keys(PROJECTS).find(k => {
+      return getProjectDirs(k).includes(USER.direction);
+    });
+    if (byDir) return byDir;
+  }
+  // 3. Check role name for project hints (e.g. "Зам по Сайтам")
+  if (USER.role) {
+    const roleLower = (USER.originalRole || USER.role || '').toLowerCase();
+    for (const [k, proj] of Object.entries(PROJECTS)) {
+      if (roleLower.includes(proj.name.toLowerCase())) return k;
+    }
+  }
+  return null; // Can't determine → caller should fall back to showing all
 }
 
 function filterBySearch(arr, sid, fields) {
@@ -2957,11 +3005,12 @@ function renderHome() {
   // Project cards — filter by user's project access
   let html = '';
   const visibleProjects = Object.entries(PROJECTS).filter(([key, proj]) => {
-    if (getUserPerms().seeAll) return true; // CEO sees all
-    // User sees only projects matching their direction
-    if (!USER || !USER.direction || USER.direction === 'Все') return true;
-    const dirs = getProjectDirs(key);
-    return dirs.includes(USER.direction) || proj.name === USER.direction;
+    const p = getUserPerms();
+    if (p.seeAll) return true; // CEO sees all
+    // Зам: check their project assignment, fall back to all
+    const userPK = getUserProjectKey();
+    if (!userPK) return true; // Can't determine project → show all (safe fallback)
+    return key === userPK;
   });
   
   for (const [key, proj] of visibleProjects) {
@@ -3145,6 +3194,44 @@ function renderProjectView() {
   let html = '';
 
   if (currentPvTab === 'overview') {
+    // CLIENT STATUS SUMMARY (for Сайты project)
+    if (proj.canAddSub) {
+      const clientDirs = (DATA.directions||[]).filter(d => d['Проект'] === proj.name);
+      if (clientDirs.length) {
+        html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><h3>👥 Статус клиентов ('+clientDirs.length+')</h3></div>';
+        html += '<div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Этап</th><th>Тип сайта</th><th>💰 Цена</th><th>Менеджер</th><th>Оплата</th><th>Город</th></tr></thead><tbody>';
+        clientDirs.sort((a,b) => {
+          const sa = STAGES.findIndex(s=>s.id===(a['stage']||'lead'));
+          const sb = STAGES.findIndex(s=>s.id===(b['stage']||'lead'));
+          return sa - sb;
+        }).forEach(d => {
+          const st = d['stage']||'lead';
+          const stObj = STAGES.find(s=>s.id===st) || STAGES[0];
+          const stIdx = STAGES.findIndex(s=>s.id===st);
+          const paid = d['Оплачено'];
+          const price = Number(d['Цена'])||0;
+          const cid = d['ID']||d.id||'';
+          // Find the current active task for this client
+          const clientTasks = (DATA.tasks||[]).filter(t => (t['Направление']||'') === (d['Название']||''));
+          const activeTask = clientTasks.find(t => (t['Статус']||'').includes('В работе') || (t['Статус']||'').includes('Новая'));
+          html += '<tr onclick="openSlideOver(\''+escA(cid)+'\')" style="cursor:pointer" title="Нажмите для деталей">';
+          html += '<td><strong>'+esc(d['Название']||'?')+'</strong></td>';
+          html += '<td><span style="background:'+stObj.color+';color:#fff;padding:2px 10px;border-radius:10px;font-size:11px;white-space:nowrap">'+stObj.name+'</span></td>';
+          html += '<td>'+esc(d['Тип сайта']||'—')+'</td>';
+          html += '<td style="font-weight:600">'+(price?price.toLocaleString('ru')+'₽':'—')+'</td>';
+          html += '<td>'+esc(d['Менеджер']||'—')+'</td>';
+          html += '<td style="color:'+(paid?'var(--green)':'var(--orange)')+'">'+( paid?'✅ Оплачен':'⏳')+'</td>';
+          html += '<td>'+esc(d['Город']||'—')+'</td>';
+          html += '</tr>';
+          // Show current task as sub-row
+          if (activeTask) {
+            html += '<tr style="background:rgba(0,212,170,0.04);font-size:12px"><td colspan="7" style="padding:4px 12px 8px 20px">↳ <span style="color:var(--accent)">Текущая задача:</span> '+esc(activeTask['Описание']||'')+'  <span style="color:var(--text2)">👤 '+esc(activeTask['Ответственный']||'—')+' · 📅 '+(activeTask['Дедлайн']||'—')+'</span></td></tr>';
+          }
+        });
+        html += '</tbody></table></div></div>';
+      }
+    }
+    
     // Overdue
     if (ptOverdue.length) {
       html += '<div class="card" style="border-color:rgba(255,107,107,0.4)"><div class="card-header" style="background:rgba(255,107,107,0.05)"><h3>🔴 Просроченные ('+ptOverdue.length+')</h3></div>';
@@ -3253,30 +3340,33 @@ function renderSubprojectView() {
     }
     // Pipeline stages for site projects
     if (proj && proj.canAddSub) {
-      const pipelineStages = [
-        { icon: '📋', name: 'Анкета', key: 'Заполнить анкету' },
-        { icon: '🎨', name: 'Пример', key: 'Сгенерировать пример' },
-        { icon: '📤', name: 'Отправка', key: 'Отправить пример' },
-        { icon: '💬', name: 'Фидбек', key: 'Получить фидбек' },
-        { icon: '💳', name: 'Оплата', key: 'Выставить счёт' },
-        { icon: '🔧', name: 'Установка', key: 'Установить сайт' },
-        { icon: '✅', name: 'Сдача', key: 'Сдать проект' }
-      ];
+      // Match pipeline stages to actual SITE_PIPELINE task descriptions
+      const pipelineStages = SITE_PIPELINE.slice(1).map(p => ({  // Skip step 1 (Поиск клиента)
+        icon: p.name.split(' ')[0] || '📋',
+        name: p.name.replace(/^[^\s]+\s/, '').split(':')[0].trim(),  // Remove emoji prefix
+        stepName: p.name,
+        role: p.role
+      }));
       html += '<div class="card" style="margin-bottom:16px"><div class="card-header"><h3>📊 Воронка проекта</h3></div>';
       html += '<div style="display:flex;gap:4px;padding:16px;overflow-x:auto">';
       pipelineStages.forEach((stage, idx) => {
-        const matchTask = st.find(t => (t['Описание']||'').includes(stage.key));
+        // Match task by SITE_PIPELINE step name in description
+        const matchTask = st.find(t => (t['Описание']||'').includes(stage.stepName.replace(/^[^\s]+\s/, '')));
         const isDone = matchTask && (matchTask['Статус']||'').includes('Готово');
-        const isActive = matchTask && !isDone && (matchTask['Статус']||'').includes('В работе');
+        const isActive = matchTask && !isDone && ((matchTask['Статус']||'').includes('В работе') || (matchTask['Статус']||'').includes('Новая'));
         const isOverdue = matchTask && !isDone && matchTask['Дедлайн'] && matchTask['Дедлайн'] < td;
         const bg = isDone ? 'var(--green)' : isOverdue ? 'var(--red)' : isActive ? 'var(--accent)' : 'var(--bg3)';
         const clr = isDone || isActive || isOverdue ? 'white' : 'var(--text2)';
         html += '<div style="flex:1;min-width:80px;text-align:center;padding:10px 6px;border-radius:10px;background:'+bg+';color:'+clr+';font-size:11px;cursor:pointer" ';
-        if (matchTask) html += 'onclick="openTaskDetail(\''+escA(matchTask.ID)+'\')" ';
-        html += 'title="'+(matchTask ? esc(matchTask['Статус']||'')+' — '+esc(matchTask['Дедлайн']||'') : 'Нет задачи')+'">';
+        if (matchTask) html += 'onclick="openTaskDetail(\''+escA(matchTask['ID']||matchTask.id)+'\')" ';
+        html += 'title="'+(matchTask ? esc((matchTask['Ответственный']||''))+' · '+esc(matchTask['Статус']||'')+' · '+esc(matchTask['Дедлайн']||'') : 'Нет задачи')+'">';
         html += '<div style="font-size:20px;margin-bottom:4px">'+stage.icon+'</div>';
         html += '<div style="font-weight:600">'+stage.name+'</div>';
-        if (matchTask && matchTask['Дедлайн']) html += '<div style="font-size:9px;opacity:0.8;margin-top:2px">'+matchTask['Дедлайн'].slice(5)+'</div>';
+        // Show assigned person
+        if (matchTask) {
+          html += '<div style="font-size:9px;opacity:0.8;margin-top:2px">👤 '+(matchTask['Ответственный']||'—').split(' ')[0]+'</div>';
+          if (matchTask['Дедлайн']) html += '<div style="font-size:9px;opacity:0.7">'+matchTask['Дедлайн'].slice(5)+'</div>';
+        }
         html += '</div>';
         if (idx < pipelineStages.length - 1) html += '<div style="display:flex;align-items:center;color:var(--text3)">→</div>';
       });
@@ -5195,7 +5285,7 @@ function toggleAiPanel() {
 }
 
 function getDataContext() {
-  const ctx = { projects: {}, staff_count: DATA.staff.length, total_tasks: 0, overdue: [], upcoming: [] };
+  const ctx = { projects: {}, staff_count: DATA.staff.length, total_tasks: 0, overdue: [], upcoming: [], clients: [] };
   const now = new Date();
   for (const [key, proj] of Object.entries(PROJECTS)) {
     const tasks = DATA.tasks.filter(t => {
@@ -5204,16 +5294,33 @@ function getDataContext() {
       }
       return false;
     });
-    ctx.projects[proj.name] = { subprojects: Object.keys(proj.subprojects).length, tasks: tasks.length };
+    // Add client/direction info for each subproject
+    const subs = {};
+    for (const sub of Object.keys(proj.subprojects)) {
+      const dir = (DATA.directions||[]).find(d => d['Название'] === sub);
+      const subTasks = tasks.filter(t => t['Направление'] === sub);
+      subs[sub] = { 
+        tasks: subTasks.length, 
+        stage: dir ? (dir.stage||'lead') : null,
+        manager: dir ? dir['Менеджер'] : null,
+        price: dir ? dir['Цена'] : null,
+        paid: dir ? !!dir['Оплачено'] : false
+      };
+    }
+    ctx.projects[proj.name] = { subprojects: subs, total_tasks: tasks.length };
     ctx.total_tasks += tasks.length;
     tasks.forEach(t => {
-      if (t['Дедлайн'] && t['Статус'] !== 'Завершено') {
+      if (t['Дедлайн'] && t['Статус'] !== 'Готово' && t['Статус'] !== 'Завершено') {
         const dl = new Date(t['Дедлайн']);
-        if (dl < now) ctx.overdue.push({ task: t['Название'], deadline: t['Дедлайн'], direction: t['Направление'] });
-        else if (dl - now < 7*86400000) ctx.upcoming.push({ task: t['Название'], deadline: t['Дедлайн'], direction: t['Направление'] });
+        if (dl < now) ctx.overdue.push({ task: t['Описание']||t['Название'], deadline: t['Дедлайн'], direction: t['Направление'], assignee: t['Ответственный'] });
+        else if (dl - now < 7*86400000) ctx.upcoming.push({ task: t['Описание']||t['Название'], deadline: t['Дедлайн'], direction: t['Направление'], assignee: t['Ответственный'] });
       }
     });
   }
+  // Add all clients/directions
+  (DATA.directions||[]).forEach(d => {
+    ctx.clients.push({ name: d['Название'], stage: d.stage||'lead', price: d['Цена'], paid: !!d['Оплачено'], manager: d['Менеджер'], project: d['Проект'] });
+  });
   ctx.partners_count = DATA.partners.length;
   ctx.comms_count = DATA.comms.length;
   return ctx;
@@ -5256,6 +5363,9 @@ async function sendGlobalAi() {
         userId: USER?.tgId || '',
         context: 'chat',
         source: 'web',
+        direction: currentSubproject || currentProject || '',
+        user: USER?.name || '',
+        dataContext: JSON.stringify(dataCtx),
         history: globalAiMessages.filter(m=>m.role==='user'||m.role==='assistant').slice(-10)
       }),
       signal: controller.signal
@@ -5456,6 +5566,7 @@ function openAddSubproject() {
         'Название': name,
         'Проект': 'Сайты',
         'Статус': 'В работе',
+        'stage': 'lead',
         'Тип сайта': type,
         'Цена': pricing.price,
         'Оплачено': false,
@@ -5463,7 +5574,8 @@ function openAddSubproject() {
         'Телефон': phone,
         'Город': city,
         'Ссылка': link,
-        'Описание': desc
+        'Описание': desc,
+        'Менеджер': USER?.name || ''
       };
       
       const ok1 = await apiWrite('Направления', dirRow);
@@ -5586,21 +5698,19 @@ async function saveModal() {
         ID: 'DIR'+String(Date.now()).slice(-6),
         'Название': name,
         'Проект': proj.name,
-        'Emoji': emoji,
         'Описание': desc,
         'Ссылка': url,
         'Клиент': client,
         'Телефон': phone,
         'Город': city,
-        'Бизнес_тип': biztype,
+        'Тип бизнеса': biztype,
         'Тип сайта': siteType,
         'Цена': String(pricing.price),
         'Стиль': style,
         'Анкета': questionnaire,
-        'Бюджет': budget || String(pricing.price),
-        'Дедлайн': deadline,
-        'Статус': 'В работе',
-        'Дата_создания': today()
+        'stage': 'lead',
+        'Менеджер': USER?.name || '',
+        'Статус': 'В работе'
       });
     }
 
@@ -5978,10 +6088,17 @@ function renderWorkflowBanner(dir) {
   const wf = getWorkflowStep(dir);
   const id = dir['ID'] || dir.id || '';
   const p = getUserPerms();
+  const name = dir['Название']||'';
   
   if (wf.step === 7) {
     return '<div class="workflow-banner" style="border-color:var(--green);background:rgba(0,212,170,.06)"><div class="wf-step">🎉</div><div class="wf-info"><h4 style="color:var(--green)">Проект завершён!</h4><p>Клиент получил готовый сайт</p></div></div>';
   }
+  
+  // Find current active task for this client
+  const clientTasks = (DATA.tasks||[]).filter(t => (t['Направление']||'') === name);
+  const activeTask = clientTasks.find(t => (t['Статус']||'').includes('В работе') || (t['Статус']||'').includes('Новая'));
+  const responsible = activeTask ? (activeTask['Ответственный']||'Не назначен') : (dir['Менеджер']||'Не назначен');
+  const deadline = activeTask ? (activeTask['Дедлайн']||'—') : '—';
   
   let missingHtml = '';
   if (wf.required.length) {
@@ -5995,9 +6112,11 @@ function renderWorkflowBanner(dir) {
     }
   }
   
-  const actionBtn = wf.action && p.canEdit ? '<div class="wf-action"><button onclick="setDealStage(\''+id+'\',\''+wf.nextStage+'\')">'+wf.action+'</button></div>' : '';
+  const actionBtn = wf.action && p.canWrite ? '<div class="wf-action"><button onclick="setDealStage(\''+id+'\',\''+wf.nextStage+'\')">'+wf.action+'</button></div>' : '';
   
-  return '<div class="workflow-banner"><div class="wf-step">'+wf.icon+'</div><div class="wf-info"><h4>Шаг '+wf.step+'/7: '+wf.title+'</h4><p>'+wf.desc+'</p>'+missingHtml+'</div>'+actionBtn+'</div>';
+  return '<div class="workflow-banner"><div class="wf-step">'+wf.icon+'</div><div class="wf-info"><h4>Шаг '+wf.step+'/7: '+wf.title+'</h4><p>'+wf.desc+'</p>' +
+    '<div style="display:flex;gap:12px;margin-top:6px;font-size:12px"><span style="color:var(--accent)">👤 '+esc(responsible)+'</span><span style="color:var(--text2)">📅 '+esc(deadline)+'</span></div>' +
+    missingHtml+'</div>'+actionBtn+'</div>';
 }
 
 // ============================================================
@@ -6234,11 +6353,10 @@ function openClientCard(id) {
     
     html += '<button class="btn btn-secondary" onclick="saveLeadData(\''+eid+'\')" style="width:100%;margin-bottom:8px">💾 Сохранить</button>';
     
-    // Validation: need phone + type to proceed
-    if (hasPhone && hasType) {
-      html += '<button class="btn btn-primary" onclick="saveLeadData(\''+eid+'\');setDealStage(\''+eid+'\',\'anketa\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ Данные собраны → Анкета / ТЗ</button>';
-    } else {
-      html += '<div style="text-align:center;padding:8px;color:var(--text2);font-size:12px;background:var(--bg3);border-radius:8px">⚠️ Заполните телефон и тип сайта → Сохраните → Далее</div>';
+    // Always show advance button — validate from form inputs on click
+    html += '<button class="btn btn-primary" onclick="advanceLeadToAnketa(\''+eid+'\')" style="width:100%;font-size:14px;padding:12px">✅ Данные собраны → Анкета / ТЗ</button>';
+    if (!hasPhone || !hasType) {
+      html += '<div style="text-align:center;padding:4px;color:var(--orange);font-size:11px">⚠️ Рекомендуется заполнить телефон и тип сайта</div>';
     }
     
   } else if (stage === 'anketa') {
@@ -6261,7 +6379,7 @@ function openClientCard(id) {
     html += '<div><label style="font-size:11px;color:var(--text2);display:block;margin-bottom:4px">Пожелания клиента по сайту</label><textarea id="cc-wishes" placeholder="Цвета, стиль, референсы, что обязательно добавить..." style="width:100%;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;min-height:50px">'+esc(dir['Комментарий']||'')+'</textarea></div>';
     html += '</div>';
     html += '<button class="btn btn-secondary" onclick="saveAnketa(\''+eid+'\')" style="width:100%;margin-bottom:8px">💾 Сохранить анкету</button>';
-    html += '<button class="btn btn-primary" onclick="saveAnketa(\''+eid+'\');setDealStage(\''+eid+'\',\'proto\');closeClientCard();setTimeout(()=>renderProjectView(),500)" style="width:100%;font-size:14px;padding:12px">✅ Анкета заполнена → Создать прототип</button>';
+    html += '<button class="btn btn-primary" onclick="advanceAnketaToProto(\''+eid+'\')" style="width:100%;font-size:14px;padding:12px">✅ Анкета заполнена → Создать прототип</button>';
     
   } else if (stage === 'proto') {
     html += '<div style="font-size:16px;font-weight:700;margin-bottom:4px">🎨 Шаг 3: Создайте сайт</div>';
@@ -6336,7 +6454,7 @@ function openClientCard(id) {
   html += '<div>💰 '+(Number(dir['Цена'])||0).toLocaleString('ru')+'₽</div><div>💳 '+(dir['Оплачено']?'✅':'⏳')+'</div>';
   html += '<div>🌐 '+esc(dir['Тип сайта']||'—')+'</div><div>👤 '+esc(dir['Менеджер']||'—')+'</div>';
   html += '</div>';
-  if (p.canEdit) html += '<div style="padding:8px 12px;border:1px solid var(--border);border-top:0;border-radius:0 0 8px 8px"><button class="btn btn-sm btn-secondary" onclick="closeClientCard();openModal(\'direction\',\''+eid+'\')">✏️ Редактировать</button></div>';
+  if (p.canWrite) html += '<div style="padding:8px 12px;border:1px solid var(--border);border-top:0;border-radius:0 0 8px 8px"><button class="btn btn-sm btn-secondary" onclick="closeClientCard();openModal(\'direction\',\''+eid+'\')">✏️ Редактировать</button></div>';
   html += '</details>';
   
   // FINANCE PANEL (all steps except lead — lead has its own inline)
@@ -6346,7 +6464,7 @@ function openClientCard(id) {
   html += '<div class="card" style="padding:16px;margin-bottom:16px">';
   html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">';
   html += '<div style="font-size:13px;font-weight:700">📋 Задачи ('+activeTasks.length+')</div>';
-  if (p.canEdit) html += '<button class="btn btn-sm btn-primary" onclick="closeClientCard();openModal(\'task\');setTimeout(()=>{const f=document.getElementById(\'field-Направление\');if(f)f.value=\''+ename+'\';},300)">➕</button>';
+  if (p.canWrite) html += '<button class="btn btn-sm btn-primary" onclick="closeClientCard();openModal(\'task\');setTimeout(()=>{const f=document.getElementById(\'field-Направление\');if(f)f.value=\''+ename+'\';},300)">➕</button>';
   html += '</div>';
   if (activeTasks.length) {
     activeTasks.forEach(t => {
@@ -6374,19 +6492,25 @@ function openClientCard(id) {
 
 async function saveAnketa(id) {
   const v = (sel) => { const el = document.getElementById(sel); return el ? el.value.trim() : ''; };
-  const updates = {};
-  if (v('cc-biz-type')) updates.description = v('cc-biz-type');
-  if (v('cc-services')) updates.services = v('cc-services');
-  if (v('cc-phone')) updates.phone = v('cc-phone');
-  if (v('cc-city')) updates.city = v('cc-city');
-  if (v('cc-wishes')) updates.comment = v('cc-wishes');
-  if (v('cc-address')) updates.address = v('cc-address');
-  if (v('cc-social')) updates.social = v('cc-social');
-  if (v('cc-hours')) updates.work_hours = v('cc-hours');
-  if (v('cc-prices')) updates.prices = v('cc-prices');
-  if (Object.keys(updates).length) {
-    try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Анкета сохранена'); await loadData(); }
-    catch(e) { toast('Ошибка: '+e.message,'error'); }
+  const updates = {
+    description: v('cc-biz-type') || null,
+    services: v('cc-services') || null,
+    phone: v('cc-phone') || null,
+    city: v('cc-city') || null,
+    comment: v('cc-wishes') || null,
+    address: v('cc-address') || null,
+    social: v('cc-social') || null,
+    work_hours: v('cc-hours') || null,
+    prices: v('cc-prices') || null
+  };
+  try {
+    const { error } = await SB.from('directions').update(updates).eq('id', id);
+    if (error) throw error;
+    toast('✅ Анкета сохранена');
+    await loadData();
+  } catch(e) {
+    console.error('saveAnketa error:', e);
+    toast('Ошибка: '+e.message,'error');
   }
 }
 
@@ -6401,16 +6525,43 @@ function updateLeadPrice() {
 
 async function saveLeadData(id) {
   const v = (sel) => { const el = document.getElementById(sel); return el ? el.value.trim() : ''; };
-  const updates = {};
-  if (v('cc-lead-phone')) updates.phone = v('cc-lead-phone');
-  if (v('cc-lead-city')) updates.city = v('cc-lead-city');
-  if (v('cc-lead-type')) updates.site_type = v('cc-lead-type');
-  if (v('cc-lead-price')) updates.price = Number(v('cc-lead-price')) || 0;
-  if (v('cc-lead-manager')) updates.manager = v('cc-lead-manager');
-  if (Object.keys(updates).length) {
-    try { await SB.from('directions').update(updates).eq('id', id); toast('✅ Данные сохранены'); await loadData(); }
-    catch(e) { toast('Ошибка: '+e.message,'error'); }
+  const updates = {
+    phone: v('cc-lead-phone') || null,
+    city: v('cc-lead-city') || null,
+    site_type: v('cc-lead-type') || null,
+    price: Number(v('cc-lead-price')) || 0,
+    manager: v('cc-lead-manager') || null
+  };
+  try {
+    const { error } = await SB.from('directions').update(updates).eq('id', id);
+    if (error) throw error;
+    toast('✅ Данные сохранены');
+    await loadData();
+  } catch(e) {
+    console.error('saveLeadData error:', e);
+    toast('Ошибка сохранения: '+e.message,'error');
   }
+}
+
+async function advanceLeadToAnketa(id) {
+  // Read from FORM inputs, not DATA
+  const phone = document.getElementById('cc-lead-phone')?.value?.trim();
+  const type = document.getElementById('cc-lead-type')?.value?.trim();
+  if (!phone && !type) {
+    toast('⚠️ Рекомендуется заполнить телефон и тип сайта','warning');
+  }
+  // Save first, then advance
+  await saveLeadData(id);
+  await setDealStage(id, 'anketa');
+  closeClientCard();
+  setTimeout(() => renderProjectView(), 300);
+}
+
+async function advanceAnketaToProto(id) {
+  await saveAnketa(id);
+  await setDealStage(id, 'proto');
+  closeClientCard();
+  setTimeout(() => renderProjectView(), 300);
 }
 
 // Budget/finance block for client card
@@ -6536,7 +6687,7 @@ async function kanbanDrop(e, col) {
   if (oldStage === newStage) return;
   dir['stage'] = newStage;
   try {
-    const dbId = dir._dbId || dir.id;
+    const dbId = dir['ID'] || dir._dbId || dir.id;
     await SB.from('directions').update({stage: newStage}).eq('id', dbId);
     toast('✅ ' + (dir['Название']||'Сделка') + ' → ' + STAGES.find(s=>s.id===newStage)?.name);
     renderKanban();
@@ -6600,8 +6751,8 @@ function openSlideOver(id) {
   document.getElementById('so-actions').innerHTML = `
     ${dir['Телефон']?'<button onclick="window.open(\'tel:'+esc(dir['Телефон'])+'\')">📞 Позвонить</button>':''}
     <button onclick="openSubproject('${escA(dir['Название']||'')}')">🌐 Генератор сайта</button>
-    ${p.canEdit?'<button onclick="closeSlideOver();editItem(\'directions\',\''+(dir['ID']||dir.id)+'\')">✏️ Редактировать</button>':''}
-    ${!dir['Оплачено']&&p.canEdit?'<button onclick="markPaid(\''+id+'\')">💰 Отметить оплату</button>':''}
+    ${p.canWrite?'<button onclick="closeSlideOver();editItem(\'directions\',\''+(dir['ID']||dir.id)+'\')">✏️ Редактировать</button>':''}
+    ${!dir['Оплачено']&&p.canWrite?'<button onclick="markPaid(\''+id+'\')">💰 Отметить оплату</button>':''}
   `;
 
   // Tasks checklist
@@ -6632,15 +6783,24 @@ function closeSlideOver() {
 
 async function setDealStage(id, newStage) {
   const dir = (DATA.directions||[]).find(d => (d['ID']||d.id) === id);
-  if (!dir) return;
+  if (!dir) { console.error('setDealStage: direction not found for id', id); toast('❌ Клиент не найден','error'); return; }
+  const oldStage = dir['stage']||'lead';
   dir['stage'] = newStage;
   try {
-    const dbId = dir._dbId || dir.id;
-    await SB.from('directions').update({stage: newStage}).eq('id', dbId);
-    toast('✅ → ' + STAGES.find(s=>s.id===newStage)?.name);
-    renderKanban();
+    const dbId = dir['ID'] || dir._dbId || dir.id;
+    if (!dbId) { console.error('setDealStage: no dbId!', dir); toast('❌ Нет ID для сохранения','error'); return; }
+    const { error } = await SB.from('directions').update({stage: newStage}).eq('id', dbId);
+    if (error) throw error;
+    const stageName = STAGES.find(s=>s.id===newStage)?.name || newStage;
+    toast('✅ → ' + stageName);
+    await loadData();  // Reload all data to stay in sync
+    renderAll();
     if (currentDealId === id) openSlideOver(id);
-  } catch(err) { toast('❌ '+err.message,'error'); }
+  } catch(err) {
+    dir['stage'] = oldStage;  // Rollback on error
+    console.error('setDealStage error:', err);
+    toast('❌ Ошибка: '+err.message,'error');
+  }
 }
 
 async function advanceDealStage() {
@@ -6659,7 +6819,7 @@ async function markPaid(id) {
   if (!dir) return;
   dir['Оплачено'] = true;
   try {
-    const dbId = dir._dbId || dir.id;
+    const dbId = dir['ID'] || dir._dbId || dir.id;
     await SB.from('directions').update({paid: true}).eq('id', dbId);
     toast('💰 Оплата отмечена!');
     if (currentDealId === id) openSlideOver(id);
@@ -6673,7 +6833,7 @@ async function toggleTaskDone(taskId) {
   const newStatus = task['Статус'] === 'Готово' ? '🔄 Выполняется' : 'Готово';
   task['Статус'] = newStatus;
   try {
-    const dbId = task._dbId || task.id;
+    const dbId = task['ID'] || task._dbId || task.id;
     await SB.from('tasks').update({status: newStatus}).eq('id', dbId);
     toast(newStatus === 'Готово' ? '✅ Задача выполнена!' : '🔄 Задача возобновлена');
     if (currentDealId) openSlideOver(currentDealId);
