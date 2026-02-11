@@ -7376,7 +7376,7 @@ function openSlideOver(id) {
     ${cleanPh?'<button onclick="window.open(\'tel:'+cleanPh+'\')">📞 Позвонить</button>':''}
     ${cleanPh?'<button onclick="window.open(\'https://wa.me/'+cleanPh.replace('+','')+'\',\'_blank\')">💬 WhatsApp</button>':''}
     <button onclick="closeSlideOver();openSubproject('${escA(dir['Название']||'')}')">📂 Открыть карточку</button>
-    ${p.canWrite?'<button onclick="closeSlideOver();openClientCard(\\'${escA(id)}\\')">✏️ Редактировать</button>':''}
+    ${p.canWrite?'<button onclick="closeSlideOver();openClientCard(\''+escA(id)+'\')">✏️ Редактировать</button>':''}
     ${!dir['Оплачено']&&p.canWrite?'<button onclick="markPaid(\''+id+'\')">💰 Отметить оплату</button>':''}
   `;
 
