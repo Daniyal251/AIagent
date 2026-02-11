@@ -1439,7 +1439,7 @@ tbody tr:last-child td { border-bottom: none; }
   }
 }
 
-/* ============== KANBAN PIPELINE ============== */
+/* ============== PIPELINE (vertical for Sites) ============== */
 .kanban-wrap{display:flex;gap:10px;overflow-x:auto;padding:12px 0;min-height:400px}
 .kanban-col{min-width:220px;max-width:240px;flex:0 0 220px;background:var(--bg3);border-radius:var(--radius);display:flex;flex-direction:column;border:1px solid var(--border)}
 .kanban-col-header{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:700}
@@ -1459,6 +1459,22 @@ tbody tr:last-child td { border-bottom: none; }
 .kanban-card .k-manager{color:var(--text2)}
 .kanban-card.dragging{opacity:.5;transform:rotate(2deg)}
 .kanban-col.drag-over{background:rgba(0,212,170,.08);border-color:var(--accent)}
+/* Vertical pipeline */
+.pipeline-vertical{display:flex;flex-direction:column;gap:12px}
+.pipe-stage{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.pipe-stage-hdr{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-weight:700;font-size:13px;border-bottom:1px solid var(--border)}
+.pipe-stage-hdr .pipe-dot{width:10px;height:10px;border-radius:50%;margin-right:8px;flex-shrink:0}
+.pipe-stage-hdr .pipe-info{display:flex;align-items:center;gap:8px}
+.pipe-stage-hdr .pipe-stats{font-size:11px;font-weight:400;color:var(--text2);display:flex;gap:10px}
+.pipe-stage-body{padding:8px;display:flex;flex-direction:column;gap:6px}
+.pipe-client{display:flex;align-items:center;gap:12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .2s}
+.pipe-client:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.pipe-client .pc-name{font-weight:600;font-size:13px;flex:1}
+.pipe-client .pc-price{font-weight:600;color:var(--accent);font-size:13px}
+.pipe-client .pc-meta{font-size:10px;color:var(--text3);display:flex;gap:8px;margin-top:2px}
+.pipe-client .pc-del{opacity:0;color:var(--red);cursor:pointer;font-size:16px;padding:4px 6px;border-radius:6px;transition:all .15s}
+.pipe-client:hover .pc-del{opacity:1}
+.pipe-client .pc-del:hover{background:var(--red-glow)}
 
 /* ============== SLIDE-OVER ============== */
 .slideover-overlay{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.5);z-index:700;display:none;opacity:0;transition:opacity .3s}
@@ -1705,7 +1721,7 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="page-header">
         <h2 id="pv-title">📁 Проект</h2>
         <div class="actions">
-          <button class="btn btn-primary" id="btn-add-sub" onclick="openAddSubproject()">+ Подпроект</button>
+          <button class="btn btn-primary" id="btn-add-sub" onclick="openAddSubproject()">+ Клиент</button>
           <button class="btn btn-primary" id="btn-quick-site" onclick="openQuickSiteTask()" style="display:none;background:linear-gradient(135deg,#FF6B35,#F7931E)">🌐 + Клиент (ссылка)</button>
           <button class="btn btn-primary" onclick="openModal('task')">+ Задача</button>
           <button class="btn btn-secondary" onclick="openModal('partner')">+ Партнёр</button>
@@ -2057,11 +2073,22 @@ tbody tr:last-child td { border-bottom: none; }
     <button onclick="globalAiQuick('Подготовь план на неделю')" style="padding:5px 12px;border-radius:16px;border:1px solid rgba(177,151,252,0.25);background:rgba(177,151,252,0.05);color:var(--purple);font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer">📋 План</button>
   </div>
   <div id="ai-global-messages" style="flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px">
-    <div class="ai-msg system">Привет! Я ИИ-ассистент RKT HUB. Могу помочь с задачами, письмами, анализом и планированием по всем вашим проектам. Спрашивайте!</div>
+    <div class="ai-msg system">Привет! Я ИИ-ассистент RKT HUB. Помогу с задачами, КП, аналитикой и планированием.</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 8px">
+      <button onclick="aiQuick('Подготовь коммерческое предложение (КП) для клиента')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">📄 Создать КП</button>
+      <button onclick="aiQuick('Покажи отчёт по задачам и просроченным')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">📊 Отчёт</button>
+      <button onclick="aiQuick('Что делать новому сотруднику? Объясни как работает система')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">🆘 Помощь</button>
+      <button onclick="aiQuick('Составь план работы на неделю')" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit">📋 План</button>
+    </div>
   </div>
   <div style="display:flex;gap:8px;padding:14px 16px;border-top:1px solid rgba(177,151,252,0.15);background:rgba(26,34,52,0.5);border-radius:0 0 16px 16px">
+    <div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px">
+    <div id="ai-file-badge" style="display:none;font-size:11px;color:var(--accent);padding:2px 8px;background:var(--accent-glow);border-radius:6px;cursor:pointer" onclick="window._aiAttachedFile=null;this.style.display='none';toast('📎 Файл отвязан','info')">📎</div>
+    <div style="display:flex;gap:8px">
+    <button onclick="attachFileToAI()" style="padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text2);cursor:pointer;font-size:16px" title="Прикрепить файл">📎</button>
     <input id="ai-global-input" placeholder="Спросите что угодно..." onkeydown="if(event.key==='Enter')sendGlobalAi()" style="flex:1;padding:10px 16px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px">
     <button id="ai-global-send" onclick="sendGlobalAi()" style="padding:10px 18px;background:linear-gradient(135deg,var(--purple),#7950f2);color:#fff;border:none;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;cursor:pointer">➤</button>
+    </div></div>
   </div>
 </div>
 
@@ -3542,7 +3569,7 @@ function renderHome() {
     html += '<div class="desc">'+esc(proj.desc)+'</div>';
     html += '</div>';
     html += '<div class="project-card-stats">';
-    html += '<div class="pcs"><div class="v" style="color:'+proj.color+'">'+Object.keys(proj.subprojects).length+'</div><div class="l">Подпроектов</div></div>';
+    html += '<div class="pcs"><div class="v" style="color:'+proj.color+'">'+Object.keys(proj.subprojects).length+'</div><div class="l">'+(proj.canAddSub?'Клиентов':'Направлений')+'</div></div>';
     html += '<div class="pcs"><div class="v" style="color:'+proj.color+'">'+pp.length+'</div><div class="l">Партнёров</div></div>';
     html += '<div class="pcs"><div class="v" style="color:'+proj.color+'">'+ptActive.length+'</div><div class="l">Задач</div></div>';
     html += '</div>';
@@ -3599,7 +3626,7 @@ function renderProjectView() {
       '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:'+(ptOverdue.length?'var(--red)':'var(--green)')+'">'+ptOverdue.length+'</div><div class="m-label">Просрочено</div></div>';
   } else {
   document.getElementById('pv-metrics').innerHTML =
-    '<div class="metric-card"><div class="m-icon">📂</div><div class="m-value">'+Object.keys(proj.subprojects).length+'</div><div class="m-label">Подпроектов</div></div>'+
+    '<div class="metric-card"><div class="m-icon">📂</div><div class="m-value">'+Object.keys(proj.subprojects).length+'</div><div class="m-label">Направлений</div></div>'+
     '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+pp.length+'</div><div class="m-label">Партнёров</div></div>'+
     '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+ptActive.length+'</div><div class="m-label">Задач</div><div class="m-sub">'+(ptOverdue.length?'🔴 '+ptOverdue.length+' просроч.':'в работе')+'</div></div>'+
     '<div class="metric-card"><div class="m-icon">📈</div><div class="m-value">'+avgPr+'%</div><div class="m-label">Прогресс</div></div>'+
@@ -3610,65 +3637,61 @@ function renderProjectView() {
   let sgHtml = '';
   // CLIENT-ORIENTED CRM for Сайты
   if (proj.canAddSub) {
-    // Render Kanban pipeline directly
+    // Render vertical pipeline
     const allDirs = (DATA.directions||[]).filter(d => d['Проект'] === 'Сайты');
     const totalRev = allDirs.filter(d=>d['Оплачено']).reduce((s,d)=>s+(Number(d['Цена'])||0),0);
     const totalPipe = allDirs.filter(d=>!d['Оплачено']&&(d['stage']||'lead')!=='done').reduce((s,d)=>s+(Number(d['Цена'])||0),0);
+    const doneCount = allDirs.filter(d=>(d['stage'])==='done').length;
+    const activeCount = allDirs.filter(d=>(d['stage']||'lead')!=='done').length;
     
-    // CRM Header with stats
-    sgHtml += '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
-    sgHtml += '<div class="card" style="flex:1;min-width:150px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">💰 Выручка</div><div style="font-size:22px;font-weight:700;color:var(--green)">'+totalRev.toLocaleString('ru')+'₽</div></div>';
-    sgHtml += '<div class="card" style="flex:1;min-width:150px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">🔄 В работе</div><div style="font-size:22px;font-weight:700;color:var(--accent)">'+allDirs.filter(d=>(d['stage']||'lead')!=='done').length+'</div></div>';
-    sgHtml += '<div class="card" style="flex:1;min-width:150px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">📊 Pipeline</div><div style="font-size:22px;font-weight:700;color:var(--blue)">'+totalPipe.toLocaleString('ru')+'₽</div></div>';
-    sgHtml += '<div class="card" style="flex:1;min-width:150px;padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">✅ Завершено</div><div style="font-size:22px;font-weight:700">'+allDirs.filter(d=>(d['stage'])==='done').length+'</div></div>';
+    // Compact stats row
+    sgHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px">';
+    sgHtml += '<div class="card" style="padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">👥 Клиенты</div><div style="font-size:22px;font-weight:700">'+allDirs.length+'</div><div style="font-size:10px;color:var(--text3)">'+activeCount+' в работе</div></div>';
+    sgHtml += '<div class="card" style="padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">💰 Выручка</div><div style="font-size:22px;font-weight:700;color:var(--green)">'+totalRev.toLocaleString('ru')+'₽</div></div>';
+    sgHtml += '<div class="card" style="padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">📊 Pipeline</div><div style="font-size:22px;font-weight:700;color:var(--blue)">'+totalPipe.toLocaleString('ru')+'₽</div></div>';
+    sgHtml += '<div class="card" style="padding:14px;text-align:center"><div style="font-size:11px;color:var(--text2)">✅ Готово</div><div style="font-size:22px;font-weight:700">'+doneCount+'</div></div>';
     sgHtml += '</div>';
     
-    // Kanban Pipeline
-    sgHtml += '<div class="kanban-wrap" id="kanban-inline" style="margin-bottom:16px">';
+    // Vertical pipeline
+    const canDel = getUserPerms().level >= 3; // CEO + Зам
+    sgHtml += '<div class="pipeline-vertical">';
     STAGES.forEach(stage => {
       const deals = allDirs.filter(d => (d['stage']||'lead') === stage.id);
       const sum = deals.reduce((s,d) => s + (Number(d['Цена'])||0), 0);
-      sgHtml += '<div class="kanban-col" data-stage="'+stage.id+'" ondragover="kanbanDragOver(event)" ondrop="kanbanDrop(event,this)" ondragleave="this.classList.remove(\'drag-over\')">';
-      sgHtml += '<div class="kanban-col-header"><div>'+stage.name+' <span class="k-count">'+deals.length+'</span></div>';
-      sgHtml += '<div class="k-sum">'+(sum?sum.toLocaleString('ru')+'₽':'')+'</div></div>';
-      sgHtml += '<div class="kanban-col-body">';
-      deals.forEach(d => {
-        const id = d['ID']||d.id||'';
-        const overdue = d['Дедлайн'] && d['Дедлайн'] < td && stage.id !== 'done';
-        const clientTasks = ptActive.filter(t => (t['Направление']||'') === (d['Название']||''));
-        sgHtml += '<div class="kanban-card'+(overdue?' overdue':'')+'" draggable="true" data-id="'+id+'" onclick="openSlideOver(\''+escA(id)+'\')" ondragstart="kanbanDragStart(event,this)" ondragend="kanbanDragEnd(this)">';
-        sgHtml += '<div class="k-name">'+esc(d['Название']||d['name']||'?')+'</div>';
-        sgHtml += '<div class="k-meta">';
-        if (d['Цена']) sgHtml += '<span class="k-price">'+Number(d['Цена']).toLocaleString('ru')+'₽</span>';
-        if (d['Тип сайта']) sgHtml += '<span class="k-type">'+esc(d['Тип сайта'])+'</span>';
-        if (d['Город']) sgHtml += '<span class="k-city">📍'+esc(d['Город'])+'</span>';
-        sgHtml += d['Оплачено'] ? '<span class="k-paid">💰</span>' : '<span class="k-unpaid">⏳</span>';
-        if (d['Менеджер']) sgHtml += '<span class="k-manager">👤'+esc(d['Менеджер'].split(' ')[0])+'</span>';
-        sgHtml += '</div></div>';
-      });
-      sgHtml += '</div></div>';
+      
+      sgHtml += '<div class="pipe-stage">';
+      sgHtml += '<div class="pipe-stage-hdr" onclick="togglePipeStage(this)">';
+      sgHtml += '<div class="pipe-info"><span class="pipe-dot" style="background:'+stage.color+'"></span>'+stage.name+'</div>';
+      sgHtml += '<div class="pipe-stats"><span>'+deals.length+' клиент'+(deals.length!==1?'ов':'')+'</span>';
+      if (sum) sgHtml += '<span style="color:var(--accent)">'+sum.toLocaleString('ru')+'₽</span>';
+      sgHtml += '<span>▾</span></div></div>';
+      
+      if (deals.length) {
+        sgHtml += '<div class="pipe-stage-body">';
+        deals.forEach(d => {
+          const cid = d['ID']||d.id||'';
+          const cname = d['Название']||'?';
+          const overdue = d['Дедлайн'] && d['Дедлайн'] < td && stage.id !== 'done';
+          sgHtml += '<div class="pipe-client'+(overdue?' overdue':'')+'" onclick="openSlideOver(\''+escA(cid)+'\')">';
+          sgHtml += '<div style="flex:1"><div class="pc-name">'+esc(cname)+'</div>';
+          sgHtml += '<div class="pc-meta">';
+          if (d['Тип сайта']) sgHtml += '<span>'+esc(d['Тип сайта'])+'</span>';
+          if (d['Город']) sgHtml += '<span>📍'+esc(d['Город'])+'</span>';
+          if (d['Менеджер']) sgHtml += '<span>👤'+esc(d['Менеджер'].split(' ')[0])+'</span>';
+          sgHtml += d['Оплачено'] ? '<span style="color:var(--green)">💰 Оплачен</span>' : '<span style="color:var(--orange)">⏳ Не оплачен</span>';
+          sgHtml += '</div></div>';
+          if (d['Цена']) sgHtml += '<div class="pc-price">'+Number(d['Цена']).toLocaleString('ru')+'₽</div>';
+          if (canDel) sgHtml += '<div class="pc-del" onclick="event.stopPropagation();deleteClient(\''+escA(cid)+'\',\''+escA(cname)+'\')" title="Удалить">🗑</div>';
+          sgHtml += '</div>';
+        });
+        sgHtml += '</div>';
+      }
+      sgHtml += '</div>';
     });
     sgHtml += '</div>';
     
     // Add client button
-    sgHtml += '<button class="btn btn-primary" onclick="openAddSubproject()" style="margin-bottom:16px">➕ Добавить клиента</button>';
-    
-    // Client list (collapsed, below kanban)
-    sgHtml += '<div class="card"><div class="card-header" onclick="document.getElementById(\'client-list-body\').style.display=document.getElementById(\'client-list-body\').style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer"><h3>📋 Все клиенты ('+allDirs.length+') <span style="font-size:12px;color:var(--text3)">▾</span></h3></div>';
-    sgHtml += '<div id="client-list-body" style="display:none"><div class="table-wrap"><table><thead><tr><th>Клиент</th><th>Этап</th><th>Тип</th><th>Цена</th><th>Менеджер</th><th>Оплата</th><th></th></tr></thead><tbody>';
-    allDirs.forEach(d => {
-      const stageObj = STAGES.find(s=>s.id===(d['stage']||'lead')) || STAGES[0];
-      sgHtml += '<tr onclick="openSlideOver(\''+escA(d['ID']||d.id||'')+'\')" style="cursor:pointer">';
-      sgHtml += '<td><strong>'+esc(d['Название']||'?')+'</strong></td>';
-      sgHtml += '<td><span class="badge" style="background:'+stageObj.color+';color:#fff;padding:2px 8px;border-radius:10px;font-size:10px">'+stageObj.name+'</span></td>';
-      sgHtml += '<td>'+esc(d['Тип сайта']||'—')+'</td>';
-      sgHtml += '<td>'+(Number(d['Цена'])||0).toLocaleString('ru')+'₽</td>';
-      sgHtml += '<td>'+esc(d['Менеджер']||'—')+'</td>';
-      sgHtml += '<td>'+(d['Оплачено']?'✅':'⏳')+'</td>';
-      sgHtml += '<td><button class="btn btn-sm btn-secondary" onclick="event.stopPropagation();openSubproject(\''+escA(d['Название']||'')+'\')">📂 Карточка</button></td>';
-      sgHtml += '</tr>';
-    });
-    sgHtml += '</tbody></table></div></div></div>';
+    sgHtml += '<button class="btn btn-primary" onclick="openAddSubproject()" style="margin-top:16px;width:100%">➕ Добавить клиента</button>';
     
   } else {
   // Standard subproject cards (for РКТ etc.)
@@ -6204,15 +6227,33 @@ function getDataContext() {
 
 async function sendGlobalAi() {
   const input = document.getElementById('ai-global-input');
-  const msg = input.value.trim();
+  let msg = input.value.trim();
   if (!msg) return;
   input.value = '';
   input.disabled = true;
 
+  // Handle attached file
+  let fileInfo = '';
+  if (window._aiAttachedFile) {
+    const f = window._aiAttachedFile;
+    fileInfo = '\n\n[Прикреплён файл: ' + f.name + ' (' + formatFileSize(f.size) + ')]';
+    // Read text files
+    if (f.name.match(/\.(txt|csv|md|json)$/i) && f.size < 100000) {
+      try {
+        const text = await f.text();
+        fileInfo += '\nСодержимое файла:\n' + text.substring(0, 5000);
+      } catch(e) {}
+    }
+    window._aiAttachedFile = null;
+    const badge = document.getElementById('ai-file-badge');
+    if (badge) badge.style.display = 'none';
+  }
+  msg += fileInfo;
+
   const container = document.getElementById('ai-global-messages');
   const userDiv = document.createElement('div');
   userDiv.className = 'ai-msg user';
-  userDiv.textContent = msg;
+  userDiv.textContent = msg.split('\n')[0]; // Show first line only in chat
   container.appendChild(userDiv);
   globalAiMessages.push({ role: 'user', content: msg });
   saveAiHistory();
@@ -6524,6 +6565,29 @@ function closeModal() {
   editingItem = null;
 }
 
+// Send Telegram notification when task is assigned to staff
+async function notifyTaskAssigned(taskDesc, assigneeName, direction) {
+  if (!assigneeName) return;
+  // Find staff member's telegram_id
+  const staff = DATA.staff.find(s => (s['Имя']||'').includes(assigneeName) || (assigneeName||'').includes(s['Имя']||'___'));
+  if (!staff) return;
+  const tgId = staff['Telegram_ID'] || staff.telegram_id;
+  if (!tgId) return;
+  
+  try {
+    await fetch(CONFIG.AI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'notify',
+        source: 'web',
+        chatId: tgId,
+        message: '📋 *Новая задача!*\n\n' + taskDesc + '\n📁 ' + (direction||'') + '\n👤 Ответственный: ' + assigneeName + '\n\n🌐 Откройте RKT HUB для деталей'
+      })
+    });
+  } catch(e) { console.warn('Notification failed:', e); }
+}
+
 async function saveModal() {
   // Handle new project
   if (currentModal === 'newproject') {
@@ -6627,6 +6691,11 @@ async function saveModal() {
         });
       }
       toast('📋 Создано '+SITE_PIPELINE.length+' задач для «'+name+'» с назначениями', 'info');
+      // Notify all assigned staff
+      for (const step of SITE_PIPELINE) {
+        const assigned = getSiteStaffByRole(step.role);
+        if (assigned) notifyTaskAssigned(step.name + ' для «'+name+'»', assigned, name);
+      }
     }
     return;
   }
@@ -6704,7 +6773,13 @@ async function saveModal() {
   document.getElementById('modalSaveBtn').disabled = true;
   const ok = await apiWrite(def.sheet, row);
   document.getElementById('modalSaveBtn').disabled = false;
-  if(ok) toast('✅ '+def.title+' сохранён!','success');
+  if(ok) {
+    toast('✅ '+def.title+' сохранён!','success');
+    // Notify assignee if task created/assigned
+    if (def.sheet === 'Задачи' && row['Ответственный'] && !editingItem) {
+      notifyTaskAssigned(row['Описание']||row['Название']||'', row['Ответственный'], row['Направление']);
+    }
+  }
   
   // Auto-delegation: if task in site pipeline is marked done, create next step
   if (def.sheet === 'Задачи' && (row['Статус'] === 'Готово' || row['Статус'] === '✅ Готово') && row['Проект'] === 'Сайты') {
@@ -7586,6 +7661,68 @@ async function kanbanDrop(e, col) {
 // SLIDE-OVER DEAL CARD
 // ============================================================
 let currentDealId = null;
+
+// Quick AI action
+function aiQuick(text) {
+  const input = document.getElementById('ai-global-input');
+  if (input) { input.value = text; sendGlobalAi(); }
+}
+
+function togglePipeStage(hdr) {
+  const body = hdr.parentElement.querySelector('.pipe-stage-body');
+  if (!body) return;
+  const arrow = hdr.querySelector('.pipe-stats span:last-child');
+  if (body.style.display === 'none') {
+    body.style.display = '';
+    if (arrow) arrow.textContent = '▾';
+  } else {
+    body.style.display = 'none';
+    if (arrow) arrow.textContent = '▸';
+  }
+}
+
+async function deleteClient(id, name) {
+  const p = getUserPerms();
+  if (p.level < 3) { toast('⛔ Только CEO и Зам могут удалять клиентов','error'); return; }
+  
+  document.getElementById('confirmTitle').textContent = '🗑 Удалить клиента?';
+  document.getElementById('confirmText').textContent = '«' + name + '» и все связанные задачи будут удалены.';
+  document.getElementById('confirmOverlay').classList.add('show');
+  confirmCallback = async function(ok) {
+    if (!ok) return;
+    try {
+      const { error: e1 } = await SB.from('directions').delete().eq('id', id);
+      if (e1) throw e1;
+      const { error: e2 } = await SB.from('tasks').delete().eq('direction', name);
+      if (e2) console.warn('Task delete warn:', e2);
+      toast('✅ Клиент «' + name + '» удалён', 'success');
+      await loadData();
+      syncSubprojectsFromDb(currentProject);
+      renderProjectView();
+    } catch(e) {
+      toast('❌ Ошибка: ' + e.message, 'error');
+    }
+  };
+}
+
+// File upload for AI chat
+function attachFileToAI() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = '.pdf,.doc,.docx,.txt,.png,.jpg,.jpeg,.csv,.xlsx';
+  inp.onchange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    window._aiAttachedFile = file;
+    const badge = document.getElementById('ai-file-badge');
+    if (badge) {
+      badge.textContent = '📎 ' + file.name;
+      badge.style.display = 'inline-block';
+    }
+    toast('📎 Файл прикреплён: ' + file.name, 'info');
+  };
+  inp.click();
+}
 
 function openSlideOver(id) {
   const dir = (DATA.directions||[]).find(d => (d['ID']||d.id) === id);
