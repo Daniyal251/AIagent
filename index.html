@@ -1700,6 +1700,7 @@ tbody tr:last-child td { border-bottom: none; }
       <div class="metrics" id="dash-metrics"></div>
       <div id="dash-revenue-chart"></div>
       <div id="dash-pipeline-summary" style="margin-bottom:16px"></div>
+      <div id="dash-earnings" style="margin-bottom:16px"></div>
       <div class="card" style="border:1px solid rgba(177,151,252,0.2);background:linear-gradient(135deg,rgba(177,151,252,0.03),rgba(121,80,242,0.01))">
         <div class="card-header" style="display:flex;align-items:center;justify-content:space-between">
           <h3>🤖 ИИ-ассистент</h3>
@@ -2311,50 +2312,50 @@ const ROLES = {
     emoji: '👑', level: 4,
     canWrite: true, canDelete: true, canApprove: true, canManageStaff: true, seeAll: true,
     canEditTasks: true, canEditPartners: true, canEditStaff: true, canEditProjects: true,
-    canAssignTasks: true, canViewFinance: true, canExport: true,
+    canAssignTasks: true, canViewFinance: true, canExport: true, canSettings: true,
     canCreateSiteTask: true, canGenerateSite: true,
     writeSheets: ['Партнёры','Задачи','Направления','Сотрудники','Проекты','Согласования','Коммуникации'],
     desc: 'Полный доступ ко всей системе'
   },
   'Зам': {
     emoji: '⭐', level: 3,
-    canWrite: true, canDelete: false, canApprove: false, canManageStaff: true, seeAll: true,
+    canWrite: true, canDelete: false, canApprove: false, canManageStaff: true, seeAll: false,
     canEditTasks: true, canEditPartners: true, canEditStaff: true, canEditProjects: false,
-    canAssignTasks: true, canViewFinance: false, canExport: true,
+    canAssignTasks: true, canViewFinance: true, canExport: true, canSettings: false,
     canCreateSiteTask: true, canGenerateSite: true,
     writeSheets: ['Партнёры','Задачи','Коммуникации','Направления'],
     needsApproval: ['Сотрудники','Проекты'],
-    desc: 'Управление задачами и партнёрами, создание сайтов'
+    desc: 'Управление своим проектом: задачи, партнёры, команда'
   },
   'Руководитель': {
     emoji: '📋', level: 2,
     canWrite: true, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false,
     canEditTasks: true, canEditPartners: false, canEditStaff: false, canEditProjects: false,
-    canAssignTasks: false, canViewFinance: false, canExport: false,
+    canAssignTasks: true, canViewFinance: false, canExport: false, canSettings: false,
     canCreateSiteTask: true, canGenerateSite: true,
     writeSheets: ['Задачи','Коммуникации'],
     needsApproval: ['Партнёры','Направления','Сотрудники','Проекты'],
-    desc: 'Управление своими задачами и коммуникациями'
+    desc: 'Управление задачами в своём направлении'
   },
   'Менеджер': {
     emoji: '💼', level: 1,
     canWrite: true, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false,
     canEditTasks: true, canEditPartners: false, canEditStaff: false, canEditProjects: false,
-    canAssignTasks: false, canViewFinance: false, canExport: false,
+    canAssignTasks: false, canViewFinance: false, canExport: false, canSettings: false,
     canCreateSiteTask: true, canGenerateSite: false,
     writeSheets: ['Задачи','Коммуникации'],
     needsApproval: ['Партнёры','Направления'],
-    desc: 'Выполнение задач и общение с клиентами'
+    desc: 'Работа с клиентами и выполнение задач'
   },
   'Сотрудник': {
     emoji: '👤', level: 0,
     canWrite: false, canDelete: false, canApprove: false, canManageStaff: false, seeAll: false,
     canEditTasks: false, canEditPartners: false, canEditStaff: false, canEditProjects: false,
-    canAssignTasks: false, canViewFinance: false, canExport: false,
+    canAssignTasks: false, canViewFinance: false, canExport: false, canSettings: false,
     canCreateSiteTask: false, canGenerateSite: false,
     writeSheets: [],
     needsApproval: ['Задачи','Партнёры','Коммуникации'],
-    desc: 'Просмотр своих задач'
+    desc: 'Просмотр и выполнение своих задач'
   }
 };
 
@@ -2641,14 +2642,27 @@ function showApp() {
   document.getElementById('userAvatar').textContent = USER.name.charAt(0).toUpperCase();
   document.getElementById('settingsApiUrl').value = CONFIG.SUPABASE_URL;
   document.getElementById('settingsAiUrl').value = CONFIG.AI_URL;
-  // Supabase — no separate write URL needed
-  // Supabase — no sheet ID needed
   document.getElementById('s-name').textContent = USER.name;
   document.getElementById('s-role').textContent = p.emoji+' '+USER.role;
   document.getElementById('s-dir').textContent = USER.direction;
   document.getElementById('s-tgid').textContent = USER.tgId;
   document.getElementById('btn-add-staff').style.display = p.canManageStaff?'':'none';
+  
+  // ROLE-BASED NAV VISIBILITY
   document.getElementById('nav-approvals').classList.toggle('hidden', !p.canApprove);
+  // Settings — only CEO
+  const navSettings = document.querySelector('[data-page="settings"]');
+  if (navSettings) navSettings.classList.toggle('hidden', USER.role !== 'CEO');
+  // Partners — only CEO and Зам
+  const navPartners = document.querySelector('[data-page="partners"]');
+  if (navPartners) navPartners.classList.toggle('hidden', p.level < 3);
+  // Staff — only CEO and Зам
+  const navStaff = document.querySelector('[data-page="staff"]');
+  if (navStaff) navStaff.classList.toggle('hidden', !p.canManageStaff);
+  // Comms — hide for basic Сотрудник
+  const navComms = document.querySelector('[data-page="comms"]');
+  if (navComms) navComms.classList.toggle('hidden', p.level < 1);
+  
   loadData();
   if(refreshTimer) clearInterval(refreshTimer);
   refreshTimer = setInterval(loadData, CONFIG.REFRESH);
@@ -2757,8 +2771,33 @@ function genId(prefix) {
 // ============================================================
 function filterByRole(arr) {
   const p = getUserPerms();
-  if (p.seeAll || !USER || USER.direction==='Все') return arr;
-  return arr.filter(i => { const d=i['Направление']||''; return d===USER.direction||d==='Все'||d==='Общее'||d===''; });
+  if (p.seeAll || !USER) return arr;
+  if (USER.direction === 'Все' || !USER.direction) return arr;
+  
+  // Build list of all directions this user can see
+  const myDirs = new Set(['Все', 'Общее', '', USER.direction]);
+  
+  // If user is Зам or Руководитель, they see all directions in their project
+  if (p.level >= 2) {
+    const projKey = Object.keys(PROJECTS).find(k => {
+      const pd = getProjectDirs(k);
+      return pd.includes(USER.direction) || PROJECTS[k].name === USER.direction;
+    });
+    if (projKey) {
+      getProjectDirs(projKey).forEach(d => myDirs.add(d));
+      myDirs.add(PROJECTS[projKey].name);
+    }
+  }
+  
+  return arr.filter(i => {
+    const d = i['Направление'] || '';
+    const proj = i['Проект'] || '';
+    // If item matches user's visible directions or project
+    if (myDirs.has(d) || myDirs.has(proj)) return true;
+    // Менеджер/Сотрудник: also show items assigned to them
+    if (p.level <= 1 && (i['Ответственный']||'').includes(USER.name)) return true;
+    return false;
+  });
 }
 
 function filterBySearch(arr, sid, fields) {
@@ -2825,6 +2864,16 @@ function openProject(projKey) {
   currentSubproject = null;
   currentPvTab = 'overview';
   showPage('project');
+  
+  // FIX 8: Hide partner elements in Сайты project
+  const isSites = (projKey === 'sites');
+  const pvPartnerBtn = document.querySelector('#page-project .actions [onclick*="partner"]');
+  if (pvPartnerBtn) pvPartnerBtn.style.display = isSites ? 'none' : '';
+  const pvPartnerTab = document.querySelector('#pv-tabs [data-tab="partners"]');
+  if (pvPartnerTab) pvPartnerTab.style.display = isSites ? 'none' : '';
+  // Show finance/salaries tabs in Сайты
+  document.querySelectorAll('.tab-finance, .tab-salaries').forEach(t => t.style.display = isSites ? '' : 'none');
+  
   renderProjectView();
 }
 
@@ -2832,13 +2881,15 @@ function openSubproject(spName) {
   currentSubproject = spName;
   currentSpTab = 'overview';
   showPage('subproject');
-  // Show site generator tab only for "Сайты" project
+  const isSites = (currentProject === 'sites');
+  // Show site generator tab only for Сайты
   const siteGenTab = document.querySelector('.tab-sitegen');
-  if (siteGenTab) siteGenTab.style.display = (currentProject === 'sites') ? '' : 'none';
-  // Show Finance & Salaries tabs only for Sites project
-  document.querySelectorAll('.tab-finance, .tab-salaries').forEach(t => {
-    t.style.display = (currentProject === 'sites') ? '' : 'none';
-  });
+  if (siteGenTab) siteGenTab.style.display = isSites ? '' : 'none';
+  // Hide partner tab/button in Сайты subproject
+  const spPartnerBtn = document.querySelector('#page-subproject .actions [onclick*="partner"]');
+  if (spPartnerBtn) spPartnerBtn.style.display = isSites ? 'none' : '';
+  const spPartnerTab = document.querySelector('#sp-tabs [data-tab="partners"]');
+  if (spPartnerTab) spPartnerTab.style.display = isSites ? 'none' : '';
   renderSubprojectView();
 }
 
@@ -2903,9 +2954,17 @@ function renderHome() {
     '<div class="metric-card"><div class="m-icon">🔴</div><div class="m-value" style="color:'+(overdue.length?'var(--red)':'var(--green)')+'">'+overdue.length+'</div><div class="m-label">Просрочено</div></div>'+
     '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">'+DATA.staff.length+'</div><div class="m-label">Команда</div></div>';
 
-  // Project cards
+  // Project cards — filter by user's project access
   let html = '';
-  for (const [key, proj] of Object.entries(PROJECTS)) {
+  const visibleProjects = Object.entries(PROJECTS).filter(([key, proj]) => {
+    if (getUserPerms().seeAll) return true; // CEO sees all
+    // User sees only projects matching their direction
+    if (!USER || !USER.direction || USER.direction === 'Все') return true;
+    const dirs = getProjectDirs(key);
+    return dirs.includes(USER.direction) || proj.name === USER.direction;
+  });
+  
+  for (const [key, proj] of visibleProjects) {
     const dirs = getProjectDirs(key);
     const pp = allPartners.filter(p => dirs.includes(p['Направление']||''));
     const pt = allTasks.filter(t => dirs.includes(t['Направление']||''));
@@ -2938,11 +2997,13 @@ function renderHome() {
     html += '</div></div>';
   }
 
-  // Add project card
-  html += '<div class="project-card add-card" onclick="openModal(\'newproject\')">';
-  html += '<span class="add-icon">➕</span>';
-  html += '<span class="add-text">Добавить проект</span>';
-  html += '</div>';
+  // Add project card — only CEO
+  if (getUserPerms().level >= 4) {
+    html += '<div class="project-card add-card" onclick="openModal(\'newproject\')">';
+    html += '<span class="add-icon">➕</span>';
+    html += '<span class="add-text">Добавить проект</span>';
+    html += '</div>';
+  }
 
   document.getElementById('project-grid').innerHTML = html;
 }
@@ -3302,26 +3363,51 @@ function renderCommTable(data) {
 // RENDER: DASHBOARD (ГД)
 // ============================================================
 function renderDashboard() {
-  const fp = filterByRole(DATA.partners);
-  const ft = filterByRole(DATA.tasks);
-  const fpr = filterByRole(DATA.projects);
+  const p = getUserPerms();
+  const isCEO = USER && USER.role === 'CEO';
+  
+  // Filter data by user's scope
+  let fp = filterByRole(DATA.partners);
+  let ft = filterByRole(DATA.tasks);
+  let fpr = filterByRole(DATA.projects);
+  let fDirs = DATA.directions || [];
+  
+  // Non-CEO: filter by their direction/project
+  if (!isCEO && USER && USER.direction && USER.direction !== 'Все') {
+    fp = fp.filter(x => (x['Направление']||'') === USER.direction || !x['Направление']);
+    ft = ft.filter(x => (x['Направление']||'') === USER.direction || (x['Ответственный']||'') === USER.name);
+    fpr = fpr.filter(x => (x['Направление']||'') === USER.direction);
+    fDirs = fDirs.filter(x => {
+      // Find if this direction belongs to user's project
+      const projKey = Object.keys(PROJECTS).find(k => PROJECTS[k].name === USER.direction || getProjectDirs(k).includes(USER.direction));
+      return projKey ? getProjectDirs(projKey).includes(x['Название']) : true;
+    });
+  }
+  // Менеджер/Сотрудник: only their own tasks
+  if (p.level <= 1 && USER) {
+    ft = ft.filter(t => (t['Ответственный']||'').includes(USER.name));
+  }
+  
   const td = today();
   const active = ft.filter(t => (t['Статус']||'')!=='Готово');
   const overdue = active.filter(t => t['Дедлайн']&&t['Дедлайн']<td);
 
+  // Dashboard title based on role
+  const dashTitle = isCEO ? 'Все проекты' : (USER?.direction || 'Мои задачи');
+  
   document.getElementById('dash-metrics').innerHTML =
-    '<div class="metric-card"><div class="m-icon">🏢</div><div class="m-value">'+Object.keys(PROJECTS).length+'</div><div class="m-label">Проектов</div><div class="m-sub">РКТ, Сайты...</div></div>'+
-    '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+fp.length+'</div><div class="m-label">Партнёров</div><div class="m-sub">'+fp.filter(p=>p['Статус']==='Активный').length+' активных</div></div>'+
-    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+active.length+'</div><div class="m-label">Задач в работе</div><div class="m-sub">'+(overdue.length?'🔴 '+overdue.length+' просрочено':'всё в срок')+'</div></div>'+
+    (isCEO ? '<div class="metric-card"><div class="m-icon">🏢</div><div class="m-value">'+Object.keys(PROJECTS).length+'</div><div class="m-label">Проектов</div></div>' : '') +
+    (p.level >= 3 ? '<div class="metric-card"><div class="m-icon">🤝</div><div class="m-value">'+fp.length+'</div><div class="m-label">Партнёров</div><div class="m-sub">'+fp.filter(x=>x['Статус']==='Активный').length+' активных</div></div>' : '') +
+    '<div class="metric-card"><div class="m-icon">✅</div><div class="m-value">'+active.length+'</div><div class="m-label">'+(p.level<=1?'Мои задачи':'Задач в работе')+'</div><div class="m-sub">'+(overdue.length?'🔴 '+overdue.length+' просрочено':'всё в срок')+'</div></div>'+
     '<div class="metric-card"><div class="m-icon">📁</div><div class="m-value">'+fpr.length+'</div><div class="m-label">Подпроектов</div></div>'+
-    '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">'+DATA.staff.length+'</div><div class="m-label">Команда</div></div>';
+    (p.canManageStaff ? '<div class="metric-card"><div class="m-icon">👥</div><div class="m-value">'+DATA.staff.filter(s=>(s['Статус']||'Активный')!=='Ожидает'&&s['Статус']!=='❌ Удалён').length+'</div><div class="m-label">Команда</div></div>' : '');
 
-  // Revenue chart
+  // Revenue chart — CEO/Зам only
   const rchEl = document.getElementById('dash-revenue-chart');
-  if (rchEl) rchEl.innerHTML = renderRevenueChart();
+  if (rchEl) rchEl.innerHTML = (p.level >= 3) ? renderRevenueChart() : '';
 
-  // Pipeline summary
-  const sDirs = (DATA.directions||[]).filter(d => d['Проект'] === 'Сайты');
+  // Pipeline summary — based on user's visible directions
+  const sDirs = fDirs.filter(d => d['Проект'] === 'Сайты');
   const pEl = document.getElementById('dash-pipeline-summary');
   if (pEl && sDirs.length) {
     const tPipe = sDirs.filter(d=>(d['stage']||'lead')!=='done').reduce((s,d)=>s+(Number(d['Цена'])||0),0);
@@ -3332,6 +3418,34 @@ function renderDashboard() {
         return cnt ? '<span style="padding:3px 10px;border-radius:12px;background:var(--bg);font-size:11px;color:var(--text2)">'+s.name+' <b>'+cnt+'</b></span>' : '';
       }).join('') + '</div>' +
       '<div style="font-size:12px;color:var(--text2)">💰 Получено: <b style="color:var(--green)">'+tPaid.toLocaleString('ru')+'₽</b> · В работе: <b style="color:var(--accent)">'+tPipe.toLocaleString('ru')+'₽</b></div></div>';
+  } else if (pEl) { pEl.innerHTML = ''; }
+
+  // MY EARNINGS — show for all employees (FIX 12)
+  const earningsEl = document.getElementById('dash-earnings');
+  if (earningsEl && USER) {
+    const myDeals = (DATA.directions||[]).filter(d => d['Проект']==='Сайты' && d['Оплачено'] && d['Менеджер'] === USER.name);
+    const myTotal = myDeals.reduce((s,d) => {
+      const price = Number(d['Цена'])||0;
+      const pricing = SITE_PRICING[d['Тип сайта']] || {};
+      const pct = pricing.managerPct || 15;
+      return s + Math.round(price * pct / 100);
+    }, 0);
+    const myPending = (DATA.directions||[]).filter(d => d['Проект']==='Сайты' && !d['Оплачено'] && d['Менеджер'] === USER.name);
+    const pendingTotal = myPending.reduce((s,d) => {
+      const price = Number(d['Цена'])||0;
+      const pricing = SITE_PRICING[d['Тип сайта']] || {};
+      return s + Math.round(price * (pricing.managerPct || 15) / 100);
+    }, 0);
+    
+    if (myDeals.length || myPending.length) {
+      earningsEl.innerHTML = '<div class="card" style="padding:16px 20px"><h4 style="font-size:14px;font-weight:600;margin-bottom:10px">💰 Мои доходы</h4>' +
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">' +
+        '<div style="text-align:center;padding:12px;background:rgba(0,212,170,0.08);border-radius:8px"><div style="font-size:11px;color:var(--text2)">✅ Получено</div><div style="font-size:22px;font-weight:700;color:var(--green)">'+myTotal.toLocaleString('ru')+'₽</div><div style="font-size:11px;color:var(--text3)">'+myDeals.length+' сделок</div></div>' +
+        '<div style="text-align:center;padding:12px;background:rgba(255,170,0,0.08);border-radius:8px"><div style="font-size:11px;color:var(--text2)">⏳ Ожидается</div><div style="font-size:22px;font-weight:700;color:var(--orange)">'+pendingTotal.toLocaleString('ru')+'₽</div><div style="font-size:11px;color:var(--text3)">'+myPending.length+' в работе</div></div>' +
+        '</div></div>';
+    } else {
+      earningsEl.innerHTML = '';
+    }
   }
 
   // Overdue table
@@ -3570,6 +3684,19 @@ function renderStaff() {
   
   const p = getUserPerms();
   let staff = getStaffForProject(staffProjectFilter);
+  
+  // FIX 6: Non-CEO users only see staff in their project/direction
+  if (!p.seeAll && USER && USER.direction && USER.direction !== 'Все') {
+    const userProjKey = Object.keys(PROJECTS).find(k => getProjectDirs(k).includes(USER.direction) || PROJECTS[k].name === USER.direction);
+    if (userProjKey) {
+      const myDirs = getProjectDirs(userProjKey);
+      staff = staff.filter(s => {
+        const sd = s['Направление']||'';
+        const sp = s['Проект']||'';
+        return sd === USER.direction || myDirs.includes(sd) || sp === PROJECTS[userProjKey]?.name || sd === 'Все' || s['Роль'] === 'CEO';
+      });
+    }
+  }
   
   // Direction filter
   if (staffDirFilter !== 'Все') {
@@ -3904,6 +4031,7 @@ function updateDirectionOptions(projName) {
 }
 
 function saveSettings() {
+  if (!USER || USER.role !== 'CEO') { toast('⛔ Только CEO может менять настройки','error'); return; }
   localStorage.setItem('rkt_config', JSON.stringify({
     AI_URL: CONFIG.AI_URL
   }));
@@ -4378,8 +4506,9 @@ function renderSiteGenerator() {
     '<textarea id="sg-extra" rows="2" placeholder="Добавить карту, форму заказа, галерею фото..."></textarea></div>' +
 
     '<div style="display:flex;gap:10px;margin-top:20px">' +
-    '<button class="btn btn-primary" onclick="generateSite()" style="flex:1">🚀 Сгенерировать сайт</button>' +
-    '<button class="btn btn-secondary" onclick="fillSiteDemo()" style="flex:0 0 auto">📋 Заполнить пример</button>' +
+    '<button class="btn btn-primary" onclick="generateSite()" style="flex:1">🤖 Сгенерировать (ИИ)</button>' +
+    '<button class="btn btn-secondary" onclick="generateSiteLocal()" style="flex:0 0 auto">⚡ Быстрый шаблон</button>' +
+    '<button class="btn btn-secondary" onclick="fillSiteDemo()" style="flex:0 0 auto">📋 Пример</button>' +
     '</div>' +
     '</div></div></div>';
 }
@@ -4480,16 +4609,84 @@ async function generateSite() {
         iDoc.open(); iDoc.write(html); iDoc.close();
         // Auto-resize iframe
         setTimeout(() => {
-          try { iframe.style.height = Math.max(700, doc.body.scrollHeight + 50) + 'px'; } catch(e){}
+          try { iframe.style.height = Math.max(700, iDoc.body.scrollHeight + 50) + 'px'; } catch(e){}
         }, 500);
       }
     }, 100);
     toast('Сайт сгенерирован!','success');
   } catch(e) {
-    siteGenStep = 'form';
-    renderSubprojectView();
-    toast('Ошибка генерации: ' + e.message,'error');
+    // Fallback: generate site locally with template
+    const fallbackHtml = generateLocalSite(sgd);
+    if (fallbackHtml) {
+      sgd.html = fallbackHtml;
+      siteGenStep = 'preview';
+      renderSubprojectView();
+      setTimeout(() => {
+        const iframe = document.getElementById('site-preview-iframe');
+        if (iframe) {
+          const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+          iDoc.open(); iDoc.write(fallbackHtml); iDoc.close();
+        }
+      }, 100);
+      toast('⚠️ ИИ недоступен. Создан шаблонный сайт. Можно редактировать вручную.','warning');
+    } else {
+      siteGenStep = 'form';
+      renderSubprojectView();
+      toast('Ошибка генерации: ' + e.message,'error');
+    }
   }
+}
+
+function generateLocalSite(d) {
+  const themes = {
+    warm: {bg:'#FFF8F0',primary:'#E85D04',secondary:'#F48C06',text:'#370617',hero:'linear-gradient(135deg,#E85D04,#F48C06)'},
+    cool: {bg:'#F0F4F8',primary:'#1E88E5',secondary:'#42A5F5',text:'#1A237E',hero:'linear-gradient(135deg,#1565C0,#42A5F5)'},
+    dark: {bg:'#1a1a2e',primary:'#e94560',secondary:'#0f3460',text:'#eee',hero:'linear-gradient(135deg,#16213e,#0f3460)'},
+    nature:{bg:'#F1F8E9',primary:'#2E7D32',secondary:'#66BB6A',text:'#1B5E20',hero:'linear-gradient(135deg,#2E7D32,#66BB6A)'},
+    luxury:{bg:'#FFF8E1',primary:'#BF953F',secondary:'#FCF6BA',text:'#3E2723',hero:'linear-gradient(135deg,#BF953F,#AA771C)'},
+    auto:  {bg:'#F8F9FA',primary:'#00d4aa',secondary:'#4dabf7',text:'#212529',hero:'linear-gradient(135deg,#00d4aa,#4dabf7)'}
+  };
+  const t = themes[d.theme] || themes.auto;
+  const svc = (d.services||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const svcHtml = svc.length ? svc.map(s=>'<div style="background:white;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);text-align:center"><div style="font-size:28px;margin-bottom:8px">✨</div><h3 style="margin:0;font-size:16px">'+s+'</h3></div>').join('') : '';
+  
+  return `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${d.name||'Сайт'}</title>
+<meta name="description" content="${(d.desc||'').substring(0,160)}">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;color:${t.text};background:${t.bg}}
+.hero{background:${t.hero};color:white;padding:100px 20px;text-align:center}
+.hero h1{font-size:clamp(28px,5vw,48px);margin-bottom:16px}
+.hero p{font-size:18px;opacity:.9;max-width:600px;margin:0 auto 30px}
+.btn{display:inline-block;padding:14px 32px;background:white;color:${t.primary};border-radius:50px;text-decoration:none;font-weight:700;transition:.3s;margin:6px}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.15)}
+.btn-outline{background:transparent;border:2px solid white;color:white}
+section{padding:60px 20px;max-width:1000px;margin:0 auto}
+h2{font-size:28px;text-align:center;margin-bottom:30px;color:${t.primary}}
+.services{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;padding:20px 0}
+.contact{background:${t.primary};color:white;padding:50px 20px;text-align:center;border-radius:0}
+.contact a{color:white;text-decoration:none;font-size:20px;display:block;margin:8px 0}
+footer{text-align:center;padding:20px;font-size:13px;color:#888;background:#111;color:#666}
+</style></head><body>
+<div class="hero">
+<h1>${d.name||'Добро пожаловать'}</h1>
+<p>${d.desc||d.type||''}</p>
+${d.phone?'<a href="tel:'+d.phone+'" class="btn">📞 Позвонить</a>':''}
+<a href="#contact" class="btn btn-outline">Связаться</a>
+</div>
+${d.desc?'<section><h2>О нас</h2><p style="text-align:center;max-width:700px;margin:0 auto;line-height:1.8">'+d.desc+'</p></section>':''}
+${svcHtml?'<section><h2>Услуги</h2><div class="services">'+svcHtml+'</div></section>':''}
+${d.prices?'<section><h2>Цены</h2><p style="text-align:center;font-size:18px">'+d.prices+'</p></section>':''}
+<div class="contact" id="contact">
+<h2 style="color:white">Контакты</h2>
+${d.phone?'<a href="tel:'+d.phone+'">📞 '+d.phone+'</a>':''}
+${d.address?'<p style="margin:12px 0">📍 '+(d.city?d.city+', ':'')+d.address+'</p>':''}
+${d.hours?'<p style="margin:12px 0">🕐 '+d.hours+'</p>':''}
+${d.social?'<p style="margin:12px 0">📱 '+d.social+'</p>':''}
+</div>
+<footer>© ${new Date().getFullYear()} ${d.name||''} · Сделано в RKT Hub</footer>
+</body></html>`;
 }
 
 function regenerateSite() { siteGenStep = 'form'; renderSubprojectView(); setTimeout(generateSite, 100); }
@@ -4530,6 +4727,38 @@ function buildSitePrompt(d) {
 14. Без внешних зависимостей кроме шрифтов и карты
 
 Верни ПОЛНЫЙ рабочий HTML файл.`;
+}
+
+function generateSiteLocal() {
+  const name = document.getElementById('sg-name')?.value?.trim();
+  const type = document.getElementById('sg-type')?.value?.trim();
+  const desc = document.getElementById('sg-desc')?.value?.trim();
+  if (!name || !type || !desc) { toast('Заполните обязательные поля (*)','error'); return; }
+  const sgd = getSiteGenData();
+  Object.assign(sgd, {
+    name, type, desc,
+    city: document.getElementById('sg-city')?.value?.trim() || '',
+    address: document.getElementById('sg-address')?.value?.trim() || '',
+    phone: document.getElementById('sg-phone')?.value?.trim() || '',
+    social: document.getElementById('sg-social')?.value?.trim() || '',
+    hours: document.getElementById('sg-hours')?.value?.trim() || '',
+    services: document.getElementById('sg-services')?.value?.trim() || '',
+    prices: document.getElementById('sg-prices')?.value?.trim() || '',
+    theme: document.getElementById('sg-theme')?.value || 'auto',
+    style: document.getElementById('sg-style')?.value || 'modern',
+    extra: document.getElementById('sg-extra')?.value?.trim() || ''
+  });
+  sgd.html = generateLocalSite(sgd);
+  siteGenStep = 'preview';
+  renderSubprojectView();
+  setTimeout(() => {
+    const iframe = document.getElementById('site-preview-iframe');
+    if (iframe) {
+      const iDoc = iframe.contentDocument || iframe.contentWindow.document;
+      iDoc.open(); iDoc.write(sgd.html); iDoc.close();
+    }
+  }, 100);
+  toast('⚡ Шаблонный сайт создан! Можно скачать или перегенерировать через ИИ.','success');
 }
 
 function downloadSiteHtml() {
@@ -5581,16 +5810,25 @@ function confirmDelete(type, id, name) {
   confirmCallback = async function(ok) {
     if(ok) {
       const sheetMap = {partner:'Партнёры',task:'Задачи',staff:'Сотрудники',comm:'Коммуникации'};
+      const tableMap = {partner:'partners',task:'tasks',staff:'staff',comm:'communications'};
       const dataMap = {partner:'partners',task:'tasks',staff:'staff',comm:'comms'};
-      // Mark as deleted in Google Sheet
-      if (sheetMap[type]) {
-        await apiWrite(sheetMap[type], { ID: id, 'Статус': '❌ Удалён' });
+      // Actually delete from Supabase
+      try {
+        const table = tableMap[type];
+        if (table) {
+          await SB.from(table).delete().eq('id', id);
+        }
+      } catch(e) {
+        // Fallback: mark as deleted
+        if (sheetMap[type]) {
+          await apiWrite(sheetMap[type], { ID: id, 'Статус': '❌ Удалён' }, 'update');
+        }
       }
       // Remove from local data
       if(DATA[dataMap[type]]) DATA[dataMap[type]] = DATA[dataMap[type]].filter(i=>i.ID!==id);
       renderAll();
       toast('🗑 Удалено','warning');
-      setTimeout(loadData, 2000);
+      setTimeout(loadData, 1500);
     }
   };
 }
@@ -5617,6 +5855,15 @@ async function handleApproval(id, approved) {
       const rowData = JSON.parse(item['Данные']);
       await apiWrite(item['Лист'], rowData);
       toast('✅ Одобрено и записано в «'+item['Лист']+'»','success');
+      
+      // Send Telegram notification to the applicant
+      if (rowData['Telegram_ID'] || rowData.Telegram_ID) {
+        const tgId = rowData['Telegram_ID'] || rowData.Telegram_ID;
+        const msg = approved 
+          ? '✅ Ваша заявка одобрена!\n\n👤 ' + (rowData['Имя']||'') + '\n📋 Роль: ' + (rowData['Роль']||'Сотрудник') + '\n\nТеперь вы можете войти в систему RKT Hub по своему Telegram ID.'
+          : '❌ Ваша заявка отклонена.\n\nОбратитесь к руководителю для уточнения.';
+        sendTelegramNotification(tgId, msg);
+      }
     } catch(e) {
       toast('✅ Одобрено (данные записаны)','success');
     }
@@ -5625,6 +5872,24 @@ async function handleApproval(id, approved) {
   }
   renderAll();
   setTimeout(loadData, 1500);
+}
+
+// Send Telegram notification via n8n webhook
+async function sendTelegramNotification(chatId, message) {
+  try {
+    await fetch(CONFIG.AI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'telegram_notify',
+        chat_id: String(chatId),
+        message: message,
+        source: 'web'
+      })
+    });
+  } catch(e) {
+    console.log('TG notification failed:', e);
+  }
 }
 
 // ============================================================
