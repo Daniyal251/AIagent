@@ -5824,44 +5824,62 @@ async function handleFileUpload(input) {
   if (!input.files || !input.files.length) return;
   
   for (const file of input.files) {
-    toast('Загрузка: ' + file.name + '...','info');
+    toast('📤 Загрузка: ' + file.name + '...','info');
     
     try {
-      // Upload via API (if endpoint exists) or save reference
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('direction', currentSubproject || '');
-      formData.append('user', USER.name || '');
+      const folder = (currentSubproject || 'Общее').replace(/[^a-zA-Zа-яА-Я0-9_ -]/g, '');
+      const timestamp = Date.now();
+      const safeName = file.name.replace(/[^a-zA-Zа-яА-Я0-9._-]/g, '_');
+      const path = folder + '/' + timestamp + '_' + safeName;
       
-      // Try to upload (this would need a dedicated upload endpoint in n8n)
-      // For now, just log to sheet
-      const writeData = {
-        action: 'add_document',
-        sheet: 'Документы',
-        data: {
-          'Файл': file.name,
-          'Папка': currentSubproject || 'Общее',
-          'Загрузил': USER.name || 'Веб',
-          'Дата': new Date().toISOString().split('T')[0],
-          'Размер': formatFileSize(file.size)
-        }
+      // 1. Upload to Supabase Storage
+      const { data: uploadData, error: uploadErr } = await SB.storage
+        .from('documents')
+        .upload(path, file, { contentType: file.type, upsert: false });
+      
+      if (uploadErr) throw uploadErr;
+      
+      // 2. Get public URL
+      const { data: urlData } = SB.storage.from('documents').getPublicUrl(path);
+      const publicUrl = urlData?.publicUrl || '';
+      
+      // 3. Save metadata to documents table
+      const docRow = {
+        id: 'D' + timestamp.toString(36).toUpperCase(),
+        filename: file.name,
+        folder: currentSubproject || 'Общее',
+        uploaded_by: USER?.name || 'Веб',
+        upload_date: new Date().toISOString().split('T')[0],
+        link: publicUrl,
+        size: formatFileSize(file.size),
+        direction: currentSubproject || '',
+        project: PROJECTS[currentProject]?.name || ''
       };
       
-      await fetch(CONFIG.AI_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(writeData)
-      });
+      const { error: metaErr } = await SB.from('documents').insert(docRow);
+      if (metaErr) console.warn('Meta save error:', metaErr);
       
-      toast('✅ ' + file.name + ' — записан в реестр','success');
+      toast('✅ ' + file.name + ' загружен!','success');
     } catch(e) {
-      toast('Ошибка: ' + e.message,'error');
+      console.error('Upload error:', e);
+      // Fallback: save just metadata via API
+      try {
+        await apiWrite('Документы', {
+          'Файл': file.name,
+          'Папка': currentSubproject || 'Общее',
+          'Загрузил': USER?.name || 'Веб',
+          'Дата': new Date().toISOString().split('T')[0],
+          'Размер': formatFileSize(file.size)
+        });
+        toast('⚠️ ' + file.name + ' — метаданные сохранены (файл не загружен: ' + e.message + ')','warning');
+      } catch(e2) {
+        toast('❌ Ошибка: ' + e.message,'error');
+      }
     }
   }
   
   input.value = '';
-  // Reload data to show new files
-  setTimeout(() => { loadData(); }, 1000);
+  setTimeout(() => { loadData(); renderSubprojectView(); }, 800);
 }
 
 function formatFileSize(bytes) {
@@ -6378,6 +6396,18 @@ function openModal(type, existingData) {
 
   document.getElementById('modalBody').innerHTML = html;
   document.getElementById('modalOverlay').classList.add('show');
+  
+  // Auto-filter directions by selected project (for staff form)
+  if (type === 'staff') {
+    const projSel = document.getElementById('field-Проект');
+    if (projSel) updateDirectionOptions(projSel.value);
+    // Restore direction value after filter
+    if (editingItem) {
+      const dirSel = document.getElementById('field-Направление');
+      if (dirSel) dirSel.value = editingItem['Направление'] || 'Все';
+    }
+  }
+  
   setTimeout(() => { const f=document.getElementById('field-'+def.fields[0].name); if(f)f.focus(); }, 200);
 }
 
