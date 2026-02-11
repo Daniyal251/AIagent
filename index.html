@@ -1596,9 +1596,9 @@ tbody tr:last-child td { border-bottom: none; }
     <div id="authForgot" style="display:none">
       <div style="text-align:center;margin-bottom:16px">
         <div style="font-size:36px;margin-bottom:8px">🔑</div>
-        <div style="font-size:14px;color:var(--text2)">Введите телефон или @тег.<br>Новый пароль придёт в Telegram.</div>
+        <div style="font-size:14px;color:var(--text2)">Введите телефон, @тег или Telegram ID.<br>Новый пароль придёт в Telegram.</div>
       </div>
-      <input class="login-input" id="forgotId" type="text" placeholder="Телефон или @telegram">
+      <input class="login-input" id="forgotId" type="text" placeholder="Телефон, @telegram или Telegram ID">
       <button class="login-btn" style="margin-top:12px" onclick="doForgotPass()">
         <span id="forgotBtnText">Сбросить пароль</span>
       </button>
@@ -3031,24 +3031,21 @@ async function doForgotPass() {
     // Save new password hash
     await SB.from('staff').update({ pin_hash: hash }).eq('id', staff.ID||staff.id);
     
-    // Try to send via Telegram bot
-    const tgId = staff.Telegram_ID || staff['Telegram_ID'];
-    if (tgId && CONFIG.TG_BOT_TOKEN) {
+    // Try to send via Telegram bot (through n8n webhook)
+    const tgId = staff.Telegram_ID || staff['Telegram_ID'] || staff.telegram_id;
+    if (tgId) {
       try {
-        await fetch('https://api.telegram.org/bot'+CONFIG.TG_BOT_TOKEN+'/sendMessage', {
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ chat_id: tgId, text: '🔑 Ваш новый пароль для RKT HUB: '+tempPass+'\n\nСмените его после входа в разделе Профиль.', parse_mode:'HTML' })
-        });
+        await sendTelegramNotification(tgId, '🔑 Ваш новый пароль для RKT HUB:\n\n`' + tempPass + '`\n\nСмените его после входа в разделе Профиль.');
         errEl.style.color = 'var(--green)';
         errEl.textContent = '✅ Новый пароль отправлен в Telegram!';
       } catch(e) {
         errEl.style.color = 'var(--orange)';
-        errEl.textContent = '⚠️ Не удалось отправить в TG. Новый пароль: '+tempPass;
+        errEl.textContent = '⚠️ Не удалось отправить в TG. Новый пароль: ' + tempPass;
       }
     } else {
       // No TG — show password directly
       errEl.style.color = 'var(--orange)';
-      errEl.textContent = '⚠️ Telegram не привязан. Новый пароль: '+tempPass;
+      errEl.textContent = '⚠️ Telegram не привязан. Новый пароль: ' + tempPass;
     }
     errEl.style.display = 'block';
     document.getElementById('forgotBtnText').textContent = 'Сбросить пароль';
