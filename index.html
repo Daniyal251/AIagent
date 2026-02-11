@@ -2917,7 +2917,7 @@ function doTelegramLogin() {
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.94 8.13l-1.97 9.28c-.15.67-.54.83-1.09.52l-3.02-2.23-1.45 1.4c-.16.16-.3.3-.61.3l.22-3.05 5.55-5.02c.24-.22-.05-.33-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.66-.64.13-.95l11.57-4.46c.54-.2 1.01.13.83.93z"/></svg>
         Открыть @${botName}
       </a>
-      <input class="login-input" id="tgCodeInput" type="text" placeholder="Код из бота или ваш Telegram ID" style="text-align:center" onkeydown="if(event.key==='Enter')verifyTgCode()">
+      <input class="login-input" id="tgCodeInput" type="text" placeholder="6-значный код из бота" style="text-align:center;font-size:18px;letter-spacing:6px" maxlength="6" onkeydown="if(event.key==='Enter')verifyTgCode()">
       <button class="login-btn" style="margin-top:10px" onclick="verifyTgCode()">
         <span id="tgVerifyBtnText">Подтвердить</span>
       </button>
@@ -2942,7 +2942,7 @@ function cancelTgLogin() {
 async function verifyTgCode() {
   const code = (document.getElementById('tgCodeInput')?.value||'').trim();
   const errEl = document.getElementById('tgError');
-  if (!code) { errEl.textContent='Введите код или Telegram ID'; errEl.style.display='block'; return; }
+  if (!code) { errEl.textContent='Введите 6-значный код из бота'; errEl.style.display='block'; return; }
   
   document.getElementById('tgVerifyBtnText').textContent = '⏳ Проверка...';
   errEl.style.display = 'none';
@@ -2952,37 +2952,47 @@ async function verifyTgCode() {
     
     let staff = null;
     
-    // Try as Telegram ID (numeric)
-    if (/^\d+$/.test(code)) {
-      staff = _staffCache.find(s => String(s.Telegram_ID||'').trim() === code);
-    }
-    
-    // Try as auth token (if bot writes to tg_auth_tokens table)
-    if (!staff) {
-      try {
-        const { data } = await SB.from('tg_auth_tokens').select('*').eq('token', code).single();
-        if (data?.staff_id) {
-          staff = _staffCache.find(s => (s.ID||s.id) === data.staff_id);
-        } else if (data?.telegram_id) {
-          staff = _staffCache.find(s => String(s.Telegram_ID||'').trim() === String(data.telegram_id));
+    // 1) Try as auth token from tg_auth_tokens (primary method)
+    try {
+      const { data } = await SB.from('tg_auth_tokens').select('*').eq('token', code).single();
+      if (data) {
+        // Check expiry (5 min)
+        const created = new Date(data.created_at).getTime();
+        if (Date.now() - created > 5 * 60 * 1000) {
+          await SB.from('tg_auth_tokens').delete().eq('token', code).catch(()=>{});
+          errEl.textContent = '❌ Код истёк. Отправьте /login в боте заново.';
+          errEl.style.display = 'block';
+          document.getElementById('tgVerifyBtnText').textContent = 'Подтвердить';
+          return;
         }
-        if (data) await SB.from('tg_auth_tokens').delete().eq('token', code).catch(()=>{});
-      } catch(e) { /* table may not exist */ }
+        if (data.staff_id) {
+          staff = _staffCache.find(s => (s.ID||s.id) === data.staff_id);
+        } else if (data.telegram_id) {
+          staff = _staffCache.find(s => String(s.Telegram_ID||s.telegram_id||'').trim() === String(data.telegram_id));
+        }
+        // Delete used token (one-time)
+        await SB.from('tg_auth_tokens').delete().eq('token', code).catch(()=>{});
+      }
+    } catch(e) { /* table may not exist */ }
+    
+    // 2) Fallback: try as Telegram ID (numeric, for backward compat)
+    if (!staff && /^\d{5,}$/.test(code)) {
+      staff = _staffCache.find(s => String(s.Telegram_ID||s.telegram_id||'').trim() === code);
     }
     
-    // Try as @username
+    // 3) Try as @username
     if (!staff && code.startsWith('@')) {
       const uname = code.slice(1).toLowerCase();
-      staff = _staffCache.find(s => (s['Username']||'').toLowerCase().replace('@','') === uname);
+      staff = _staffCache.find(s => (s['Username']||s.username||'').toLowerCase().replace('@','') === uname);
     }
     
     if (staff) {
       errEl.style.color = 'var(--green)';
-      errEl.textContent = '✅ Найден: ' + (staff['Имя']||'') + '. Входим...';
+      errEl.textContent = '✅ Найден: ' + (staff['Имя']||staff.name||'') + '. Входим...';
       errEl.style.display = 'block';
       setTimeout(() => { cancelTgLogin(); completeLogin(staff); }, 600);
     } else {
-      errEl.textContent = 'Пользователь не найден. Проверьте код или ID.';
+      errEl.textContent = '❌ Код не найден или истёк. Отправьте /login в боте.';
       errEl.style.display = 'block';
       document.getElementById('tgVerifyBtnText').textContent = 'Подтвердить';
     }
@@ -4555,31 +4565,176 @@ async function resetStaffPassword(staffId, staffName) {
   }
 }
 
+// ---- PASSWORD CHANGE WITH TELEGRAM CODE CONFIRMATION ----
+let _pwdChangeState = {};
+
 async function changeMyPassword() {
   if (!USER) return;
-  const oldPass = prompt('Текущий пароль:');
-  if (!oldPass) return;
-  
-  // Verify current password
-  const oldHash = await hashPassword(oldPass);
   const staff = _staffCache.find(s => (s.ID||s.id) === USER.id);
-  if (!staff || oldHash !== (staff['pin_hash']||'')) {
-    toast('❌ Неверный текущий пароль', 'error');
+  if (!staff) { toast('❌ Профиль не найден','error'); return; }
+  
+  const tgId = staff.Telegram_ID || staff.telegram_id || '';
+  if (!tgId) {
+    toast('❌ Telegram не привязан. Привяжите через бота @' + (CONFIG.TG_BOT||'AIhroject_bot'), 'error');
     return;
   }
   
-  const newPass = prompt('Новый пароль (мин. 4 символа):');
-  if (!newPass || newPass.length < 4) { toast('❌ Пароль слишком короткий', 'error'); return; }
-  const newPass2 = prompt('Повторите новый пароль:');
-  if (newPass !== newPass2) { toast('❌ Пароли не совпадают', 'error'); return; }
+  _pwdChangeState = { staffId: USER.id, tgId, step: 1 };
   
+  // Show password change modal
+  let overlay = document.getElementById('pwdChangeOverlay');
+  if (overlay) overlay.remove();
+  
+  overlay = document.createElement('div');
+  overlay.id = 'pwdChangeOverlay';
+  overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.7);z-index:10000;display:flex;align-items:center;justify-content:center;animation:fadeIn .2s';
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border-radius:16px;padding:28px;width:380px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="font-size:36px;margin-bottom:8px">🔐</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text)">Смена пароля</div>
+      </div>
+      <div id="pwdStep1">
+        <input class="login-input" id="pwdNew" type="password" placeholder="Новый пароль (мин. 4 символа)" style="margin-bottom:10px">
+        <input class="login-input" id="pwdNew2" type="password" placeholder="Повторите новый пароль" onkeydown="if(event.key==='Enter')pwdSendCode()">
+        <button class="login-btn" style="margin-top:12px;width:100%" onclick="pwdSendCode()">
+          <span id="pwdSendBtnText">📱 Отправить код в Telegram</span>
+        </button>
+      </div>
+      <div id="pwdStep2" style="display:none">
+        <div style="text-align:center;font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">
+          📱 Код подтверждения отправлен в<br><b>Telegram</b>. Введите его ниже:
+        </div>
+        <input class="login-input" id="pwdCode" type="text" placeholder="6-значный код" style="text-align:center;font-size:20px;letter-spacing:8px" maxlength="6" onkeydown="if(event.key==='Enter')pwdVerifyCode()">
+        <button class="login-btn" style="margin-top:12px;width:100%" onclick="pwdVerifyCode()">
+          <span id="pwdVerifyBtnText">✅ Подтвердить</span>
+        </button>
+        <div style="text-align:center;margin-top:10px">
+          <a href="#" onclick="pwdSendCode();return false" style="color:var(--accent);font-size:12px">🔄 Отправить код заново</a>
+        </div>
+      </div>
+      <div class="login-error" id="pwdError"></div>
+      <div style="text-align:center;margin-top:14px">
+        <a href="#" onclick="closePwdChange();return false" style="color:var(--text3);font-size:12px">← Отмена</a>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = (e) => { if (e.target === overlay) closePwdChange(); };
+  document.getElementById('pwdNew').focus();
+}
+
+function closePwdChange() {
+  const el = document.getElementById('pwdChangeOverlay');
+  if (el) el.remove();
+  _pwdChangeState = {};
+}
+
+async function pwdSendCode() {
+  const errEl = document.getElementById('pwdError');
+  errEl.style.display = 'none';
+  
+  const p1 = document.getElementById('pwdNew').value;
+  const p2 = document.getElementById('pwdNew2').value;
+  
+  if (!p1 || p1.length < 4) { errEl.textContent='❌ Пароль мин. 4 символа'; errEl.style.display='block'; return; }
+  if (p1 !== p2) { errEl.textContent='❌ Пароли не совпадают'; errEl.style.display='block'; return; }
+  
+  document.getElementById('pwdSendBtnText').textContent = '⏳ Отправка...';
+  
+  // Generate 6-digit code
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  _pwdChangeState.code = code;
+  _pwdChangeState.codeTime = Date.now();
+  _pwdChangeState.newPassHash = await hashPassword(p1);
+  
+  // Save code to tg_auth_tokens
   try {
-    const newHash = await hashPassword(newPass);
-    await SB.from('staff').update({ pin_hash: newHash }).eq('id', USER.id);
-    if (staff) staff['pin_hash'] = newHash;
-    toast('✅ Пароль изменён', 'success');
+    await SB.from('tg_auth_tokens').insert({
+      token: code,
+      staff_id: _pwdChangeState.staffId,
+      telegram_id: _pwdChangeState.tgId,
+      type: 'password_change'
+    });
+  } catch(e) { /* table may not exist, use local check */ }
+  
+  // Send code via Telegram
+  try {
+    await sendTelegramNotification(
+      _pwdChangeState.tgId,
+      '🔐 *Смена пароля*\n\nКод подтверждения: `' + code + '`\n\n⏰ Код действует 5 минут.\n⚠️ Если вы не запрашивали смену пароля — проигнорируйте.'
+    );
   } catch(e) {
-    toast('❌ Ошибка: '+e.message, 'error');
+    errEl.textContent = '❌ Не удалось отправить код в Telegram';
+    errEl.style.display = 'block';
+    document.getElementById('pwdSendBtnText').textContent = '📱 Отправить код в Telegram';
+    return;
+  }
+  
+  // Switch to step 2
+  document.getElementById('pwdStep1').style.display = 'none';
+  document.getElementById('pwdStep2').style.display = 'block';
+  document.getElementById('pwdSendBtnText').textContent = '📱 Отправить код в Telegram';
+  document.getElementById('pwdCode').focus();
+  toast('📱 Код отправлен в Telegram', 'success');
+}
+
+async function pwdVerifyCode() {
+  const errEl = document.getElementById('pwdError');
+  errEl.style.display = 'none';
+  const entered = (document.getElementById('pwdCode')?.value||'').trim();
+  
+  if (!entered || entered.length !== 6) { errEl.textContent='Введите 6-значный код'; errEl.style.display='block'; return; }
+  
+  document.getElementById('pwdVerifyBtnText').textContent = '⏳ Проверка...';
+  
+  // Check expiry (5 min)
+  if (Date.now() - (_pwdChangeState.codeTime||0) > 5 * 60 * 1000) {
+    errEl.textContent = '❌ Код истёк. Отправьте новый.';
+    errEl.style.display = 'block';
+    document.getElementById('pwdVerifyBtnText').textContent = '✅ Подтвердить';
+    return;
+  }
+  
+  // Verify code (local + DB)
+  let valid = (entered === _pwdChangeState.code);
+  
+  if (!valid) {
+    try {
+      const { data } = await SB.from('tg_auth_tokens').select('*').eq('token', entered).eq('staff_id', _pwdChangeState.staffId).single();
+      if (data) {
+        valid = true;
+        await SB.from('tg_auth_tokens').delete().eq('token', entered).catch(()=>{});
+      }
+    } catch(e) { /* table may not exist */ }
+  }
+  
+  if (!valid) {
+    errEl.textContent = '❌ Неверный код';
+    errEl.style.display = 'block';
+    document.getElementById('pwdVerifyBtnText').textContent = '✅ Подтвердить';
+    return;
+  }
+  
+  // Code verified — change password
+  try {
+    await SB.from('staff').update({ pin_hash: _pwdChangeState.newPassHash }).eq('id', _pwdChangeState.staffId);
+    const staff = _staffCache.find(s => (s.ID||s.id) === _pwdChangeState.staffId);
+    if (staff) staff['pin_hash'] = _pwdChangeState.newPassHash;
+    
+    // Cleanup used code from DB
+    try { await SB.from('tg_auth_tokens').delete().eq('token', _pwdChangeState.code).catch(()=>{}); } catch(e) {}
+    
+    closePwdChange();
+    toast('✅ Пароль успешно изменён!', 'success');
+    
+    // Notify via Telegram
+    try {
+      await sendTelegramNotification(_pwdChangeState.tgId, '✅ Пароль успешно изменён в RKT HUB.');
+    } catch(e) {}
+  } catch(e) {
+    errEl.textContent = '❌ Ошибка: ' + e.message;
+    errEl.style.display = 'block';
+    document.getElementById('pwdVerifyBtnText').textContent = '✅ Подтвердить';
   }
 }
 
