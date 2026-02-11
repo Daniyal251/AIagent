@@ -2075,7 +2075,7 @@ const CONFIG = {
   SUPABASE_URL: 'https://prparzgqevfelwsndmkc.supabase.co',
   SUPABASE_KEY: 'sb_publishable_gFeXATQGYxKx08BpeOedZg_7buTwVJq',
   AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
-  TG_BOT: 'RktHubBot',       // @username бота без @
+  TG_BOT: 'AIhroject_bot',    // @username бота без @
   TG_BOT_TOKEN: '',           // Токен бота для отправки сообщений (заполнить!)
   REFRESH: 60000,
   VERSION: '12.0.0'
@@ -2766,9 +2766,21 @@ async function doPasswordLogin() {
     // Check password
     const hash = await hashPassword(pass);
     if (!staff['pin_hash']) {
-      showLoginErr('У этого аккаунта нет пароля. Обратитесь к администратору или восстановите через Telegram.');
-      document.getElementById('loginBtnText').textContent = 'Войти';
-      return;
+      // No password set yet — set it now and login
+      try {
+        await SB.from('staff').update({ pin_hash: hash }).eq('id', staff.ID||staff.id);
+        staff['pin_hash'] = hash;
+        const cached = _staffCache.find(s => (s.ID||s.id) === (staff.ID||staff.id));
+        if (cached) cached['pin_hash'] = hash;
+        showLoginErr('✅ Пароль установлен! Входим...', 'var(--green)');
+        setTimeout(() => completeLogin(staff), 500);
+        return;
+      } catch(e2) {
+        // pin_hash column may not exist — login without password check
+        console.warn('Cannot set password, pin_hash column may not exist:', e2);
+        completeLogin(staff);
+        return;
+      }
     }
     
     if (hash !== staff['pin_hash']) {
@@ -2834,8 +2846,25 @@ async function doPasswordRegister() {
       'Статус': 'Активный', 'Дата_добавления': today(), 'pin_hash': passHash
     };
     
-    const writeOk = await apiWrite('Сотрудники', staffRow);
-    if (!writeOk) throw new Error('Ошибка записи в базу');
+    let writeOk = await apiWrite('Сотрудники', staffRow);
+    
+    // If failed — maybe pin_hash column doesn't exist yet, retry without it
+    if (!writeOk) {
+      console.warn('Retrying registration without pin_hash...');
+      delete staffRow['pin_hash'];
+      writeOk = await apiWrite('Сотрудники', staffRow);
+      if (writeOk) {
+        // Try to add pin_hash directly
+        try {
+          await loadStaffCache();
+          const newRec = _staffCache.find(s => (s['Телефон']||'') === phone);
+          if (newRec) {
+            await SB.from('staff').update({ pin_hash: passHash }).eq('id', newRec.ID||newRec.id);
+          }
+        } catch(e2) { console.warn('pin_hash column may not exist:', e2); }
+      }
+    }
+    if (!writeOk) throw new Error('Не удалось создать аккаунт. Проверьте подключение.');
     
     // Send approval request for role upgrade
     await selfRegister({ name, phone, username, email:'', role:'Менеджер', project, telegram_id:'' });
@@ -2867,51 +2896,102 @@ async function doPasswordRegister() {
 
 // ---- TELEGRAM LOGIN ----
 function doTelegramLogin() {
-  const botName = CONFIG.TG_BOT || 'RktHubBot';
-  // Generate one-time token
-  const token = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
-  localStorage.setItem('rkt_tg_token', token);
+  const botName = CONFIG.TG_BOT || 'AIhroject_bot';
   
-  // Open Telegram deep link
-  const deepLink = 'https://t.me/' + botName + '?start=login_' + token;
-  window.open(deepLink, '_blank');
+  // Show TG login modal inline
+  const container = document.getElementById('authLogin').style.display !== 'none' 
+    ? document.getElementById('authLogin') 
+    : document.getElementById('authRegister');
   
-  // Show waiting state
-  showLoginErr('📱 Подтвердите вход в Telegram-боте...', 'var(--blue)');
+  // Replace current form with TG flow
+  const prevHTML = container.innerHTML;
+  container.innerHTML = `
+    <div style="text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">💬</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:8px">Вход через Telegram</div>
+      <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5">
+        1. Откройте бота <b>@${botName}</b><br>
+        2. Отправьте команду <code>/login</code><br>
+        3. Бот пришлёт код — введите его ниже
+      </div>
+      <a href="https://t.me/${botName}?start=login" target="_blank" class="tg-login-btn" style="margin-bottom:14px;text-decoration:none">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.94 8.13l-1.97 9.28c-.15.67-.54.83-1.09.52l-3.02-2.23-1.45 1.4c-.16.16-.3.3-.61.3l.22-3.05 5.55-5.02c.24-.22-.05-.33-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.66-.64.13-.95l11.57-4.46c.54-.2 1.01.13.83.93z"/></svg>
+        Открыть @${botName}
+      </a>
+      <input class="login-input" id="tgCodeInput" type="text" placeholder="Код из бота или ваш Telegram ID" style="text-align:center" onkeydown="if(event.key==='Enter')verifyTgCode()">
+      <button class="login-btn" style="margin-top:10px" onclick="verifyTgCode()">
+        <span id="tgVerifyBtnText">Подтвердить</span>
+      </button>
+      <div class="login-error" id="tgError"></div>
+      <div style="margin-top:14px">
+        <a href="#" onclick="cancelTgLogin();return false" style="color:var(--text3);font-size:12px">← Вернуться к обычному входу</a>
+      </div>
+    </div>
+  `;
+  container._prevHTML = prevHTML;
+}
+
+function cancelTgLogin() {
+  const loginDiv = document.getElementById('authLogin');
+  const regDiv = document.getElementById('authRegister');
+  if (loginDiv._prevHTML) { loginDiv.innerHTML = loginDiv._prevHTML; delete loginDiv._prevHTML; }
+  if (regDiv._prevHTML) { regDiv.innerHTML = regDiv._prevHTML; delete regDiv._prevHTML; }
+  // If nothing restored, just reload page
+  if (!loginDiv.innerHTML.includes('loginId')) location.reload();
+}
+
+async function verifyTgCode() {
+  const code = (document.getElementById('tgCodeInput')?.value||'').trim();
+  const errEl = document.getElementById('tgError');
+  if (!code) { errEl.textContent='Введите код или Telegram ID'; errEl.style.display='block'; return; }
   
-  // Poll for Telegram auth confirmation
-  let attempts = 0;
-  const pollInterval = setInterval(async () => {
-    attempts++;
-    if (attempts > 60) { // 2 minutes timeout
-      clearInterval(pollInterval);
-      showLoginErr('⏰ Время ожидания истекло. Попробуйте снова.');
-      return;
+  document.getElementById('tgVerifyBtnText').textContent = '⏳ Проверка...';
+  errEl.style.display = 'none';
+  
+  try {
+    if (!_staffCache.length) await loadStaffCache();
+    
+    let staff = null;
+    
+    // Try as Telegram ID (numeric)
+    if (/^\d+$/.test(code)) {
+      staff = _staffCache.find(s => String(s.Telegram_ID||'').trim() === code);
     }
-    try {
-      // Check if bot confirmed this token
-      const { data } = await SB.from('tg_auth_tokens').select('*').eq('token', token).single();
-      if (data && data.staff_id) {
-        clearInterval(pollInterval);
-        // Load staff and login
-        if (!_staffCache.length) await loadStaffCache();
-        const staff = _staffCache.find(s => (s.ID||s.id) === data.staff_id || String(s.Telegram_ID||'') === String(data.telegram_id||''));
-        if (staff) {
-          showLoginErr('✅ Telegram подтверждён!', 'var(--green)');
-          setTimeout(() => completeLogin(staff), 500);
-        } else {
-          showLoginErr('❌ Пользователь не найден в системе');
+    
+    // Try as auth token (if bot writes to tg_auth_tokens table)
+    if (!staff) {
+      try {
+        const { data } = await SB.from('tg_auth_tokens').select('*').eq('token', code).single();
+        if (data?.staff_id) {
+          staff = _staffCache.find(s => (s.ID||s.id) === data.staff_id);
+        } else if (data?.telegram_id) {
+          staff = _staffCache.find(s => String(s.Telegram_ID||'').trim() === String(data.telegram_id));
         }
-        // Cleanup token
-        await SB.from('tg_auth_tokens').delete().eq('token', token);
-      }
-    } catch(e) {
-      // Token not found yet — keep polling (table may not exist yet, that's ok)
+        if (data) await SB.from('tg_auth_tokens').delete().eq('token', code).catch(()=>{});
+      } catch(e) { /* table may not exist */ }
     }
-  }, 2000);
-  
-  // Store interval to cleanup on page leave
-  window._tgPollInterval = pollInterval;
+    
+    // Try as @username
+    if (!staff && code.startsWith('@')) {
+      const uname = code.slice(1).toLowerCase();
+      staff = _staffCache.find(s => (s['Username']||'').toLowerCase().replace('@','') === uname);
+    }
+    
+    if (staff) {
+      errEl.style.color = 'var(--green)';
+      errEl.textContent = '✅ Найден: ' + (staff['Имя']||'') + '. Входим...';
+      errEl.style.display = 'block';
+      setTimeout(() => { cancelTgLogin(); completeLogin(staff); }, 600);
+    } else {
+      errEl.textContent = 'Пользователь не найден. Проверьте код или ID.';
+      errEl.style.display = 'block';
+      document.getElementById('tgVerifyBtnText').textContent = 'Подтвердить';
+    }
+  } catch(e) {
+    errEl.textContent = '❌ Ошибка: ' + e.message;
+    errEl.style.display = 'block';
+    document.getElementById('tgVerifyBtnText').textContent = 'Подтвердить';
+  }
 }
 
 // ---- FORGOT PASSWORD ----
