@@ -1508,7 +1508,7 @@ tbody tr:last-child td { border-bottom: none; }
 .view-toggle button.active{background:var(--accent);color:#fff;font-weight:600}
 
 </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="document.getElementById('loginError').textContent='⚠️ Ошибка загрузки. Проверьте интернет.';document.getElementById('loginError').style.display='block'"></script>
 </head>
 <body>
 
@@ -2081,9 +2081,17 @@ const CONFIG = {
   VERSION: '12.0.0'
 };
 
-// Supabase client — ЗАМЕНИ SUPABASE_KEY на свой anon/publishable ключ!
-// Найди его: Supabase → Settings → API → anon public
-const SB = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+// Supabase client
+let SB = null;
+try {
+  if (window.supabase) {
+    SB = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+  } else {
+    console.error('Supabase library not loaded! Check CDN or internet connection.');
+  }
+} catch(e) {
+  console.error('Supabase init error:', e);
+}
 
 // ============================================================
 // COLUMN MAPPING: Supabase (English) ↔ Frontend (Russian)
@@ -2658,6 +2666,7 @@ async function hashPassword(pass) {
 
 // Load staff cache (for internal use, not displayed to user)
 async function loadStaffCache() {
+  if (!SB) { console.warn('No Supabase connection'); return; }
   try {
     const { data, error } = await SB.from('staff').select('*');
     if (error) throw error;
@@ -2737,6 +2746,7 @@ async function doPasswordLogin() {
   const errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
   
+  if (!SB) { showLoginErr('⚠️ Нет подключения к базе данных. Проверьте интернет и обновите страницу.'); return; }
   if (!id) { showLoginErr('Введите телефон, @тег или email'); return; }
   if (!pass) { showLoginErr('Введите пароль'); return; }
   
@@ -2787,6 +2797,8 @@ async function doPasswordRegister() {
   const pass2 = document.getElementById('regPass2').value;
   const errEl = document.getElementById('regError');
   errEl.style.display = 'none';
+  
+  if (!SB) { errEl.textContent='⚠️ Нет подключения к базе. Обновите страницу.'; errEl.style.display='block'; return; }
   
   // Validation
   if (!name) { errEl.textContent='Укажите ФИО'; errEl.style.display='block'; return; }
