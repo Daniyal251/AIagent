@@ -80,6 +80,31 @@ a:hover { text-decoration: underline; }
   .sp-two-col { grid-template-columns: 1fr !important; }
 }
 
+/* Auth tabs & telegram button */
+.auth-tab { flex:1;padding:10px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;border-radius:8px;transition:all .2s;font-family:inherit }
+.auth-tab.active { background:var(--accent);color:#fff }
+.auth-tab:not(.active):hover { background:var(--bg4) }
+.tg-login-btn { width:100%;padding:12px;border-radius:var(--radius-sm);border:1px solid #0088cc;background:rgba(0,136,204,.08);color:#0088cc;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .2s;font-family:inherit }
+.tg-login-btn:hover { background:rgba(0,136,204,.15);border-color:#006daa }
+
+/* Staff picker cards */
+.staff-pick {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 14px; border-radius: 10px; cursor: pointer;
+  border: 1px solid transparent; transition: all .15s;
+  background: var(--bg3);
+}
+.staff-pick:hover { border-color: var(--accent); background: rgba(0,212,170,.06); }
+.staff-pick .sp-ava {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 16px; color: #fff; flex-shrink: 0;
+}
+.staff-pick .sp-info { flex: 1; min-width: 0; }
+.staff-pick .sp-info .sp-n { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.staff-pick .sp-info .sp-r { font-size: 11px; color: var(--text2); }
+.staff-pick .sp-tag { font-size: 11px; color: var(--text3); }
+
 /* ============================================================
    LOGIN SCREEN
    ============================================================ */
@@ -1487,57 +1512,99 @@ tbody tr:last-child td { border-bottom: none; }
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
+<!-- AUTH SCREEN -->
 <div class="login-screen" id="loginScreen">
-  <div class="login-card">
+  <div class="login-card" style="width:440px;max-width:95vw">
     <span class="login-icon">🏥</span>
     <div class="login-logo">RKT HUB</div>
     <div class="login-sub">Система управления проектами</div>
 
-    <!-- LOGIN TAB -->
-    <div id="loginTab">
-      <label class="login-label">Ваш Telegram ID</label>
-      <input class="login-input" id="loginTgId" type="text" placeholder="Например: 1144907578" autofocus>
-      <div class="login-hint">
-        Узнайте свой ID: напишите <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a> в Telegram
+    <!-- AUTH TABS -->
+    <div style="display:flex;gap:0;margin-bottom:20px;background:var(--bg3);border-radius:10px;padding:3px;border:1px solid var(--border)">
+      <button id="authTabLogin" class="auth-tab active" onclick="showAuthTab('login')">🔑 Вход</button>
+      <button id="authTabReg" class="auth-tab" onclick="showAuthTab('register')">📝 Регистрация</button>
+    </div>
+
+    <!-- ===== LOGIN FORM ===== -->
+    <div id="authLogin">
+      <div style="display:grid;gap:10px">
+        <input class="login-input" id="loginId" type="text" placeholder="Телефон, @telegram или email" autocomplete="username" autofocus>
+        <div style="position:relative">
+          <input class="login-input" id="loginPass" type="password" placeholder="Пароль" autocomplete="current-password" onkeydown="if(event.key==='Enter')doPasswordLogin()" style="padding-right:44px">
+          <button onclick="togglePassVis('loginPass',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3)" title="Показать">👁</button>
+        </div>
       </div>
-      <button class="login-btn" id="loginBtn" onclick="doLogin()">
-        <span id="loginBtnText">Войти в систему</span>
+      <button class="login-btn" onclick="doPasswordLogin()" style="margin-top:14px">
+        <span id="loginBtnText">Войти</span>
       </button>
       <div class="login-error" id="loginError"></div>
-      <div style="margin-top:16px;text-align:center">
-        <a href="#" onclick="toggleRegForm();return false" style="color:var(--accent);font-size:13px">📝 Нет аккаунта? Зарегистрироваться</a>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:18px 0 14px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--text3)">или</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <button class="tg-login-btn" onclick="doTelegramLogin()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.94 8.13l-1.97 9.28c-.15.67-.54.83-1.09.52l-3.02-2.23-1.45 1.4c-.16.16-.3.3-.61.3l.22-3.05 5.55-5.02c.24-.22-.05-.33-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.66-.64.13-.95l11.57-4.46c.54-.2 1.01.13.83.93z"/></svg>
+        Войти через Telegram
+      </button>
+
+      <div style="text-align:center;margin-top:14px">
+        <a href="#" onclick="showForgotPass();return false" style="color:var(--text3);font-size:12px">Забыли пароль?</a>
       </div>
     </div>
 
-    <!-- REGISTER TAB -->
-    <div id="registerTab" style="display:none">
-      <label class="login-label">👤 ФИО *</label>
-      <input class="login-input" id="regName" type="text" placeholder="Иванов Иван Иванович">
-      <label class="login-label" style="margin-top:8px">📱 Telegram ID *</label>
-      <input class="login-input" id="regTgId" type="text" placeholder="Узнайте у @userinfobot">
-      <label class="login-label" style="margin-top:8px">📞 Телефон</label>
-      <input class="login-input" id="regPhone" type="text" placeholder="+7 900 123-45-67">
-      <label class="login-label" style="margin-top:8px">📧 Email</label>
-      <input class="login-input" id="regEmail" type="text" placeholder="email@example.com">
-      <label class="login-label" style="margin-top:8px">💼 Роль</label>
-      <select class="login-input" id="regRole" style="padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px">
-        <option value="Менеджер">Менеджер</option>
-        <option value="Руководитель">Руководитель</option>
-        <option value="Инженер">Инженер</option>
-        <option value="Разработчик">Разработчик</option>
-      </select>
-      <label class="login-label" style="margin-top:8px">📂 Проект</label>
-      <select class="login-input" id="regProject" style="padding:10px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px">
-        <option value="РКТ">РКТ</option>
-        <option value="Сайты">Сайты</option>
-      </select>
-      <button class="login-btn" style="margin-top:12px" onclick="doRegister()">
-        <span id="regBtnText">📝 Отправить заявку</span>
+    <!-- ===== REGISTER FORM ===== -->
+    <div id="authRegister" style="display:none">
+      <div style="display:grid;gap:10px">
+        <input class="login-input" id="regName" type="text" placeholder="👤 ФИО *">
+        <input class="login-input" id="regPhone" type="tel" placeholder="📱 Телефон * (+7 900 123-45-67)">
+        <input class="login-input" id="regUsername" type="text" placeholder="💬 Telegram @тег">
+        <select class="login-input" id="regProject" style="padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:14px">
+          <option value="">📂 Выберите проект *</option>
+          <option value="Сайты">🌐 Сайты</option>
+          <option value="РКТ">🏥 РКТ</option>
+        </select>
+        <div style="position:relative">
+          <input class="login-input" id="regPass" type="password" placeholder="🔒 Пароль * (мин. 4 символа)" autocomplete="new-password" style="padding-right:44px">
+          <button onclick="togglePassVis('regPass',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3)">👁</button>
+        </div>
+        <div style="position:relative">
+          <input class="login-input" id="regPass2" type="password" placeholder="🔒 Повторите пароль *" autocomplete="new-password" onkeydown="if(event.key==='Enter')doPasswordRegister()" style="padding-right:44px">
+          <button onclick="togglePassVis('regPass2',this)" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:16px;color:var(--text3)">👁</button>
+        </div>
+      </div>
+      <button class="login-btn" style="margin-top:14px" onclick="doPasswordRegister()">
+        <span id="regBtnText">Зарегистрироваться</span>
       </button>
       <div class="login-error" id="regError"></div>
-      <div style="margin-top:12px;text-align:center">
-        <a href="#" onclick="toggleRegForm();return false" style="color:var(--accent);font-size:13px">← Уже есть аккаунт? Войти</a>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:18px 0 14px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--text3)">или</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <button class="tg-login-btn" onclick="doTelegramLogin()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.94 8.13l-1.97 9.28c-.15.67-.54.83-1.09.52l-3.02-2.23-1.45 1.4c-.16.16-.3.3-.61.3l.22-3.05 5.55-5.02c.24-.22-.05-.33-.37-.13l-6.87 4.33-2.96-.92c-.64-.2-.66-.64.13-.95l11.57-4.46c.54-.2 1.01.13.83.93z"/></svg>
+        Регистрация через Telegram
+      </button>
+    </div>
+
+    <!-- ===== FORGOT PASSWORD ===== -->
+    <div id="authForgot" style="display:none">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:36px;margin-bottom:8px">🔑</div>
+        <div style="font-size:14px;color:var(--text2)">Введите телефон или @тег.<br>Новый пароль придёт в Telegram.</div>
+      </div>
+      <input class="login-input" id="forgotId" type="text" placeholder="Телефон или @telegram">
+      <button class="login-btn" style="margin-top:12px" onclick="doForgotPass()">
+        <span id="forgotBtnText">Сбросить пароль</span>
+      </button>
+      <div class="login-error" id="forgotError"></div>
+      <div style="text-align:center;margin-top:12px">
+        <a href="#" onclick="showAuthTab('login');return false" style="color:var(--accent);font-size:13px">← Назад к входу</a>
       </div>
     </div>
   </div>
@@ -1843,6 +1910,8 @@ tbody tr:last-child td { border-bottom: none; }
         <h3 style="margin-bottom:20px;font-size:15px">🔗 Подключения</h3>
         <div class="form-group"><label>🔗 Supabase URL</label><input type="text" id="settingsApiUrl" readonly onchange="updateConfig('API_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
         <div class="form-group"><label>AI URL</label><input type="text" id="settingsAiUrl" onchange="updateConfig('AI_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
+        <div class="form-group"><label>🤖 Telegram Bot (@username)</label><input type="text" id="settingsTgBot" onchange="updateConfig('TG_BOT',this.value)" placeholder="RktHubBot" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
+        <div class="form-group"><label>🔑 Telegram Bot Token</label><input type="password" id="settingsTgToken" onchange="updateConfig('TG_BOT_TOKEN',this.value)" placeholder="123456:ABC-..." style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
         <div class="form-group"><label>📦 База данных</label><input type="text" id="settingsWriteUrl" value="Supabase PostgreSQL" readonly onchange="updateConfig('WRITE_URL',this.value)" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);width:100%;font-family:monospace;font-size:12px"></div>
         <div class="form-group"><label>📋 Статус</label><input type="text" id="settingsSheetId" value="✅ Supabase подключена" readonly onchange="updateConfig('SHEET_ID',this.value)" placeholder="1Te4CsdcN1rvpznHNyPa24MuH5ZSx45DUUDREWO5mtoE" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--accent);width:100%;font-family:monospace;font-size:12px;font-weight:600"></div>
         <p style="font-size:11px;color:var(--text3);margin-top:-8px">Скопируйте ID из URL таблицы: docs.google.com/spreadsheets/d/<b style="color:var(--accent)">ВОТ_ЭТОТ_ID</b>/edit</p>
@@ -1859,6 +1928,11 @@ tbody tr:last-child td { border-bottom: none; }
           <div class="detail-item"><div class="detail-label">Роль</div><div class="detail-value" id="s-role">—</div></div>
           <div class="detail-item"><div class="detail-label">Направление</div><div class="detail-value" id="s-dir">—</div></div>
           <div class="detail-item"><div class="detail-label">Telegram ID</div><div class="detail-value" id="s-tgid">—</div></div>
+          <div class="detail-item"><div class="detail-label">Телефон</div><div class="detail-value" id="s-phone">—</div></div>
+        </div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;gap:8px">
+          <button class="btn btn-secondary" onclick="changeMyPassword()" style="font-size:13px">🔒 Сменить пароль</button>
+          <button class="btn btn-danger" onclick="doLogout()" style="font-size:13px">🚪 Выйти</button>
         </div>
       </div>
       <div class="card" style="padding:28px;margin-top:16px">
@@ -2001,8 +2075,10 @@ const CONFIG = {
   SUPABASE_URL: 'https://prparzgqevfelwsndmkc.supabase.co',
   SUPABASE_KEY: 'sb_publishable_gFeXATQGYxKx08BpeOedZg_7buTwVJq',
   AI_URL: 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai',
+  TG_BOT: 'RktHubBot',       // @username бота без @
+  TG_BOT_TOKEN: '',           // Токен бота для отправки сообщений (заполнить!)
   REFRESH: 60000,
-  VERSION: '11.0.0'
+  VERSION: '12.0.0'
 };
 
 // Supabase client — ЗАМЕНИ SUPABASE_KEY на свой anon/publishable ключ!
@@ -2015,8 +2091,8 @@ const SB = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY
 const COL_MAP = {
   staff: {
     id:'ID', name:'Имя', role:'Роль', project:'Проект', direction:'Направление',
-    telegram_id:'Telegram_ID', phone:'Телефон', email:'Email', hire_date:'Дата_найма',
-    status:'Статус', created_at:'Дата_добавления', updated_at:'Обновлено'
+    telegram_id:'Telegram_ID', username:'Username', phone:'Телефон', email:'Email', hire_date:'Дата_найма',
+    status:'Статус', created_at:'Дата_добавления', updated_at:'Обновлено', pin_hash:'pin_hash'
   },
   partners: {
     id:'ID', name:'Название', country:'Страна', direction:'Направление', product:'Продукт',
@@ -2464,8 +2540,9 @@ const FORM_DEFS = {
       { name: 'Проект', type: 'select', options: () => ['Все', ...Object.values(PROJECTS).map(p=>p.name)], onchange: 'updateDirectionOptions(this.value)' },
       { name: 'Направление', type: 'select', id: 'field-direction', options: () => ['Все', ...getDirectionOptions()] },
       { name: 'Telegram_ID', type: 'text', placeholder: 'Числовой Telegram ID' },
+      { name: 'Username', type: 'text', placeholder: '@username' },
       { name: 'Email', type: 'text', placeholder: 'email' },
-      { name: 'Телефон', type: 'text', placeholder: '+7...' },
+      { name: 'Телефон', type: 'text', placeholder: '+7...', required: true },
       { name: 'Статус', type: 'select', options: ['Активный', 'Ожидает', 'Отключён'] }
     ]
   },
@@ -2564,95 +2641,349 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function checkSavedLogin() {
   loadSavedSettings();
   const s = localStorage.getItem('rkt_user');
-  if (s) { try { USER=JSON.parse(s); if(USER&&USER.tgId){USER.role=normalizeRole(USER.role);showApp();return;} } catch(e){} localStorage.removeItem('rkt_user'); }
+  if (s) { try { USER=JSON.parse(s); if(USER&&(USER.tgId||USER.phone||USER.name)){USER.role=normalizeRole(USER.role);showApp();return;} } catch(e){} localStorage.removeItem('rkt_user'); }
+  // Not logged in — load staff cache
+  loadStaffCache();
 }
 
-async function doLogin() {
-  const tgId = document.getElementById('loginTgId').value.trim();
-  if (!tgId) { showLoginErr('Введите Telegram ID'); return; }
-  if (!/^\d+$/.test(tgId)) { showLoginErr('Только цифры'); return; }
+// ============ PASSWORD AUTH ============
+let _staffCache = [];
+const ROLE_COLORS = {'CEO':'#e74c3c','Зам':'#e67e22','Руководитель':'#3498db','Менеджер':'#00d4aa','Разработчик':'#9b59b6','Инженер':'#1abc9c','Сотрудник':'#7f8c8d'};
 
-  document.getElementById('loginBtn').disabled = true;
-  document.getElementById('loginBtnText').textContent = 'Подключаюсь...';
-  document.getElementById('loginError').style.display = 'none';
+async function hashPassword(pass) {
+  const data = new TextEncoder().encode(pass + '_rkt_hub_2026');
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(hash)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
 
+// Load staff cache (for internal use, not displayed to user)
+async function loadStaffCache() {
   try {
-    // Fetch staff directly from Supabase
-    const { data: staffRows, error: staffErr } = await SB.from('staff').select('*').eq('telegram_id', tgId.trim());
-    if (staffErr) throw staffErr;
-    
-    const mappedStaff = mapFromDb('staff', staffRows || []);
-    const staff = mappedStaff[0];
-    if (!staff) { showLoginErr('⛔ ID «'+tgId+'» не найден. Обратитесь к администратору.'); resetLogin(); return; }
-
-    USER = {
-      id: staff.ID||'', tgId: String(staff.Telegram_ID).trim(),
-      name: staff['Имя']||'Сотрудник', role: normalizeRole(staff['Роль']||'Сотрудник'),
-      originalRole: staff['Роль']||'',
-      direction: staff['Направление']||'Все', project: staff['Проект']||'',
-      email: staff['Email']||'', phone: staff['Телефон']||'', username: staff['Username']||''
-    };
-    localStorage.setItem('rkt_user', JSON.stringify(USER));
-    showApp();
+    const { data, error } = await SB.from('staff').select('*');
+    if (error) throw error;
+    _staffCache = (data||[]).map(s => mapFromDb('staff',[s])[0]).filter(Boolean);
   } catch(e) {
-    console.error(e);
-    showLoginErr('⚠️ Не удалось подключиться. Проверьте интернет.');
-    resetLogin();
+    console.error('loadStaffCache:', e);
   }
 }
 
-function showLoginErr(m) { const e=document.getElementById('loginError'); e.textContent=m; e.style.display='block'; }
-function resetLogin() { document.getElementById('loginBtn').disabled=false; document.getElementById('loginBtnText').textContent='Войти в систему'; }
-
-function toggleRegForm() {
-  const lt = document.getElementById('loginTab');
-  const rt = document.getElementById('registerTab');
-  if (rt.style.display === 'none') { rt.style.display='block'; lt.style.display='none'; }
-  else { rt.style.display='none'; lt.style.display='block'; }
+// ---- UI TAB SWITCHING ----
+function showAuthTab(tab) {
+  document.getElementById('authLogin').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('authRegister').style.display = tab==='register' ? 'block' : 'none';
+  document.getElementById('authForgot').style.display = tab==='forgot' ? 'block' : 'none';
+  document.getElementById('authTabLogin').classList.toggle('active', tab==='login');
+  document.getElementById('authTabReg').classList.toggle('active', tab==='register');
+  // Clear errors
+  ['loginError','regError','forgotError'].forEach(id => { const e=document.getElementById(id); if(e){e.style.display='none'; e.style.color='';} });
+  // Focus first input
+  if (tab==='login') document.getElementById('loginId')?.focus();
+  if (tab==='register') document.getElementById('regName')?.focus();
+  if (tab==='forgot') document.getElementById('forgotId')?.focus();
 }
 
-async function doRegister() {
-  const name = document.getElementById('regName').value.trim();
-  const tgId = document.getElementById('regTgId').value.trim();
-  const phone = document.getElementById('regPhone').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const role = document.getElementById('regRole').value;
-  const project = document.getElementById('regProject').value;
-  const errEl = document.getElementById('regError');
+function showForgotPass() { showAuthTab('forgot'); }
 
-  if (!name || !tgId) {
-    errEl.textContent = 'Заполните ФИО и Telegram ID';
-    errEl.style.display = 'block';
-    return;
+function togglePassVis(inputId, btn) {
+  const inp = document.getElementById(inputId);
+  if (!inp) return;
+  const isPass = inp.type === 'password';
+  inp.type = isPass ? 'text' : 'password';
+  btn.textContent = isPass ? '🙈' : '👁';
+}
+
+function showLoginErr(m, color) { 
+  const e=document.getElementById('loginError'); 
+  e.textContent=m; e.style.display='block'; e.style.color=color||''; 
+}
+
+// ---- FIND STAFF BY IDENTIFIER ----
+function findStaffByInput(input) {
+  if (!input) return null;
+  const q = input.trim();
+  const allStaff = _staffCache;
+  
+  // @username
+  if (q.startsWith('@')) {
+    const uname = q.slice(1).toLowerCase();
+    return allStaff.find(s => (s['Username']||'').toLowerCase().replace('@','') === uname);
   }
+  // Phone
+  if (/^\+?\d[\d\s\-()]{6,}$/.test(q)) {
+    const clean = q.replace(/[\s\-()]/g, '');
+    return allStaff.find(s => {
+      const sp = (s['Телефон']||'').replace(/[\s\-()]/g, '');
+      return sp && (sp === clean || sp.endsWith(clean.slice(-10)) || clean.endsWith(sp.slice(-10)));
+    });
+  }
+  // Email
+  if (q.includes('@') && q.includes('.')) {
+    return allStaff.find(s => (s['Email']||'').toLowerCase() === q.toLowerCase());
+  }
+  // Telegram ID (digits only)
+  if (/^\d+$/.test(q)) {
+    return allStaff.find(s => String(s.Telegram_ID||'').trim() === q);
+  }
+  // Name (exact then partial)
+  const lower = q.toLowerCase();
+  return allStaff.find(s => (s['Имя']||'').toLowerCase() === lower) ||
+         allStaff.find(s => (s['Имя']||'').toLowerCase().includes(lower));
+}
 
-  document.getElementById('regBtnText').textContent = '⏳ Отправляю...';
+// ---- PASSWORD LOGIN ----
+async function doPasswordLogin() {
+  const id = document.getElementById('loginId').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
-
-  const ok = await selfRegister({
-    name, telegram_id: tgId, phone, email, role, project
-  });
-
-  if (ok) {
-    errEl.style.display = 'block';
-    errEl.style.color = 'var(--green)';
-    errEl.textContent = '✅ Заявка отправлена! Ожидайте одобрения CEO. После одобрения войдите по Telegram ID.';
-    document.getElementById('regBtnText').textContent = '✅ Заявка отправлена';
-  } else {
-    errEl.textContent = '❌ Ошибка отправки. Проверьте подключение.';
-    errEl.style.display = 'block';
-    document.getElementById('regBtnText').textContent = '📝 Отправить заявку';
+  
+  if (!id) { showLoginErr('Введите телефон, @тег или email'); return; }
+  if (!pass) { showLoginErr('Введите пароль'); return; }
+  
+  document.getElementById('loginBtnText').textContent = '⏳ Вход...';
+  
+  try {
+    // Load staff if not loaded
+    if (!_staffCache.length) await loadStaffCache();
+    
+    const staff = findStaffByInput(id);
+    if (!staff) {
+      showLoginErr('Пользователь не найден. Проверьте данные или зарегистрируйтесь.');
+      document.getElementById('loginBtnText').textContent = 'Войти';
+      return;
+    }
+    
+    // Check password
+    const hash = await hashPassword(pass);
+    if (!staff['pin_hash']) {
+      showLoginErr('У этого аккаунта нет пароля. Обратитесь к администратору или восстановите через Telegram.');
+      document.getElementById('loginBtnText').textContent = 'Войти';
+      return;
+    }
+    
+    if (hash !== staff['pin_hash']) {
+      showLoginErr('Неверный пароль');
+      document.getElementById('loginBtnText').textContent = 'Войти';
+      return;
+    }
+    
+    // Success!
+    completeLogin(staff);
+    
+  } catch(e) {
+    console.error('Login error:', e);
+    showLoginErr('⚠️ Ошибка подключения: '+e.message);
+    document.getElementById('loginBtnText').textContent = 'Войти';
   }
+}
+
+// ---- PASSWORD REGISTER ----
+async function doPasswordRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const username = document.getElementById('regUsername').value.trim().replace(/^@/, '');
+  const project = document.getElementById('regProject').value;
+  const pass = document.getElementById('regPass').value;
+  const pass2 = document.getElementById('regPass2').value;
+  const errEl = document.getElementById('regError');
+  errEl.style.display = 'none';
+  
+  // Validation
+  if (!name) { errEl.textContent='Укажите ФИО'; errEl.style.display='block'; return; }
+  if (!phone) { errEl.textContent='Укажите телефон'; errEl.style.display='block'; return; }
+  if (!project) { errEl.textContent='Выберите проект'; errEl.style.display='block'; return; }
+  if (!pass || pass.length < 4) { errEl.textContent='Пароль минимум 4 символа'; errEl.style.display='block'; return; }
+  if (pass !== pass2) { errEl.textContent='Пароли не совпадают'; errEl.style.display='block'; return; }
+  
+  document.getElementById('regBtnText').textContent = '⏳ Регистрация...';
+  
+  try {
+    if (!_staffCache.length) await loadStaffCache();
+    
+    // Check duplicates
+    const dup = _staffCache.find(s => {
+      const sp = (s['Телефон']||'').replace(/[\s\-()]/g, '');
+      const cp = phone.replace(/[\s\-()]/g, '');
+      return (sp && cp && (sp === cp || sp.endsWith(cp.slice(-10)))) ||
+             (username && (s['Username']||'').toLowerCase().replace('@','') === username.toLowerCase());
+    });
+    if (dup) {
+      errEl.textContent = 'Пользователь с таким '+(dup['Телефон']?'телефоном':'тегом')+' уже существует. Войдите.';
+      errEl.style.display = 'block';
+      document.getElementById('regBtnText').textContent = 'Зарегистрироваться';
+      return;
+    }
+    
+    const passHash = await hashPassword(pass);
+    
+    const staffRow = {
+      'Имя': name, 'Роль': 'Сотрудник', 'Проект': project, 'Направление': '',
+      'Telegram_ID': '', 'Username': username, 'Email': '', 'Телефон': phone,
+      'Статус': 'Активный', 'Дата_добавления': today(), 'pin_hash': passHash
+    };
+    
+    const writeOk = await apiWrite('Сотрудники', staffRow);
+    if (!writeOk) throw new Error('Ошибка записи в базу');
+    
+    // Send approval request for role upgrade
+    await selfRegister({ name, phone, username, email:'', role:'Менеджер', project, telegram_id:'' });
+    
+    // Reload cache and auto-login
+    await loadStaffCache();
+    const newStaff = _staffCache.find(s => (s['Телефон']||'') === phone);
+    
+    if (newStaff) {
+      errEl.style.display = 'block';
+      errEl.style.color = 'var(--green)';
+      errEl.textContent = '✅ Успешная регистрация! Входим...';
+      setTimeout(() => completeLogin(newStaff), 600);
+    } else {
+      errEl.style.display = 'block';
+      errEl.style.color = 'var(--green)';
+      errEl.textContent = '✅ Зарегистрированы! Теперь войдите.';
+      document.getElementById('regBtnText').textContent = 'Зарегистрироваться';
+      setTimeout(() => showAuthTab('login'), 1500);
+    }
+    
+  } catch(e) {
+    console.error('Register error:', e);
+    errEl.textContent = '❌ Ошибка: '+e.message;
+    errEl.style.display = 'block';
+    document.getElementById('regBtnText').textContent = 'Зарегистрироваться';
+  }
+}
+
+// ---- TELEGRAM LOGIN ----
+function doTelegramLogin() {
+  const botName = CONFIG.TG_BOT || 'RktHubBot';
+  // Generate one-time token
+  const token = Date.now().toString(36) + Math.random().toString(36).slice(2,8);
+  localStorage.setItem('rkt_tg_token', token);
+  
+  // Open Telegram deep link
+  const deepLink = 'https://t.me/' + botName + '?start=login_' + token;
+  window.open(deepLink, '_blank');
+  
+  // Show waiting state
+  showLoginErr('📱 Подтвердите вход в Telegram-боте...', 'var(--blue)');
+  
+  // Poll for Telegram auth confirmation
+  let attempts = 0;
+  const pollInterval = setInterval(async () => {
+    attempts++;
+    if (attempts > 60) { // 2 minutes timeout
+      clearInterval(pollInterval);
+      showLoginErr('⏰ Время ожидания истекло. Попробуйте снова.');
+      return;
+    }
+    try {
+      // Check if bot confirmed this token
+      const { data } = await SB.from('tg_auth_tokens').select('*').eq('token', token).single();
+      if (data && data.staff_id) {
+        clearInterval(pollInterval);
+        // Load staff and login
+        if (!_staffCache.length) await loadStaffCache();
+        const staff = _staffCache.find(s => (s.ID||s.id) === data.staff_id || String(s.Telegram_ID||'') === String(data.telegram_id||''));
+        if (staff) {
+          showLoginErr('✅ Telegram подтверждён!', 'var(--green)');
+          setTimeout(() => completeLogin(staff), 500);
+        } else {
+          showLoginErr('❌ Пользователь не найден в системе');
+        }
+        // Cleanup token
+        await SB.from('tg_auth_tokens').delete().eq('token', token);
+      }
+    } catch(e) {
+      // Token not found yet — keep polling (table may not exist yet, that's ok)
+    }
+  }, 2000);
+  
+  // Store interval to cleanup on page leave
+  window._tgPollInterval = pollInterval;
+}
+
+// ---- FORGOT PASSWORD ----
+async function doForgotPass() {
+  const id = document.getElementById('forgotId').value.trim();
+  const errEl = document.getElementById('forgotError');
+  errEl.style.display = 'none';
+  
+  if (!id) { errEl.textContent='Введите телефон или @тег'; errEl.style.display='block'; return; }
+  
+  document.getElementById('forgotBtnText').textContent = '⏳ Отправка...';
+  
+  try {
+    if (!_staffCache.length) await loadStaffCache();
+    const staff = findStaffByInput(id);
+    
+    if (!staff) {
+      errEl.textContent = 'Пользователь не найден';
+      errEl.style.display = 'block';
+      document.getElementById('forgotBtnText').textContent = 'Сбросить пароль';
+      return;
+    }
+    
+    // Generate temp password
+    const tempPass = Math.random().toString(36).slice(2,8).toUpperCase();
+    const hash = await hashPassword(tempPass);
+    
+    // Save new password hash
+    await SB.from('staff').update({ pin_hash: hash }).eq('id', staff.ID||staff.id);
+    
+    // Try to send via Telegram bot
+    const tgId = staff.Telegram_ID || staff['Telegram_ID'];
+    if (tgId && CONFIG.TG_BOT_TOKEN) {
+      try {
+        await fetch('https://api.telegram.org/bot'+CONFIG.TG_BOT_TOKEN+'/sendMessage', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ chat_id: tgId, text: '🔑 Ваш новый пароль для RKT HUB: '+tempPass+'\n\nСмените его после входа в разделе Профиль.', parse_mode:'HTML' })
+        });
+        errEl.style.color = 'var(--green)';
+        errEl.textContent = '✅ Новый пароль отправлен в Telegram!';
+      } catch(e) {
+        errEl.style.color = 'var(--orange)';
+        errEl.textContent = '⚠️ Не удалось отправить в TG. Новый пароль: '+tempPass;
+      }
+    } else {
+      // No TG — show password directly
+      errEl.style.color = 'var(--orange)';
+      errEl.textContent = '⚠️ Telegram не привязан. Новый пароль: '+tempPass;
+    }
+    errEl.style.display = 'block';
+    document.getElementById('forgotBtnText').textContent = 'Сбросить пароль';
+    
+  } catch(e) {
+    errEl.textContent = '❌ Ошибка: '+e.message;
+    errEl.style.display = 'block';
+    document.getElementById('forgotBtnText').textContent = 'Сбросить пароль';
+  }
+}
+
+// ---- COMPLETE LOGIN ----
+function completeLogin(staff) {
+  USER = {
+    id: staff.ID||'', tgId: String(staff.Telegram_ID||'').trim(),
+    name: staff['Имя']||'Сотрудник', role: normalizeRole(staff['Роль']||'Сотрудник'),
+    originalRole: staff['Роль']||'',
+    direction: staff['Направление']||'Все', project: staff['Проект']||'',
+    email: staff['Email']||'', phone: staff['Телефон']||'', username: staff['Username']||''
+  };
+  localStorage.setItem('rkt_user', JSON.stringify(USER));
+  showApp();
 }
 
 function doLogout() {
   USER=null; localStorage.removeItem('rkt_user');
   if(refreshTimer) clearInterval(refreshTimer);
+  if(window._tgPollInterval) clearInterval(window._tgPollInterval);
   document.getElementById('mainApp').style.display='none';
   document.getElementById('loginScreen').style.display='flex';
-  document.getElementById('loginTgId').value='';
-  resetLogin(); document.getElementById('loginError').style.display='none';
+  showAuthTab('login');
+  document.getElementById('loginId').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').style.display='none';
 }
+
 
 function showApp() {
   document.getElementById('loginScreen').style.display='none';
@@ -2663,10 +2994,13 @@ function showApp() {
   document.getElementById('userAvatar').textContent = USER.name.charAt(0).toUpperCase();
   document.getElementById('settingsApiUrl').value = CONFIG.SUPABASE_URL;
   document.getElementById('settingsAiUrl').value = CONFIG.AI_URL;
+  document.getElementById('settingsTgBot').value = CONFIG.TG_BOT || '';
+  document.getElementById('settingsTgToken').value = CONFIG.TG_BOT_TOKEN || '';
   document.getElementById('s-name').textContent = USER.name;
   document.getElementById('s-role').textContent = p.emoji+' '+USER.role;
   document.getElementById('s-dir').textContent = USER.direction;
-  document.getElementById('s-tgid').textContent = USER.tgId;
+  document.getElementById('s-tgid').textContent = USER.username ? '@'+USER.username.replace('@','') : (USER.tgId||'—');
+  document.getElementById('s-phone').textContent = USER.phone || '—';
   document.getElementById('btn-add-staff').style.display = p.canManageStaff?'':'none';
   
   // ROLE-BASED NAV VISIBILITY
@@ -4031,6 +4365,8 @@ function renderStaff() {
         ph += '<div style="font-weight:700">'+esc(s['Имя']||'—')+'</div>';
         ph += '<div style="font-size:11px;color:var(--text2)">'+esc(s['Роль']||'')+ ' · '+esc(s['Направление']||'')+'</div>';
         if(s['Telegram_ID']) ph += '<div style="font-size:11px;color:var(--text3)">TG: '+esc(String(s['Telegram_ID']))+'</div>';
+        if(s['Username']) ph += '<div style="font-size:11px;color:var(--text3)">@'+esc(String(s['Username']).replace('@',''))+'</div>';
+        if(s['Телефон']) ph += '<div style="font-size:11px;color:var(--text3)">📞 '+esc(s['Телефон'])+'</div>';
         ph += '<div style="display:flex;gap:6px;margin-top:8px">';
         ph += '<button class="btn btn-sm btn-primary" onclick="approveStaff(\''+escA(s.ID)+'\')">✅ Принять</button>';
         ph += '<button class="btn btn-sm btn-danger" onclick="confirmDelete(\'staff\',\''+escA(s.ID)+'\',\''+escA(s['Имя'])+'\')">❌ Отклонить</button>';
@@ -4072,14 +4408,17 @@ function renderStaff() {
       h += '</div>';
       
       h += '<div style="display:flex;flex-direction:column;gap:3px;font-size:11px;color:var(--text3)">';
-      if(s['Telegram_ID']) h += '<span>📱 '+esc(String(s['Telegram_ID']))+'</span>';
-      if(s['Email']) h += '<span>✉️ '+esc(s['Email'])+'</span>';
+      if(s['Username']) h += '<span>💬 @'+esc(String(s['Username']).replace('@',''))+'</span>';
       if(s['Телефон']) h += '<span>📞 '+esc(s['Телефон'])+'</span>';
+      if(s['Email']) h += '<span>✉️ '+esc(s['Email'])+'</span>';
+      if(s['Telegram_ID']) h += '<span style="opacity:0.6">ID: '+esc(String(s['Telegram_ID']))+'</span>';
       h += '</div>';
       
       if(p.canManageStaff) {
-        h += '<div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+        h += '<div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);flex-wrap:wrap">';
         h += '<button class="btn btn-sm btn-secondary" onclick="editItem(\'staff\',\''+escA(s.ID)+'\')">✏️</button>';
+        h += s['pin_hash'] ? '<button class="btn btn-sm btn-secondary" onclick="resetStaffPassword(\''+escA(s.ID)+'\',\''+escA(s['Имя'])+'\')">🔓 Сброс пароля</button>' 
+                           : '<span style="font-size:10px;color:var(--orange);padding:4px 8px">⚠️ Нет пароля</span>';
         h += '<button class="btn btn-sm btn-danger" onclick="confirmDelete(\'staff\',\''+escA(s.ID)+'\',\''+escA(s['Имя'])+'\')">🗑</button>';
         h += '</div>';
       }
@@ -4090,6 +4429,67 @@ function renderStaff() {
   }
   h += '</div>';
   document.getElementById('staff-content').innerHTML = h;
+}
+
+async function resetStaffPassword(staffId, staffName) {
+  if (!confirm('Сбросить пароль для '+staffName+'?\nНовый временный пароль будет показан на экране.')) return;
+  try {
+    const tempPass = Math.random().toString(36).slice(2,8).toUpperCase();
+    const hash = await hashPassword(tempPass);
+    await SB.from('staff').update({ pin_hash: hash }).eq('id', staffId);
+    const cached = _staffCache.find(s => (s.ID||s.id) === staffId);
+    if (cached) cached['pin_hash'] = hash;
+    const inData = (DATA.staff||[]).find(s => (s.ID||s.id) === staffId);
+    if (inData) inData['pin_hash'] = hash;
+    
+    // Try send via TG
+    const staff = cached || inData;
+    const tgId = staff?.Telegram_ID || staff?.['Telegram_ID'];
+    if (tgId && CONFIG.TG_BOT_TOKEN) {
+      try {
+        await fetch('https://api.telegram.org/bot'+CONFIG.TG_BOT_TOKEN+'/sendMessage', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ chat_id: tgId, text: '🔑 Ваш новый пароль для RKT HUB: '+tempPass })
+        });
+        toast('✅ Новый пароль отправлен в Telegram для '+staffName, 'success');
+      } catch(e) {
+        alert('Новый пароль для '+staffName+': '+tempPass+'\n\n(Telegram недоступен — передайте лично)');
+      }
+    } else {
+      alert('Новый пароль для '+staffName+': '+tempPass+'\n\nСообщите ему лично.');
+    }
+    renderStaff();
+  } catch(e) {
+    toast('❌ Ошибка: '+e.message, 'error');
+  }
+}
+
+async function changeMyPassword() {
+  if (!USER) return;
+  const oldPass = prompt('Текущий пароль:');
+  if (!oldPass) return;
+  
+  // Verify current password
+  const oldHash = await hashPassword(oldPass);
+  const staff = _staffCache.find(s => (s.ID||s.id) === USER.id);
+  if (!staff || oldHash !== (staff['pin_hash']||'')) {
+    toast('❌ Неверный текущий пароль', 'error');
+    return;
+  }
+  
+  const newPass = prompt('Новый пароль (мин. 4 символа):');
+  if (!newPass || newPass.length < 4) { toast('❌ Пароль слишком короткий', 'error'); return; }
+  const newPass2 = prompt('Повторите новый пароль:');
+  if (newPass !== newPass2) { toast('❌ Пароли не совпадают', 'error'); return; }
+  
+  try {
+    const newHash = await hashPassword(newPass);
+    await SB.from('staff').update({ pin_hash: newHash }).eq('id', USER.id);
+    if (staff) staff['pin_hash'] = newHash;
+    toast('✅ Пароль изменён', 'success');
+  } catch(e) {
+    toast('❌ Ошибка: '+e.message, 'error');
+  }
 }
 
 async function approveStaff(id) {
@@ -4108,6 +4508,7 @@ async function selfRegister(data) {
     'Проект': data.project || '',
     'Направление': data.direction || '',
     'Telegram_ID': data.telegram_id || '',
+    'Username': data.username || '',
     'Email': data.email || '',
     'Телефон': data.phone || '',
     'Статус': 'Активный',
@@ -4329,7 +4730,9 @@ function updateDirectionOptions(projName) {
 function saveSettings() {
   if (!USER || USER.role !== 'CEO') { toast('⛔ Только CEO может менять настройки','error'); return; }
   localStorage.setItem('rkt_config', JSON.stringify({
-    AI_URL: CONFIG.AI_URL
+    AI_URL: CONFIG.AI_URL,
+    TG_BOT: CONFIG.TG_BOT,
+    TG_BOT_TOKEN: CONFIG.TG_BOT_TOKEN
   }));
   toast('✅ Настройки сохранены', 'success');
 }
@@ -4337,8 +4740,10 @@ function saveSettings() {
 function loadSavedSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem('rkt_config') || '{}');
-        if (saved.AI_URL) CONFIG.AI_URL = saved.AI_URL;
-          } catch(e) {}
+    if (saved.AI_URL) CONFIG.AI_URL = saved.AI_URL;
+    if (saved.TG_BOT) CONFIG.TG_BOT = saved.TG_BOT;
+    if (saved.TG_BOT_TOKEN) CONFIG.TG_BOT_TOKEN = saved.TG_BOT_TOKEN;
+  } catch(e) {}
 }
 
 async function testConnection() {
@@ -6230,7 +6635,7 @@ function exportCSV(type) {
 // KEYBOARD
 // ============================================================
 document.addEventListener('keydown', function(e) {
-  if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none') { doLogin(); return; }
+  if(e.key==='Enter'&&document.getElementById('loginScreen').style.display!=='none') { doPasswordLogin(); return; }
   if(e.key==='Escape') {
     if(document.getElementById('confirmOverlay').classList.contains('show')) closeConfirm(false);
     else if(document.getElementById('detailOverlay').classList.contains('show')) closeDetail();
