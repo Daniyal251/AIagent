@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RKT HUB — Управление проектами</title>
+<title>RKT HUB v14 — Управление проектами</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏥</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Unbounded:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 /* ===== CSS VARIABLES ===== */
 :root {
@@ -43,10 +43,11 @@
 
 /* ===== RESET ===== */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+code, pre, .mono, .login-input, .ai-input, .search-input { font-family: 'JetBrains Mono', monospace !important; }
 html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;
@@ -1408,6 +1409,75 @@ tbody tr:last-child td { border-bottom: none; }
 /* ===== MOBILE ===== */
 .mobile-toggle { display: none; }
 
+/* ---- Tablet ---- */
+@media (max-width: 1024px) {
+  .sidebar { width: 60px !important; }
+  .sidebar .logo-section span, .sidebar .nav-item .label,
+  .sidebar .user-bar span, .sidebar .user-bar .user-name { display: none !important; }
+  .sidebar .nav-item { justify-content: center; padding: 12px; }
+  .sidebar .nav-item .icon { margin: 0; font-size: 20px; }
+  .main { margin-left: 60px; }
+}
+
+/* ---- Mobile ---- */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed !important; left: -280px; width: 280px !important;
+    height: 100vh; top: 0; transition: left 0.3s ease; z-index: 1100;
+  }
+  .sidebar.mobile-open { left: 0 !important; }
+  .sidebar.mobile-open .logo-section span, .sidebar.mobile-open .nav-item .label,
+  .sidebar.mobile-open .user-bar span { display: revert !important; }
+  .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1050; }
+  .mobile-overlay.show { display: block; }
+  .main { margin-left: 0 !important; padding: 12px !important; }
+  .page-header h2 { font-size: 20px !important; }
+  .metrics { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .table-wrap, .data-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table.data-table { min-width: 600px; }
+  .slide-over, .slideover, [class*="slide-over"] { width: 100vw !important; max-width: 100vw !important; }
+  .modal { width: 95vw !important; max-width: 95vw !important; }
+  .login-card { padding: 32px 20px !important; width: 100% !important; max-width: 100% !important; }
+  .kanban-wrap, .pipeline-wrap { flex-direction: column !important; }
+  .kanban-col, .pipeline-col { min-width: 100% !important; flex: 1 !important; }
+  .detail-grid, .form-row { grid-template-columns: 1fr !important; }
+  .status-bar { padding: 8px 12px !important; }
+  #mobileMenuBtn { display: block !important; }
+}
+
+/* ---- Small ---- */
+@media (max-width: 480px) {
+  .metrics { grid-template-columns: 1fr !important; }
+  .btn { padding: 8px 12px !important; font-size: 12px !important; }
+  .page-header .actions { flex-wrap: wrap; gap: 6px; }
+  .login-card { padding: 24px 16px !important; }
+}
+
+/* ===== NOTIFICATION CSS ===== */
+.notif-bell { position: relative; cursor: pointer; font-size: 20px; padding: 8px; border-radius: 8px; transition: all 0.2s; user-select: none; }
+.notif-bell:hover { background: var(--bg3); }
+.notif-badge { position: absolute; top: 2px; right: 2px; background: var(--red, #ff6b6b); color: #fff; font-size: 10px; font-weight: 700; min-width: 18px; height: 18px; border-radius: 9px; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.notif-panel { position: fixed; top: 0; right: -400px; width: 400px; max-width: 100vw; height: 100vh; background: var(--bg2); border-left: 1px solid var(--border); z-index: 2000; transition: right 0.3s ease; overflow-y: auto; box-shadow: -4px 0 30px rgba(0,0,0,0.3); }
+.notif-panel.open { right: 0; }
+.notif-item { padding: 14px 20px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.15s; }
+.notif-item:hover { background: var(--bg3); }
+.notif-item.unread { border-left: 3px solid var(--accent); }
+.notif-time { font-size: 11px; color: var(--text3, #666); margin-top: 4px; }
+.notif-text { font-size: 13px; line-height: 1.5; }
+
+/* ===== SIDEBAR TOOLTIPS ===== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .sidebar .nav-item { position: relative; }
+  .sidebar .nav-item[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+    background: var(--bg4, var(--bg3)); color: var(--text);
+    padding: 6px 12px; border-radius: 6px; white-space: nowrap;
+    font-size: 12px; margin-left: 8px; z-index: 999;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3); pointer-events: none;
+  }
+}
+
 @media (max-width: 900px) {
   .sidebar { transform: translateX(-100%); width: 280px; }
   .sidebar.open { transform: translateX(0); box-shadow: var(--shadow-lg); }
@@ -1534,10 +1604,15 @@ tbody tr:last-child td { border-bottom: none; }
 
 <!-- AUTH SCREEN -->
 <div class="login-screen" id="loginScreen">
-  <div class="login-card" style="width:440px;max-width:95vw">
+  <div class="login-card" style="width:440px;max-width:95vw;box-sizing:border-box;padding:48px 40px">
     <span class="login-icon">🏥</span>
     <div class="login-logo">RKT HUB</div>
     <div class="login-sub">Система управления проектами</div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:20px;text-align:left;font-size:13px;color:var(--text2);line-height:1.6">
+      💡 <strong style="color:var(--text)">Как войти:</strong> введите имя, @telegram или телефон, затем пароль.<br>
+      Нет аккаунта? Вкладка «Регистрация» или бот <a href="https://t.me/AIhroject_bot" style="color:var(--accent)">@AIhroject_bot</a>.
+    </div>
 
     <!-- AUTH TABS -->
     <div style="display:flex;gap:0;margin-bottom:20px;background:var(--bg3);border-radius:10px;padding:3px;border:1px solid var(--border)">
@@ -2093,9 +2168,13 @@ tbody tr:last-child td { border-bottom: none; }
 </div>
 
 <div class="toast" id="toast"></div>
-<div class="status-bar">
+<div class="status-bar" id="statusBar">
+  <button id="mobileMenuBtn" aria-label="Открыть меню" onclick="toggleMobileMenu()" style="display:none;background:none;border:none;color:var(--text);font-size:24px;cursor:pointer;padding:4px 8px;margin-right:8px">☰</button>
   <div><span class="dot dot-green" id="statusDot"></span> <span id="statusText">Подключено</span></div>
-  <div id="statusTime"></div>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:12px">
+    <div class="notif-bell" role="button" tabindex="0" aria-label="Уведомления" onclick="toggleNotifPanel()">🔔<span class="notif-badge" id="notifBadge" style="display:none">0</span></div>
+    <div id="statusTime"></div>
+  </div>
 </div>
 
 <script>
@@ -2109,7 +2188,7 @@ const CONFIG = {
   TG_BOT: 'AIhroject_bot',    // @username бота без @
   TG_BOT_TOKEN: '',           // Токен бота для отправки сообщений (заполнить!)
   REFRESH: 60000,
-  VERSION: '12.0.0'
+  VERSION: '14.0.0'
 };
 
 // Supabase client
@@ -2600,7 +2679,7 @@ const FORM_DEFS = {
     title: 'Коммуникация', sheet: 'Коммуникации',
     fields: [
       { name: 'Партнёр', type: 'text', required: true, placeholder: 'С кем общались' },
-      { name: 'Тип', type: 'select', options: ['Звонок', 'Email', 'Встреча', 'Чат', 'Zoom', 'WhatsApp'] },
+      { name: 'Тип', type: 'select', options: ['Звонок', 'Email', 'Встреча', 'Чат', 'Zoom', 'Telegram'] },
       { name: 'Тема', type: 'text', placeholder: 'Тема' },
       { name: 'Результат', type: 'textarea', placeholder: 'Итог, договорённости...' },
       { name: 'Следующий_шаг', type: 'text', placeholder: 'Что делать дальше' },
@@ -2690,6 +2769,8 @@ function today() { return new Date().toISOString().split('T')[0]; }
 // ============================================================
 function checkSavedLogin() {
   loadSavedSettings();
+  loadNotifications();
+  initMobileMenu();
   const s = localStorage.getItem('rkt_user');
   if (s) { try { USER=JSON.parse(s); if(USER&&(USER.tgId||USER.phone||USER.name)){USER.role=normalizeRole(USER.role);showApp();return;} } catch(e){} localStorage.removeItem('rkt_user'); }
   // Not logged in — load staff cache
@@ -2782,6 +2863,27 @@ function findStaffByInput(input) {
 }
 
 // ---- PASSWORD LOGIN ----
+
+// ============================================================
+// BRUTE-FORCE PROTECTION
+// ============================================================
+const LOGIN_ATTEMPTS = {};
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_MS = 5 * 60 * 1000;
+
+function checkLoginRate(identifier) {
+  const now = Date.now();
+  if (!LOGIN_ATTEMPTS[identifier]) LOGIN_ATTEMPTS[identifier] = { count: 0, first: now };
+  const r = LOGIN_ATTEMPTS[identifier];
+  if (now - r.first > LOCKOUT_MS) { r.count = 0; r.first = now; }
+  r.count++;
+  if (r.count > MAX_LOGIN_ATTEMPTS) {
+    return { blocked: true, sec: Math.ceil((LOCKOUT_MS - (now - r.first)) / 1000) };
+  }
+  return { blocked: false };
+}
+function resetLoginRate(id) { delete LOGIN_ATTEMPTS[id]; }
+
 async function doPasswordLogin() {
   const id = document.getElementById('loginId').value.trim();
   const pass = document.getElementById('loginPass').value;
@@ -2790,6 +2892,8 @@ async function doPasswordLogin() {
   
   if (!SB) { showLoginErr('⚠️ Нет подключения к базе данных. Проверьте интернет и обновите страницу.'); return; }
   if (!id) { showLoginErr('Введите телефон, @тег или email'); return; }
+  var _rate = checkLoginRate(id.toLowerCase());
+  if (_rate.blocked) { showLoginErr('Слишком много попыток. Подождите ' + _rate.sec + ' сек.'); return; }
   if (!pass) { showLoginErr('Введите пароль'); return; }
   
   document.getElementById('loginBtnText').textContent = '⏳ Вход...';
@@ -3165,12 +3269,28 @@ function showApp() {
   
   // Supabase Realtime — auto-reload on changes
   SB.channel('rkt-hub-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, () => loadData())
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tasks' }, (payload) => {
+      var t = payload.new || {};
+      addNotification('Новая задача: ' + (t.description || t['Описание'] || 'без описания'), 'task');
+      loadData();
+    })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tasks' }, () => loadData())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'directions' }, (payload) => {
+      if (payload.eventType === 'INSERT') addNotification('Новый клиент в воронке', 'deal');
+      loadData();
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'approvals' }, (payload) => {
+      if (payload.eventType === 'INSERT') addNotification('Новое согласование', 'approval');
+      loadData();
+    })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'staff' }, () => loadData())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'directions' }, () => loadData())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'partners' }, () => loadData())
     .on('postgres_changes', { event: '*', schema: 'public', table: 'approvals' }, () => loadData())
     .subscribe();
+
+  // Onboarding for first-time users
+  setTimeout(checkOnboarding, 800);
 }
 
 // ============================================================
@@ -3438,7 +3558,7 @@ function openSubproject(spName) {
     const eid = escA(dir['ID']||dir.id||'');
     actionsEl.innerHTML = 
       (phone ? '<a href="tel:'+esc(cleanPhone)+'" class="btn btn-primary" style="text-decoration:none">📞 Позвонить</a>' +
-               '<a href="https://wa.me/'+esc(cleanPhone.replace('+',''))+'" target="_blank" class="btn btn-secondary" style="text-decoration:none">💬 WhatsApp</a>' : '') +
+               '<a href="https://t.me/'+esc(cleanPhone.replace('+',''))+'" target="_blank" class="btn btn-secondary" style="text-decoration:none">💬 Telegram</a>' : '') +
       '<button class="btn btn-secondary" onclick="openModal(\'task\')">+ Задача</button>';
   } else {
     actionsEl.innerHTML = 
@@ -4195,6 +4315,48 @@ function renderCommTable(data) {
 function renderDashboard() {
   const p = getUserPerms();
   const isCEO = USER && USER.role === 'CEO';
+  
+  // === CEO/Зам KPI PANEL ===
+  if (isCEO || USER.role === 'Зам') {
+    try {
+      var allDirs = DATA.directions || [];
+      var siteDirs = allDirs.filter(function(d) { return d['Проект'] === 'Сайты'; });
+      var totalLeads = siteDirs.length;
+      var wonDeals = siteDirs.filter(function(d) { return d.stage === 'done'; }).length;
+      var lostDeals = siteDirs.filter(function(d) { return d.stage === 'lost'; }).length;
+      var activeDeals = totalLeads - wonDeals - lostDeals;
+      var convRate = totalLeads > 0 ? ((wonDeals / totalLeads) * 100).toFixed(1) : '0.0';
+      var revenue = siteDirs.filter(function(d) { return d.stage === 'done'; }).reduce(function(s, d) { return s + (parseFloat(d['Цена']) || 0); }, 0);
+      var todayDate = new Date().toISOString().split('T')[0];
+      var overdueFollowups = siteDirs.filter(function(d) {
+        return d['Следующий контакт'] && d['Следующий контакт'] < todayDate && ['done','lost'].indexOf(d.stage) < 0;
+      });
+      var kpi = '<div style="background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:24px">';
+      kpi += '<h3 style="font-size:15px;margin-bottom:16px;color:var(--text2)">📊 KPI Продажи (Сайты)</h3>';
+      kpi += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px" class="metrics">';
+      kpi += '<div style="text-align:center"><div style="font-size:28px;font-weight:700;color:var(--accent)">' + totalLeads + '</div><div style="font-size:12px;color:var(--text2)">Всего</div></div>';
+      kpi += '<div style="text-align:center"><div style="font-size:28px;font-weight:700;color:var(--blue,#4babf7)">' + activeDeals + '</div><div style="font-size:12px;color:var(--text2)">В работе</div></div>';
+      kpi += '<div style="text-align:center"><div style="font-size:28px;font-weight:700;color:var(--green,#4ecdc4)">' + wonDeals + '</div><div style="font-size:12px;color:var(--text2)">Закрыто</div></div>';
+      kpi += '<div style="text-align:center"><div style="font-size:28px;font-weight:700;color:var(--yellow,#ffe66d)">' + convRate + '%</div><div style="font-size:12px;color:var(--text2)">Конверсия</div></div>';
+      kpi += '<div style="text-align:center"><div style="font-size:28px;font-weight:700;color:var(--purple,#a855f7)">' + (typeof fmtMoney === "function" ? fmtMoney(revenue) : revenue.toLocaleString('ru-RU') + ' \u20BD') + '</div><div style="font-size:12px;color:var(--text2)">Выручка</div></div>';
+      kpi += '</div>';
+      if (overdueFollowups.length > 0) {
+        kpi += '<div style="margin-top:16px;padding:12px;background:rgba(255,107,107,0.1);border-radius:10px;border:1px solid rgba(255,107,107,0.2)">';
+        kpi += '<span style="color:var(--red,#ff6b6b);font-weight:600">⚠️ Просроченных follow-up: ' + overdueFollowups.length + '</span>';
+        kpi += '</div>';
+      }
+      kpi += '</div>';
+      var dashEl = document.getElementById('dashboardPage');
+      if (dashEl) {
+        var existing = dashEl.querySelector('.ceo-kpi-panel');
+        if (existing) existing.remove();
+        var div = document.createElement('div');
+        div.className = 'ceo-kpi-panel';
+        div.innerHTML = kpi;
+        dashEl.prepend(div);
+      }
+    } catch(e) { console.warn('KPI render error:', e); }
+  }
   
   // Filter data by user's scope
   let fp = filterByRole(DATA.partners);
@@ -5763,7 +5925,7 @@ function buildSitePrompt(d) {
 4. Красивый современный дизайн с анимациями (CSS transitions, scroll effects)
 5. Яндекс.Карта с адресом (если указан) через iframe
 6. Кнопка "Позвонить" с tel: ссылкой
-7. Кнопка WhatsApp/Telegram для связи
+7. Кнопка Telegram для связи
 8. Все тексты на русском языке
 9. Используй Google Fonts (Montserrat или Inter)
 10. Плавная прокрутка между секциями
@@ -5920,6 +6082,18 @@ function uploadFileWeb() {
 
 async function handleFileUpload(input) {
   if (!input.files || !input.files.length) return;
+  // Validate each file
+  for (var fi = 0; fi < input.files.length; fi++) {
+    var vf = input.files[fi];
+    if (vf.size > MAX_FILE_SIZE) {
+      toast('Файл «' + vf.name + '» слишком большой (макс. 10 МБ)', 'error');
+      input.value = ''; return;
+    }
+    if (ALLOWED_FILE_TYPES.length && ALLOWED_FILE_TYPES.indexOf(vf.type) < 0 && !/\.(pdf|doc|docx|xls|xlsx|jpg|jpeg|png|gif|webp|txt|csv|zip)$/i.test(vf.name)) {
+      toast('Недопустимый тип файла: ' + vf.name, 'error');
+      input.value = ''; return;
+    }
+  }
   
   for (const file of input.files) {
     toast('📤 Загрузка: ' + file.name + '...','info');
@@ -6661,6 +6835,7 @@ function closeModal() {
 
 // Send Telegram notification when task is assigned to staff
 async function notifyTaskAssigned(taskDesc, assigneeName, direction) {
+  addNotification('Новая задача: ' + taskDesc + ' → ' + assigneeName, 'task');
   if (!assigneeName) return;
   // Find staff member's telegram_id
   const staff = DATA.staff.find(s => (s['Имя']||'').includes(assigneeName) || (assigneeName||'').includes(s['Имя']||'___'));
@@ -7130,7 +7305,7 @@ function getWorkflowStep(dir) {
   const dirName = dir['Название'] || dir['name'] || '';
   const tasks = (DATA.tasks||[]).filter(t => t['Направление'] === dirName);
   const steps = {
-    'prospect': { step: 1, icon: '🔍', title: 'Позвоните клиенту', desc: 'Установите первый контакт — позвоните или напишите в WhatsApp', action: 'Позвонил → Первый контакт', nextStage: 'contact', required: ['Телефон'] },
+    'prospect': { step: 1, icon: '🔍', title: 'Позвоните клиенту', desc: 'Установите первый контакт — позвоните или напишите в Telegram', action: 'Позвонил → Первый контакт', nextStage: 'contact', required: ['Телефон'] },
     'contact': { step: 2, icon: '📞', title: 'Ждём ответ клиента', desc: 'Перезвоните через 1-2 дня если не ответил. 80% сделок после 5+ звонков!', action: 'Клиент заинтересован', nextStage: 'interest', required: [] },
     'interest': { step: 3, icon: '✅', title: 'Создайте прототип', desc: 'Клиент заинтересован — покажите ему демо-сайт', action: 'Создать прототип', nextStage: 'proto', required: [] },
     'proto': { step: 4, icon: '🎨', title: 'Отправьте КП', desc: 'Покажите прототип + отправьте коммерческое предложение с ценой', action: 'КП отправлено', nextStage: 'proposal', required: [] },
@@ -7408,7 +7583,7 @@ function openClientCard(id) {
     if (cleanPhone) {
       html += '<div style="display:flex;gap:8px;margin-bottom:12px">';
       html += '<button class="btn btn-secondary" onclick="window.open(\'tel:'+cleanPhone+'\')" style="flex:1">📞 Позвонить</button>';
-      html += '<button class="btn btn-secondary" onclick="window.open(\'https://wa.me/'+cleanPhone.replace('+','')+'\',\'_blank\')" style="flex:1">💬 WhatsApp</button>';
+      html += '<button class="btn btn-secondary" onclick="window.open(\'https://t.me/'+cleanPhone.replace('+','')+'\',\'_blank\')" style="flex:1">💬 Telegram</button>';
       html += '</div>';
     }
     html += '<button class="btn btn-secondary" onclick="logTouch(\''+eid+'\')" style="width:100%;margin-bottom:8px">📞 Записать касание (звонок)</button>';
@@ -7447,8 +7622,8 @@ function openClientCard(id) {
     }
     const phone2 = dir['Телефон']||'';
     if (phone2) {
-      const waLink = 'https://wa.me/'+phone2.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent('Здравствуйте! Мы подготовили прототип сайта для вас: '+(dir['Ссылка']||''));
-      html += '<a href="'+waLink+'" target="_blank" class="btn btn-secondary" style="width:100%;margin-bottom:8px;text-align:center;display:block;background:rgba(37,211,102,0.1);color:#25d366;border-color:#25d366">💬 Отправить в WhatsApp</a>';
+      const tgLink = 'https://t.me/'+phone2.replace(/[^0-9]/g,'')+'?text='+encodeURIComponent('Здравствуйте! Мы подготовили прототип сайта для вас: '+(dir['Ссылка']||''));
+      html += '<a href="'+tgLink+'" target="_blank" class="btn btn-secondary" style="width:100%;margin-bottom:8px;text-align:center;display:block;background:rgba(0,136,204,0.1);color:#0088cc;border-color:#0088cc">💬 Отправить в Telegram</a>';
     }
     html += '<button class="btn btn-primary" onclick="advanceToStage(\''+eid+'\',\'negotiation\')" style="width:100%;font-size:14px;padding:12px">🤝 Клиент видел КП → Переговоры</button>';
     
@@ -7489,6 +7664,10 @@ function openClientCard(id) {
     html += '<div style="font-size:18px;font-weight:700;color:var(--red)">Клиент отказался</div>';
     html += '<div style="font-size:13px;color:var(--text2);margin-top:4px">Причина: '+esc(dir['Причина отказа']||'не указана')+'</div></div>';
     html += '<button class="btn btn-secondary" onclick="advanceToStage(\''+eid+'\',\'prospect\')" style="width:100%">🔄 Вернуть в воронку</button>';
+  }
+  // === SALES SCRIPT BUTTON (for active sales stages) ===
+  if (['prospect','contact','interest','proto','proposal','negotiation','payment'].indexOf(stage) >= 0) {
+    html += '<button class="btn btn-secondary" onclick="showSalesScript(\''+escA(stage)+'\',\''+ename+'\',\''+escA(dir['Тип сайта']||'')+'\' )" style="width:100%;margin-top:10px;background:rgba(75,171,247,0.08);color:var(--blue);border-color:rgba(75,171,247,0.3)">📝 Скрипт продажи</button>';
   }
   html += '</div>';
   
@@ -7890,7 +8069,7 @@ function openSlideOver(id) {
   const cleanPh = (dir['Телефон']||'').replace(/[^\d+]/g,'');
   document.getElementById('so-actions').innerHTML = `
     ${cleanPh?'<button onclick="window.open(\'tel:'+cleanPh+'\')">📞 Позвонить</button>':''}
-    ${cleanPh?'<button onclick="window.open(\'https://wa.me/'+cleanPh.replace('+','')+'\',\'_blank\')">💬 WhatsApp</button>':''}
+    ${cleanPh?'<button onclick="window.open(\'https://t.me/'+cleanPh.replace('+','')+'\',\'_blank\')">💬 Telegram</button>':''}
     <button onclick="logTouch('${id}')">📞 Записать касание</button>
     <button onclick="scheduleFollowUp('${id}')">📅 Напоминание</button>
     <button onclick="addDealFeedback('${id}')">💬 Фидбек</button>
@@ -8132,6 +8311,232 @@ async function toggleTaskDone(taskId) {
 // ============================================================
 // REVENUE CHART (for Dashboard)
 // ============================================================
+
+// ============================================================
+// IN-APP NOTIFICATIONS
+// ============================================================
+var NOTIFICATIONS = [];
+var notifUnread = 0;
+
+function addNotification(text, type, link) {
+  type = type || 'info';
+  NOTIFICATIONS.unshift({ id: Date.now(), text: text, type: type, time: new Date(), read: false, link: link || null });
+  if (NOTIFICATIONS.length > 50) NOTIFICATIONS.pop();
+  notifUnread++;
+  renderNotifBadge();
+  try { localStorage.setItem('rkt_notifs', JSON.stringify(NOTIFICATIONS.slice(0, 50))); } catch(e) {}
+}
+function renderNotifBadge() {
+  var b = document.getElementById('notifBadge');
+  if (b) { b.textContent = notifUnread; b.style.display = notifUnread > 0 ? 'flex' : 'none'; }
+}
+function toggleNotifPanel() {
+  var p = document.getElementById('notifPanel');
+  p.classList.toggle('open');
+  if (p.classList.contains('open')) renderNotifList();
+}
+function closeNotifPanel() { document.getElementById('notifPanel').classList.remove('open'); }
+function renderNotifList() {
+  var el = document.getElementById('notifList');
+  if (!NOTIFICATIONS.length) {
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text3)"><div style="font-size:40px;margin-bottom:12px">🔕</div>Нет уведомлений</div>';
+    return;
+  }
+  var icons = { info: 'ℹ️', task: '📋', deal: '💰', system: '⚙️', approval: '✅' };
+  el.innerHTML = NOTIFICATIONS.slice(0, 30).map(function(n) {
+    return '<div class="notif-item ' + (n.read ? '' : 'unread') + '" onclick="readNotif(' + n.id + ')">' +
+      '<div class="notif-text">' + (icons[n.type] || 'ℹ️') + ' ' + esc(n.text) + '</div>' +
+      '<div class="notif-time">' + timeAgo(n.time) + '</div></div>';
+  }).join('');
+}
+function readNotif(id) {
+  var n = NOTIFICATIONS.find(function(x) { return x.id === id; });
+  if (n && !n.read) { n.read = true; notifUnread = Math.max(0, notifUnread - 1); renderNotifBadge(); }
+  renderNotifList();
+}
+function markAllNotifRead() {
+  NOTIFICATIONS.forEach(function(n) { n.read = true; });
+  notifUnread = 0; renderNotifBadge(); renderNotifList();
+}
+function loadNotifications() {
+  try {
+    var saved = JSON.parse(localStorage.getItem('rkt_notifs') || '[]');
+    saved.forEach(function(n) { n.time = new Date(n.time); NOTIFICATIONS.push(n); });
+    notifUnread = NOTIFICATIONS.filter(function(n) { return !n.read; }).length;
+    renderNotifBadge();
+  } catch(e) {}
+}
+function timeAgo(date) {
+  var d = new Date(date);
+  var diff = (Date.now() - d.getTime()) / 1000;
+  if (diff < 60) return 'только что';
+  if (diff < 3600) return Math.floor(diff / 60) + ' мин назад';
+  if (diff < 86400) return Math.floor(diff / 3600) + ' ч назад';
+  return d.toLocaleDateString('ru-RU');
+}
+
+// ============================================================
+// MOBILE MENU
+// ============================================================
+function toggleMobileMenu() {
+  document.querySelector('.sidebar').classList.toggle('mobile-open');
+  document.getElementById('mobileOverlay').classList.toggle('show');
+}
+function closeMobileMenu() {
+  document.querySelector('.sidebar').classList.remove('mobile-open');
+  document.getElementById('mobileOverlay').classList.remove('show');
+}
+function initMobileMenu() {
+  var btn = document.getElementById('mobileMenuBtn');
+  if (!btn) return;
+  function check() { btn.style.display = window.innerWidth <= 768 ? 'block' : 'none'; }
+  check();
+  window.addEventListener('resize', check);
+  // Close sidebar on nav click (mobile)
+  document.querySelectorAll('.sidebar .nav-item').forEach(function(item) {
+    item.addEventListener('click', function() { if (window.innerWidth <= 768) closeMobileMenu(); });
+  });
+}
+
+// ============================================================
+// ONBOARDING
+// ============================================================
+function checkOnboarding() {
+  if (localStorage.getItem('rkt_onboarded') || !USER || !USER.name) return;
+  var roleTips = {
+    'CEO': 'Дашборд KPI, все проекты, управление командой, настройки, согласования и полный доступ.',
+    'Зам': 'Управление проектами, задачи команды, партнёры, отчёты.',
+    'Руководитель': 'Задачи направления, управление сотрудниками, CRM.',
+    'Менеджер': 'CRM-воронка с 9 этапами, работа с клиентами, скрипты продаж.',
+    'Сотрудник': 'Ваши задачи и просмотр проекта.'
+  };
+  var role = USER.role || 'Сотрудник';
+  var tip = roleTips[role] || roleTips['Сотрудник'];
+  var h = '<div style="text-align:center;padding:20px">';
+  h += '<div style="font-size:64px;margin-bottom:16px">👋</div>';
+  h += '<h2 style="margin-bottom:8px">Добро пожаловать, ' + esc(USER.name) + '!</h2>';
+  h += '<p style="color:var(--text2);margin-bottom:24px">Ваша роль: <strong style="color:var(--accent)">' + esc(role) + '</strong></p>';
+  h += '<div style="background:var(--bg3);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left">';
+  h += '<p style="margin-bottom:8px"><strong>Вам доступны:</strong></p><p>' + esc(tip) + '</p></div>';
+  h += '<div style="text-align:left;margin-bottom:20px;font-size:13px;color:var(--text2);line-height:1.8">';
+  h += '<strong>Подсказки:</strong><br>';
+  h += '• Боковое меню — навигация по разделам<br>';
+  h += '• Карточка клиента — подробности сделки, скрипты<br>';
+  h += '• 🤖 AI-ассистент — помощь и аналитика<br>';
+  h += '• 🔔 Уведомления — новые задачи и события</div>';
+  h += '<button class="btn btn-primary" style="width:100%" onclick="localStorage.setItem(\'rkt_onboarded\',\'1\');closeModal()">Начать работу →</button>';
+  h += '</div>';
+  showCustomModal('Добро пожаловать в RKT HUB', h);
+}
+
+// ============================================================
+// SALES SCRIPTS (клиентоориентированные)
+// ============================================================
+function getSalesScript(stage, clientName, siteType) {
+  var name = clientName || '[КОМПАНИЯ]';
+  var type = siteType || 'Лендинг';
+  var scripts = {
+    'prospect': {
+      title: '📞 Скрипт первого звонка',
+      text: 'Здравствуйте! Меня зовут [ИМЯ], компания RKT Digital.\n' +
+        'Нашёл вашу компанию «' + name + '» и хотел предложить создание современного сайта.\n' +
+        'У вас есть пара минут?\n\n' +
+        '✅ Если да: «Расскажите, чем занимается ваш бизнес? Какие задачи хотите решить с помощью сайта?»\n' +
+        '❌ Если нет: «Когда удобно перезвонить? Могу прислать информацию в Telegram.»\n' +
+        '🚪 Обход секретаря: «Соедините с руководителем — вопрос по digital-продвижению компании.»'
+    },
+    'contact': {
+      title: '📋 Выявление потребностей',
+      text: 'Добрый день, ' + name + '! Возвращаюсь к нашему разговору.\n\n' +
+        '1. Какие услуги/товары вы хотите показать на сайте?\n' +
+        '2. Кто ваша целевая аудитория?\n' +
+        '3. Что должен делать идеальный сайт для вас?\n' +
+        '4. Есть ли примеры сайтов, которые нравятся?\n' +
+        '5. Какой примерный бюджет на сайт?\n\n' +
+        '→ Записать ответы в карточку клиента'
+    },
+    'interest': {
+      title: '🎨 Презентация прототипа',
+      text: 'Отличные новости! Прототип для «' + name + '» готов.\n\n' +
+        '→ Отправьте ссылку на демо через Telegram\n' +
+        '→ «Посмотрите, как это будет выглядеть. Что нравится?»\n' +
+        '→ «Что хотели бы изменить или добавить?»\n' +
+        '→ Запишите все правки в карточку'
+    },
+    'proto': {
+      title: '🔧 Доработка прототипа',
+      text: 'По результатам обратной связи от «' + name + '»:\n\n' +
+        '→ Внесите правки по замечаниям клиента\n' +
+        '→ Покажите обновлённую версию\n' +
+        '→ «Всё ли устраивает? Готовы перейти к финальной версии?»'
+    },
+    'proposal': {
+      title: '💰 Отправка КП',
+      text: 'Добрый день! По вашему проекту «' + type + '» для «' + name + '»:\n\n' +
+        'Стоимость: [ЦЕНА] ₽\n' +
+        'Сроки: 5-10 рабочих дней\n' +
+        'Включено: дизайн, адаптив, SEO-основы, 2 раунда правок\n\n' +
+        '→ «Как вам предложение? Есть вопросы по составу работ?»'
+    },
+    'negotiation': {
+      title: '🤝 Работа с возражениями',
+      text: '«Дорого» → «Давайте сравним: фрилансер без гарантий за X₽, мы — за Y₽ с поддержкой, правками и SEO. Окупаемость через 2-3 месяца.»\n\n' +
+        '«Подумаю» → «Конечно! Что именно хотите обдумать? Могу помочь с расчётами.»\n\n' +
+        '«Сделаю сам» → «Конструкторы отлично для старта, но ограничены в SEO, скорости и уникальности. Давайте сравним?»\n\n' +
+        '«У конкурентов дешевле» → «Уточните, что именно входит в их предложение? Часто разница в объёме работ.»'
+    },
+    'payment': {
+      title: '💳 Оплата и запуск',
+      text: 'Отлично! Для запуска работ по «' + name + '»:\n\n' +
+        '1. Выставляю счёт на [СУММА] ₽\n' +
+        '2. После оплаты — старт работ в течение 1 дня\n' +
+        '3. Срок: [СРОК] рабочих дней\n' +
+        '4. Связь — через Telegram, ответ в течение 2 часов\n\n' +
+        '→ «Реквизиты для оплаты отправлю сейчас»'
+    }
+  };
+  return scripts[stage] || null;
+}
+
+function showSalesScript(stage, clientName, siteType) {
+  var s = getSalesScript(stage, clientName, siteType);
+  if (!s) { toast('Скрипт для этого этапа не задан', 'info'); return; }
+  var body = '<div style="padding:8px">';
+  body += '<div style="background:var(--bg);border-radius:10px;padding:16px;white-space:pre-line;line-height:1.7;font-size:13px" id="scriptContent">' + esc(s.text).replace(/\\n/g, '\n') + '</div>';
+  body += '<button class="btn btn-secondary" style="width:100%;margin-top:12px" onclick="var el=document.getElementById(\'scriptContent\');navigator.clipboard.writeText(el.innerText);toast(\'Скрипт скопирован!\',\'success\')">📋 Копировать скрипт</button>';
+  body += '</div>';
+  showCustomModal(s.title, body);
+}
+
+// ============================================================
+// FILE VALIDATION
+// ============================================================
+var ALLOWED_FILE_TYPES = [
+  'application/pdf', 'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+  'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'text/plain', 'text/csv', 'application/zip'
+];
+var MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
+// ============================================================
+// DATA CACHING
+// ============================================================
+var DATA_CACHE = {};
+var CACHE_TTL = 60000; // 60 seconds
+
+function getCached(table) {
+  var c = DATA_CACHE[table];
+  if (c && Date.now() - c.time < CACHE_TTL) return c.data;
+  return null;
+}
+function setCache(table, data) {
+  DATA_CACHE[table] = { data: data, time: Date.now() };
+}
+function invalidateCache(table) {
+  if (table) delete DATA_CACHE[table]; else DATA_CACHE = {};
+}
+
 function renderRevenueChart() {
   const dirs = (DATA.directions||[]).filter(d => d['Проект'] === 'Сайты' && d['Оплачено']);
   const weeks = {};
@@ -8151,6 +8556,21 @@ function renderRevenueChart() {
     return `<div class="chart-bar-wrap"><div class="chart-bar-value">${v>=1000?(v/1000).toFixed(0)+'к':v}</div><div class="chart-bar" style="height:${h}px"></div><div class="chart-bar-label">${label}</div></div>`;
   }).join('')}</div></div>`;
 }
+
+<!-- MOBILE OVERLAY -->
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMobileMenu()"></div>
+
+<!-- NOTIFICATION PANEL -->
+<div class="notif-panel" id="notifPanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:20px;border-bottom:1px solid var(--border)">
+    <h3 style="font-size:16px;font-weight:600">🔔 Уведомления</h3>
+    <div style="display:flex;gap:8px">
+      <button onclick="markAllNotifRead()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px">Прочитать все</button>
+      <button onclick="closeNotifPanel()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:20px">✕</button>
+    </div>
+  </div>
+  <div id="notifList"></div>
+</div>
 
 </script>
 </body>
