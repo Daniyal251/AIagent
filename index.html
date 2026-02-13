@@ -365,17 +365,18 @@ a:hover { text-decoration: underline; }
   border: 1px solid var(--red);
   border-radius: var(--radius-sm);
   color: #ff6b6b;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-family: inherit;
+  font-size: 14px;
   font-weight: 700;
   cursor: pointer;
   transition: var(--transition);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+  margin-top: 10px;
 }
 
 .logout-btn:hover { border-color: var(--red); color: #fff; background: var(--red); }
@@ -1478,7 +1479,9 @@ tbody tr:last-child td { border-bottom: none; }
 @media (max-width: 1024px) {
   .sidebar { width: 60px !important; }
   .sidebar .logo-section span, .sidebar .nav-item .label,
-  .sidebar .user-bar span, .sidebar .user-bar .user-name { display: none !important; }
+  .sidebar .user-bar .user-name, .sidebar .user-role-text { display: none !important; }
+  .sidebar .logout-btn { font-size: 0; padding: 10px; min-height: 40px; }
+  .sidebar .logout-btn::before { content: '\1F6AA'; font-size: 18px; }
   .sidebar .nav-item { justify-content: center; padding: 12px; }
   .sidebar .nav-item .icon { margin: 0; font-size: 20px; }
   .main { margin-left: 60px; }
@@ -2010,6 +2013,7 @@ tbody tr:last-child td { border-bottom: none; }
         <div class="tab" data-tab="staff" onclick="showPvTab('staff')">👥 Команда</div>
         <div class="tab" data-tab="timeline" onclick="showPvTab('timeline')">📅 План-график</div>
         <div class="tab" data-tab="comms" onclick="showPvTab('comms')">💬 Коммуникации</div>
+        <div class="tab" data-tab="docs" onclick="showPvTab('docs')">📄 Документы</div>
         <div class="tab tab-finance" data-tab="finance" onclick="showPvTab('finance')" style="display:none">💰 Финансы</div>
         <div class="tab tab-salaries" data-tab="salaries" onclick="showPvTab('salaries')" style="display:none">👥 Зарплаты</div>
       </div>
@@ -2501,9 +2505,9 @@ const COL_MAP = {
     author:'Автор', result:'Результат', created_at:'Дата_добавления'
   },
   documents: {
-    id:'ID', filename:'Файл', folder:'Папка', uploaded_by:'Загрузил',
+    id:'ID', filename:'Название файла', folder:'Папка', uploaded_by:'Загрузил',
     upload_date:'Дата', link:'Ссылка', drive_id:'Drive_ID', size:'Размер',
-    created_at:'Дата_добавления'
+    created_at:'Дата_добавления', project:'Проект', file_type:'Тип'
   }
 };
 
@@ -4573,7 +4577,7 @@ function renderProjectView() {
     if (ptOverdue.length) {
       html += '<div class="card" style="border-color:rgba(255,107,107,0.4)"><div class="card-header" style="background:rgba(255,107,107,0.05)"><h3>🔴 Просроченные ('+ptOverdue.length+')</h3></div>';
       html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
-      html += ptOverdue.map(t => '<tr style="background:rgba(255,107,107,0.03)"><td>'+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td style="color:var(--red);font-weight:700">'+esc(t['Дедлайн'])+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>').join('');
+      html += ptOverdue.map(t => '<tr style="cursor:pointer;background:rgba(255,107,107,0.03)" onclick="openTaskDetail(\''+escA(t.ID)+'\')"><td>'+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td style="color:var(--red);font-weight:700">'+esc(t['Дедлайн'])+'</td><td onclick="event.stopPropagation()">'+actBtns('task',t.ID,t['Описание'])+'</td></tr>').join('');
       html += '</tbody></table></div></div>';
     }
     // Active projects
@@ -4590,7 +4594,7 @@ function renderProjectView() {
     html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Направление</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th><th></th></tr></thead><tbody>';
     html += topT.length ? topT.map(t => {
       const od = t['Дедлайн']&&t['Дедлайн']<td;
-      return '<tr style="'+(od?'background:rgba(255,107,107,0.03)':'')+'"><td>'+(od?'🔴 ':'')+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Дедлайн']||'—')+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>';
+      return '<tr style="cursor:pointer;'+(od?'background:rgba(255,107,107,0.03)':'')+'" onclick="openTaskDetail(\''+escA(t.ID)+'\')"><td>'+(od?'🔴 ':'')+esc(t['Описание']||t['Название'])+'</td><td>'+esc(t['Направление'])+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Дедлайн']||'—')+'</td><td>'+actBtns('task',t.ID,t['Описание'])+'</td></tr>';
     }).join('') : emptyRow(6,'Нет задач');
     html += '</tbody></table></div></div>';
 
@@ -4624,6 +4628,34 @@ function renderProjectView() {
     const pNames = pp.map(p => p['Название']).filter(Boolean);
     const dc = (DATA.comms||[]).filter(c => pNames.some(n => (c['Партнёр']||'').includes(n)));
     html += renderCommTable(dc);
+  } else if (currentPvTab === 'docs') {
+    // Project-level documents
+    const projName = PROJECTS[currentProject]?.name || '';
+    const projDocs = (DATA.documents||[]).filter(d => {
+      const folder = d['Папка']||d['Направление']||'';
+      return folder.includes(projName) || (d['Проект']||'') === projName || dirs.some(dir => folder.includes(dir['Название']||'___'));
+    });
+    html += '<div class="card"><div class="card-header"><h3>📄 Документы проекта «'+esc(projName)+'»</h3>';
+    html += '<div class="actions"><button class="btn btn-sm btn-primary" onclick="uploadProjectFile(\''+escA(projName)+'\')">📎 Загрузить файл</button></div></div>';
+    if (projDocs.length) {
+      html += '<div class="table-wrap"><table><thead><tr><th>📄 Файл</th><th>Папка/Направление</th><th>Загрузил</th><th>Дата</th><th>Ссылка</th></tr></thead><tbody>';
+      projDocs.forEach(d => {
+        const icon = getFileIcon(d['Название файла']||d['Файл']||'');
+        const link = d['Ссылка'] ? '<a href="'+esc(d['Ссылка'])+'" target="_blank" style="color:var(--accent)">Открыть</a>' : '—';
+        html += '<tr><td>'+icon+' '+esc(d['Название файла']||d['Файл']||'—')+'</td><td>'+esc(d['Папка']||d['Направление']||'—')+'</td><td>'+esc(d['Загрузил']||'—')+'</td><td>'+esc(d['Дата']||'—')+'</td><td>'+link+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    } else {
+      html += '<div style="padding:40px;text-align:center;color:var(--text2)"><div style="font-size:40px;margin-bottom:12px">📂</div><p>Нет документов. Загрузите первый файл.</p></div>';
+    }
+    html += '</div>';
+    // AI Knowledge hint
+    html += '<div class="card" style="margin-top:12px;border-color:var(--purple);border-style:dashed"><div style="padding:20px;text-align:center">';
+    html += '<div style="font-size:24px;margin-bottom:8px">🧠</div>';
+    html += '<h4 style="margin-bottom:6px">База знаний проекта</h4>';
+    html += '<p style="font-size:13px;color:var(--text2);margin-bottom:12px">Загрузите файлы проекта — ТЗ, договоры, спецификации, презентации. ИИ-ассистент будет использовать их для ответов.</p>';
+    html += '<button class="btn btn-sm" onclick="uploadProjectFile(\''+escA(projName)+'\')" style="background:linear-gradient(135deg,var(--purple),#7950f2);color:#fff;border:none">📎 Загрузить в базу знаний</button>';
+    html += '</div></div>';
   } else if (currentPvTab === 'finance') {
     html += renderSiteFinance();
   } else if (currentPvTab === 'salaries') {
@@ -5029,6 +5061,10 @@ function renderSubprojectView() {
         setTimeout(() => renderAnketaChat(ovDirId, ovContainer, {}), 100);
       }
     }
+  }
+  // Load saved AI chat for site preview
+  if (isSites && siteGenStep === 'preview') {
+    setTimeout(() => loadSiteAiChat(currentSubproject), 200);
   }
 }
 
@@ -7046,7 +7082,10 @@ function scrollToSiteAi() {
   const block = document.getElementById('site-ai-editor-block');
   if (block) {
     block.scrollIntoView({behavior:'smooth', block:'center'});
-    setTimeout(() => { const inp = document.getElementById('site-ai-edit-input'); if(inp) inp.focus(); }, 400);
+    setTimeout(() => { 
+      const inp = document.getElementById('site-ai-edit-input'); if(inp) inp.focus();
+      loadSiteAiChat(currentSubproject);
+    }, 400);
   }
 }
 
@@ -7087,10 +7126,14 @@ async function sendSiteAiEdit() {
     chatMsgs.scrollTop = chatMsgs.scrollHeight;
   }
 
-  const systemPrompt = 'Ты профессиональный веб-разработчик. Пользователь даёт тебе текущий HTML сайта и инструкцию что изменить. ' +
-    'Верни ТОЛЬКО обновлённый HTML код целиком (начиная с <!DOCTYPE html>). Не добавляй пояснений, только HTML. ' +
+  const systemPrompt = 'Ты профессиональный веб-разработчик и консультант. ' +
+    'Пользователь может задать тебе ВОПРОС или дать ИНСТРУКЦИЮ по изменению сайта. ' +
+    'ВАЖНО: Если пользователь задаёт вопрос (что делать, как, зачем, почему, советы), НЕ возвращай HTML — просто ответь текстом. ' +
+    'Если пользователь просит внести изменения в сайт (изменить цвет, добавить блок, убрать элемент и т.д.), ' +
+    'тогда начни ответ со строки "===HTML_START===" и верни обновлённый HTML целиком, а после закрывающего </html> добавь "===HTML_END===" ' +
+    'и на новой строке напиши краткое описание изменений на русском (что конкретно ты изменил). ' +
     'Сохрани все существующие стили и функциональность, вноси ТОЛЬКО запрошенные изменения. ' +
-    'Используй современный CSS, адаптивную вёрстку. Пиши на русском языке для контента.';
+    'Используй современный CSS, адаптивную вёрстку. Пиши контент на русском.';
 
   const messages = [
     { role: 'user', content: 'Текущий HTML сайта:\n\n' + currentHtml.slice(0, 60000) + '\n\nИнструкция: ' + instruction + '\n\nВерни ТОЛЬКО обновлённый HTML целиком.' }
@@ -7137,36 +7180,59 @@ async function sendSiteAiEdit() {
     if (dtMatch) newHtml = dtMatch[1];
 
     if (newHtml && (newHtml.includes('<html') || newHtml.includes('<body') || newHtml.includes('<!DOCTYPE'))) {
+      // Check for ===HTML_START=== / ===HTML_END=== markers
+      let changeDescription = '';
+      const startMarker = aiText.indexOf('===HTML_START===');
+      const endMarker = aiText.indexOf('===HTML_END===');
+      if (startMarker !== -1 && endMarker !== -1) {
+        newHtml = aiText.substring(startMarker + 16, endMarker).trim();
+        changeDescription = aiText.substring(endMarker + 14).trim();
+        // Clean up HTML markers
+        const dtm = newHtml.match(/(<!DOCTYPE[\s\S]*<\/html>)/i);
+        if (dtm) newHtml = dtm[1];
+      }
+
       // Apply changes
       sgd.html = newHtml;
       const iframe = document.getElementById('site-preview-iframe');
       if (iframe) {
         const doc = iframe.contentDocument || iframe.contentWindow.document;
         doc.open(); doc.write(newHtml); doc.close();
-        // Green flash on success
         iframe.style.boxShadow = '0 0 20px rgba(81,207,102,0.5)';
         iframe.style.border = '2px solid var(--green)';
         setTimeout(() => { iframe.style.boxShadow = ''; iframe.style.border = 'none'; }, 2000);
       }
-      // Update code editor & source
       const textarea = document.getElementById('site-code-textarea');
       if (textarea) textarea.value = newHtml;
       const pre = document.querySelector('#site-code-block pre');
       if (pre) pre.textContent = newHtml;
 
       const badge = getAiProviderBadge(provider);
+      const descText = changeDescription ? '<br><span style="color:var(--text2);font-size:12px">📝 ' + esc(changeDescription) + '</span>' : '';
       if (chatMsgs) {
-        chatMsgs.innerHTML += '<div style="padding:8px;background:rgba(81,207,102,0.08);border-radius:8px;margin-bottom:6px;font-size:13px"><strong style="color:var(--green)">✅ AI:</strong> Изменения применены! ' + badge + '</div>';
+        chatMsgs.innerHTML += '<div style="padding:8px;background:rgba(81,207,102,0.08);border-radius:8px;margin-bottom:6px;font-size:13px"><strong style="color:var(--green)">✅ AI:</strong> Изменения применены! ' + badge + descText + '</div>';
         chatMsgs.scrollTop = chatMsgs.scrollHeight;
       }
+      saveSiteAiChat(currentSubproject);
       toast('✅ AI обновил сайт', 'success');
-    } else {
-      // AI returned text, not HTML
+    } else if (aiText && aiText.trim().length > 10) {
+      // AI returned a text answer (question mode)
+      const badge = getAiProviderBadge(provider);
+      const formattedText = aiText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
       if (chatMsgs) {
-        chatMsgs.innerHTML += '<div style="padding:8px;background:rgba(255,107,107,0.08);border-radius:8px;margin-bottom:6px;font-size:13px"><strong style="color:var(--red)">AI:</strong> ' + esc(aiText.slice(0, 500)) + '</div>';
+        chatMsgs.innerHTML += '<div style="padding:10px;background:rgba(177,151,252,0.08);border-radius:8px;margin-bottom:6px;font-size:13px"><strong style="color:var(--purple)">🤖 AI:</strong> ' + formattedText + ' ' + badge + '</div>';
         chatMsgs.scrollTop = chatMsgs.scrollHeight;
       }
-      toast('AI не вернул HTML — попробуйте переформулировать', 'warning');
+      saveSiteAiChat(currentSubproject);
+      toast('💬 AI ответил', 'info');
+    } else {
+      // AI returned empty or non-useful response
+      if (chatMsgs) {
+        chatMsgs.innerHTML += '<div style="padding:8px;background:rgba(255,107,107,0.08);border-radius:8px;margin-bottom:6px;font-size:13px"><strong style="color:var(--red)">AI:</strong> Не удалось обработать запрос — попробуйте переформулировать</div>';
+        chatMsgs.scrollTop = chatMsgs.scrollHeight;
+      }
+      saveSiteAiChat(currentSubproject);
+      toast('AI не вернул результат — попробуйте ещё раз', 'warning');
     }
   } catch(e) {
     console.error('Site AI edit error:', e);
@@ -7175,6 +7241,7 @@ async function sendSiteAiEdit() {
       chatMsgs.innerHTML += '<div style="padding:8px;background:rgba(255,107,107,0.08);border-radius:8px;font-size:13px"><strong style="color:var(--red)">❌</strong> ' + (isAbort ? 'Превышено время ожидания' : esc(e.message)) + '</div>';
     }
     toast(isAbort ? '⏱ Таймаут — попробуйте ещё раз' : 'Ошибка: ' + e.message, 'error');
+    saveSiteAiChat(currentSubproject);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = '✨ Применить'; }
     const ol = document.getElementById('site-ai-loading-overlay');
@@ -7185,6 +7252,29 @@ async function sendSiteAiEdit() {
 }
 
 // === GITHUB PAGES PUBLISHING ===
+
+// Site AI chat persistence
+function saveSiteAiChat(spName) {
+  if (!spName) return;
+  const chatMsgs = document.getElementById('site-ai-chat-msgs');
+  if (!chatMsgs) return;
+  try {
+    localStorage.setItem('rkt_site_ai_chat_' + spName, chatMsgs.innerHTML);
+  } catch(e) { console.warn('Chat save error:', e); }
+}
+
+function loadSiteAiChat(spName) {
+  if (!spName) return;
+  const chatMsgs = document.getElementById('site-ai-chat-msgs');
+  if (!chatMsgs) return;
+  try {
+    const saved = localStorage.getItem('rkt_site_ai_chat_' + spName);
+    if (saved) {
+      chatMsgs.innerHTML = saved;
+      chatMsgs.scrollTop = chatMsgs.scrollHeight;
+    }
+  } catch(e) { console.warn('Chat load error:', e); }
+}
 async function promptGitHubToken() {
   return new Promise(resolve => {
     const overlay = document.createElement('div');
@@ -8130,6 +8220,47 @@ function getFileIcon(name) {
 
 function uploadFileWeb() {
   document.getElementById('file-upload-input')?.click();
+}
+
+async function uploadProjectFile(projName) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif';
+  input.click();
+  input.onchange = async () => {
+    if (!input.files || !input.files.length) return;
+    showLoading('Загрузка файлов...');
+    let uploaded = 0;
+    for (const file of input.files) {
+      if (file.size > 10 * 1024 * 1024) { toast('⚠️ Файл '+file.name+' > 10 МБ','warning'); continue; }
+      try {
+        const safeName = slugify(file.name.replace(/\.[^.]+$/,'')) + '.' + file.name.split('.').pop();
+        const storagePath = 'documents/projects/' + slugify(projName) + '/' + safeName;
+        const { data, error } = await SB.storage.from('documents').upload(storagePath, file, { cacheControl: '3600', upsert: true });
+        if (error) throw error;
+        const { data: urlData } = SB.storage.from('documents').getPublicUrl(storagePath);
+        const docRow = {
+          'Название файла': file.name,
+          'Папка': projName,
+          'Проект': projName,
+          'Загрузил': USER?.name || '?',
+          'Ссылка': urlData?.publicUrl || '',
+          'Дата': today(),
+          'Тип': file.type || 'file'
+        };
+        await apiWrite('Документы', docRow);
+        if (!DATA.documents) DATA.documents = [];
+        DATA.documents.push(docRow);
+        uploaded++;
+      } catch(e) { console.error('Upload error:', e); toast('Ошибка загрузки: '+e.message, 'error'); }
+    }
+    hideLoading();
+    if (uploaded) {
+      toast('📎 Загружено '+uploaded+' файл(ов)', 'success');
+      renderProjectView();
+    }
+  };
 }
 
 async function handleFileUpload(input) {
@@ -9879,6 +10010,7 @@ async function autoDelegate(completedTask) {
 // VIEW / EDIT / DELETE
 // ============================================================
 function viewItem(type, id) {
+  if (type === 'partner') { openPartnerDetail(id); return; }
   const map = {partner:'partners',project:'projects',task:'tasks',staff:'staff',comm:'comms'};
   const item = DATA[map[type]]?.find(i => i.ID===id);
   if(!item) return;
@@ -9900,6 +10032,91 @@ function viewItem(type, id) {
 
 function closeDetail() { document.getElementById('detailOverlay').classList.remove('show'); }
 
+function openPartnerDetail(id) {
+  const p = (DATA.partners||[]).find(i => i.ID===id);
+  if(!p) { toast('Партнёр не найден','error'); return; }
+  
+  const perms = getUserPerms();
+  const pName = p['Название']||'?';
+  const relComms = (DATA.comms||[]).filter(c => (c['Партнёр']||'') === pName);
+  const relTasks = (DATA.tasks||[]).filter(t => {
+    const dir = t['Направление']||'';
+    const pDir = p['Направление']||'';
+    return pDir && dir.toLowerCase().includes(pDir.toLowerCase());
+  });
+  
+  let bc = '<a onclick="showPage(\'home\')">🏠 Проекты</a><span class="sep">›</span>';
+  bc += '<a onclick="showPage(\'partners\')">Партнёры</a><span class="sep">›</span>';
+  bc += '<span class="current">'+esc(pName)+'</span>';
+  
+  let html = '<div class="breadcrumb">'+bc+'</div>';
+  html += '<div class="page-header" style="margin-bottom:20px"><h2>🤝 '+esc(pName)+'</h2>';
+  html += '<div class="actions">';
+  html += '<button class="btn btn-primary" onclick="editItem(\'partner\',\''+escA(id)+'\')">✏️ Редактировать</button>';
+  if (perms.canDelete) html += ' <button class="btn btn-danger" onclick="confirmDelete(\'partner\',\''+escA(id)+'\',\''+escA(pName)+'\')">🗑 Удалить</button>';
+  html += '</div></div>';
+  
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:20px">';
+  
+  // Info card
+  html += '<div class="card"><div class="card-header"><h3>📋 Информация</h3></div>';
+  html += '<div style="padding:16px;display:grid;gap:10px">';
+  const fields = [
+    ['🏢 Название', p['Название']],['🌍 Страна', p['Страна']],['📂 Направление', p['Направление']],
+    ['📦 Продукт', p['Продукт']],['📊 Статус', p['Статус']],['👤 Контакт', p['Контакт']],
+    ['📧 Email', p['Email']],['📱 Телефон', p['Телефон']],['🔗 Сайт', p['Сайт']]
+  ];
+  fields.forEach(([label, val]) => {
+    if(val) {
+      const isLink = String(val).startsWith('http');
+      html += '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">';
+      html += '<span style="color:var(--text2);font-size:13px">'+label+'</span>';
+      html += '<span style="font-weight:600">'+(isLink?'<a href="'+esc(val)+'" target="_blank" style="color:var(--accent)">'+esc(val)+'</a>':esc(val))+'</span>';
+      html += '</div>';
+    }
+  });
+  if(p['Описание']) html += '<div style="padding:8px 0"><span style="color:var(--text2);font-size:13px">📝 Описание</span><p style="margin-top:6px">'+esc(p['Описание'])+'</p></div>';
+  html += '</div></div>';
+  
+  // Stats
+  html += '<div class="card"><div class="card-header"><h3>📊 Статистика</h3></div>';
+  html += '<div style="padding:16px;display:grid;gap:16px;text-align:center;grid-template-columns:1fr 1fr">';
+  html += '<div><div style="font-size:28px;font-weight:700">'+relComms.length+'</div><div style="font-size:12px;color:var(--text2)">Коммуникаций</div></div>';
+  html += '<div><div style="font-size:28px;font-weight:700">'+relTasks.length+'</div><div style="font-size:12px;color:var(--text2)">Задач</div></div>';
+  html += '</div></div>';
+  html += '</div>';
+  
+  // Communications table
+  html += '<div class="card"><div class="card-header"><h3>💬 Коммуникации</h3>';
+  html += '<button class="btn btn-sm btn-primary" onclick="openModal(\'comm\',{\'Партнёр\':\''+escA(pName)+'\'})">+ Добавить</button></div>';
+  if(relComms.length) {
+    html += '<div class="table-wrap"><table><thead><tr><th>Тип</th><th>Тема</th><th>Результат</th><th>Дата</th></tr></thead><tbody>';
+    relComms.forEach(c => {
+      html += '<tr><td>'+esc(c['Тип']||'')+'</td><td>'+esc(c['Тема']||'')+'</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">'+esc(c['Результат']||'')+'</td><td>'+esc(c['Дата']||'—')+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  } else {
+    html += '<div style="padding:32px;text-align:center;color:var(--text2)">📭 Нет коммуникаций</div>';
+  }
+  html += '</div>';
+  
+  // Related tasks
+  if(relTasks.length) {
+    html += '<div class="card"><div class="card-header"><h3>✅ Связанные задачи</h3></div>';
+    html += '<div class="table-wrap"><table><thead><tr><th>Задача</th><th>Приоритет</th><th>Статус</th><th>Дедлайн</th></tr></thead><tbody>';
+    relTasks.forEach(t => {
+      html += '<tr style="cursor:pointer" onclick="openTaskDetail(\''+escA(t.ID)+'\')"><td>'+esc(t['Описание']||t['Название']||'')+'</td><td>'+prBadge(t['Приоритет'])+'</td><td>'+statusBadge(t['Статус'])+'</td><td>'+esc(t['Дедлайн']||'—')+'</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+  
+  const container = document.getElementById('page-home');
+  container.innerHTML = html;
+  currentPage = 'partner-detail';
+  document.querySelectorAll('.page').forEach(pg => pg.classList.remove('active'));
+  container.classList.add('active');
+}
+
 function editItem(type, id) {
   const map = {partner:'partners',project:'projects',task:'tasks',staff:'staff',comm:'comms'};
   const item = DATA[map[type]]?.find(i => i.ID===id);
@@ -9909,16 +10126,19 @@ function editItem(type, id) {
 function confirmDelete(type, id, name) {
   if(!getUserPerms().canDelete) { toast('⛔ Только CEO','error'); return; }
   const isDirection = (type === 'direction');
-  document.getElementById('confirmTitle').textContent = isDirection ? '🗑 Удалить клиента?' : 'Удалить?';
+  const isProject = (type === 'project');
+  document.getElementById('confirmTitle').textContent = isDirection ? '🗑 Удалить клиента?' : isProject ? '🗑 Удалить проект?' : 'Удалить?';
   document.getElementById('confirmText').textContent = isDirection
     ? 'Клиент «'+(name||id)+'» и все его задачи будут удалены безвозвратно.'
+    : isProject
+    ? 'Проект «'+(name||id)+'» и все связанные задачи будут удалены безвозвратно.'
     : '«'+(name||id)+'» будет удалена.';
   document.getElementById('confirmOverlay').classList.add('show');
   confirmCallback = async function(ok) {
     if(ok) {
-      const sheetMap = {partner:'Партнёры',task:'Задачи',staff:'Сотрудники',comm:'Коммуникации',direction:'Направления'};
-      const tableMap = {partner:'partners',task:'tasks',staff:'staff',comm:'communications',direction:'directions'};
-      const dataMap = {partner:'partners',task:'tasks',staff:'staff',comm:'comms',direction:'directions'};
+      const sheetMap = {partner:'Партнёры',task:'Задачи',staff:'Сотрудники',comm:'Коммуникации',direction:'Направления',project:'Проекты'};
+      const tableMap = {partner:'partners',task:'tasks',staff:'staff',comm:'communications',direction:'directions',project:'projects'};
+      const dataMap = {partner:'partners',task:'tasks',staff:'staff',comm:'comms',direction:'directions',project:'projects'};
       try {
         const table = tableMap[type];
         if (table) {
@@ -9933,6 +10153,19 @@ function confirmDelete(type, id, name) {
             }
             if (typeof siteGenCache !== 'undefined') delete siteGenCache[name];
           }
+          // Cascade delete for projects: delete related tasks and directions
+          if (isProject && name) {
+            const relatedDirs = (DATA.directions||[]).filter(d => (d['Проект']||'') === name);
+            const relatedTasks = (DATA.tasks||[]).filter(t => (t['Проект']||'') === name);
+            for (const t of relatedTasks) {
+              const taskId = t['ID'] || t.id;
+              if (taskId) { try { await SB.from('tasks').delete().eq('id', taskId); } catch(e) {} }
+            }
+            for (const d of relatedDirs) {
+              const dirId = d['ID'] || d.id;
+              if (dirId) { try { await SB.from('directions').delete().eq('id', dirId); } catch(e) {} }
+            }
+          }
           await SB.from(table).delete().eq('id', id);
         }
       } catch(e) {
@@ -9945,6 +10178,10 @@ function confirmDelete(type, id, name) {
       if(DATA[dataMap[type]]) DATA[dataMap[type]] = DATA[dataMap[type]].filter(i=>(i.ID||i.id)!==id);
       if (isDirection && name) {
         DATA.tasks = (DATA.tasks||[]).filter(t => (t['Направление']||'') !== name);
+      }
+      if (isProject && name) {
+        DATA.tasks = (DATA.tasks||[]).filter(t => (t['Проект']||'') !== name);
+        DATA.directions = (DATA.directions||[]).filter(d => (d['Проект']||'') !== name);
       }
       if (isDirection && currentDealId === id) closeSlideOver();
       renderAll();
@@ -11531,9 +11768,10 @@ async function sendAnketaMsg(dirId) {
     // Build system prompt
     const systemPrompt = buildAnketaSystemPrompt(dir, questionnaire);
 
-    // Check if this looks like a document request (need more tokens)
+    // Check if this looks like a document/content generation request (need more tokens + longer timeout)
     const lowerText = (text || '').toLowerCase();
-    const isFileRequest = /(?:создай|сделай|подготовь|сгенерируй)[\s\S]{0,30}(?:кп|договор|прайс|бриф|контракт|документ|предложен|коммерческ|сайт)/i.test(lowerText);
+    const isFileRequest = /(?:создай|сделай|сделаем|подготовь|подготовим|сгенерируй|напиши|напишем|составь|составим|оформи|сформируй|давай\s+(?:сделаем|подготовим|напишем|составим|напиши))[^.]{0,40}(?:кп|договор|прайс|бриф|контракт|документ|предложен|коммерческ|сайт|текст|письм|описан|презентац|смет|скрипт|сообщен)/i.test(lowerText)
+      || /(?:напиши|составь|подготовь|сделай|оформи|давай)[^.]{0,20}(?:текст|письм|кп|предложен|итекст)/i.test(lowerText);
 
     // Send to AI — try cascade (fast Groq/Gemini) first for simple messages
     const hasMedia = mediaUrls.length > 0;
@@ -11555,36 +11793,56 @@ async function sendAnketaMsg(dirId) {
     // Fallback to Claude via n8n (for media, file requests, or cascade failure)
     if (!aiText) {
       aiProvider = 'claude';
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), isFileRequest ? 120000 : hasMedia ? 90000 : 45000);
-      const response = await fetch(CONFIG.AI_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: fullContent,
-          context: 'anketa',
-          source: 'web',
-          direction: dir?.['Название'] || '',
-          directionId: dirId,
-          user: USER?.name || '',
-          questionnaire: questionnaire,
-          stage: dir?.['stage'] || 'prospect',
-          history: chatHistory,
-          media: mediaUrls,
-          systemPrompt: systemPrompt,
-          isFileRequest: isFileRequest
-        }),
-        signal: controller.signal
+      const baseTimeout = isFileRequest ? 150000 : hasMedia ? 120000 : 90000;
+      const requestBody = JSON.stringify({
+        message: fullContent,
+        context: 'anketa',
+        source: 'web',
+        direction: dir?.['Название'] || '',
+        directionId: dirId,
+        user: USER?.name || '',
+        questionnaire: questionnaire,
+        stage: dir?.['stage'] || 'prospect',
+        history: chatHistory,
+        media: mediaUrls,
+        systemPrompt: systemPrompt,
+        isFileRequest: isFileRequest
       });
-      clearTimeout(timeout);
-      if (!response.ok) throw new Error('HTTP ' + response.status);
 
-      const raw = await response.json();
-      let data = raw;
-      if (Array.isArray(raw)) data = raw[0] || {};
-      if (data.json) data = data.json;
-      aiText = data.reply || data.response || data.text || data.message || '';
-      if (!aiText && data.content) { try { aiText = data.content[0].text; } catch(e) {} }
+      // Try up to 2 attempts (auto-retry on timeout)
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const controller = new AbortController();
+          const attemptTimeout = attempt === 1 ? baseTimeout : baseTimeout + 60000;
+          const timeout = setTimeout(() => controller.abort(), attemptTimeout);
+          const response = await fetch(CONFIG.AI_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: requestBody,
+            signal: controller.signal
+          });
+          clearTimeout(timeout);
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+
+          const raw = await response.json();
+          let data = raw;
+          if (Array.isArray(raw)) data = raw[0] || {};
+          if (data.json) data = data.json;
+          aiText = data.reply || data.response || data.text || data.message || '';
+          if (!aiText && data.content) { try { aiText = data.content[0].text; } catch(e) {} }
+          if (aiText) break; // Success — exit retry loop
+        } catch(retryErr) {
+          const isTimeout = retryErr.name === 'AbortError' || (retryErr.message && retryErr.message.includes('abort'));
+          if (attempt < 2 && isTimeout) {
+            console.warn('AI attempt ' + attempt + ' timed out, retrying with longer timeout...');
+            // Update typing indicator to show retry
+            const typingRetry = document.getElementById('anketa-typing-' + dirId);
+            if (typingRetry) typingRetry.innerHTML = '<div class="ai-loading"><span></span><span></span><span></span></div> <span style="font-size:11px;color:var(--text3)">Повторная попытка...</span>';
+            continue;
+          }
+          throw retryErr; // Re-throw on final attempt or non-timeout error
+        }
+      }
     }
     if (!aiText) aiText = 'Извините, не удалось получить ответ. Попробуйте ещё раз.';
 
@@ -12442,13 +12700,14 @@ function openSlideOver(id) {
   const p = getUserPerms();
   const cleanPh = (dir['Телефон']||'').replace(/[^\d+]/g,'');
   document.getElementById('so-actions').innerHTML = `
+    <button onclick="closeSlideOver();openSubproject('${escA(dir['Название']||'')}')" style="width:100%;padding:14px;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--blue));color:#fff;border:none;border-radius:var(--radius);cursor:pointer;margin-bottom:12px">📂 Перейти на страницу клиента</button>
     ${cleanPh?'<button onclick="window.open(\'tel:'+cleanPh+'\')">📞 Позвонить</button>':''}
     ${cleanPh?'<button onclick="window.open(\'https://t.me/'+cleanPh.replace('+','')+'\',\'_blank\')">💬 Telegram</button>':''}
     <button onclick="logTouch('${id}')">📞 Записать касание</button>
     <button onclick="scheduleFollowUp('${id}')">📅 Напоминание</button>
     <button onclick="addDealFeedback('${id}')">💬 Фидбек</button>
     <button onclick="addDealNote('${id}')">📝 Заметка</button>
-    <button onclick="closeSlideOver();openSubproject('${escA(dir['Название']||'')}')">📂 Открыть</button>
+
     ${p.canWrite?'<button onclick="closeSlideOver();openClientCard(\''+escA(id)+'\')">✏️ Редактировать</button>':''}
     ${!dir['Оплачено']&&p.canWrite?'<button onclick="markPaid(\''+id+'\')">💰 Оплата</button>':''}
     ${stage!=='lost'&&stage!=='done'?'<button onclick="rejectDeal(\''+id+'\')" style="background:rgba(255,75,75,.15);color:var(--red)">❌ Отказ</button>':''}
