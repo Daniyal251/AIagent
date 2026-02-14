@@ -271,6 +271,283 @@ body::before {
   color: var(--orange);
   border: 1px solid rgba(251,146,60,0.2);
 }
+.pc-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(124,111,247,0.06);
+  border: 1px solid rgba(124,111,247,0.15);
+  color: var(--accent2);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+.pc-info:hover {
+  background: rgba(124,111,247,0.12);
+  border-color: rgba(124,111,247,0.3);
+}
+
+/* ═══ PREVIEW MODAL ═══ */
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.preview-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.preview-modal {
+  width: 100%;
+  max-width: 680px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  transform: translateY(20px) scale(0.97);
+  transition: transform 0.3s;
+  position: relative;
+}
+.preview-overlay.active .preview-modal {
+  transform: translateY(0) scale(1);
+}
+.pm-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  transition: all 0.2s;
+}
+.pm-close:hover { background: var(--bg4); color: var(--text); }
+
+.pm-hero {
+  padding: 32px 28px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.pm-hero-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.pm-emoji {
+  font-size: 48px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.pm-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+.pm-subtitle { font-size: 14px; color: var(--text2); line-height: 1.5; }
+.pm-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 4px;
+}
+.pm-price { font-size: 28px; font-weight: 800; color: var(--accent2); }
+.pm-price-note { font-size: 13px; color: var(--text3); }
+
+.pm-body { padding: 24px 28px; }
+
+.pm-section {
+  margin-bottom: 24px;
+}
+.pm-section:last-child { margin-bottom: 0; }
+.pm-section-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+.pm-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.pm-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--bg3);
+}
+.pm-feature-icon { flex-shrink: 0; font-size: 15px; }
+.pm-audience {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--accent-glow);
+  border: 1px solid rgba(124,111,247,0.15);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.pm-audience b { color: var(--accent2); }
+
+/* Mock site preview */
+.pm-mockup {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #fff;
+  position: relative;
+}
+.pm-mockup-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f0f0f2;
+  border-bottom: 1px solid #e0e0e4;
+}
+.pm-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.pm-dot-r { background: #ff5f57; }
+.pm-dot-y { background: #ffbd2e; }
+.pm-dot-g { background: #28ca41; }
+.pm-mockup-url {
+  flex: 1;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  background: #fff;
+  font-size: 11px;
+  color: #666;
+  font-family: 'JetBrains Mono', monospace;
+}
+.pm-mockup-body {
+  min-height: 220px;
+  position: relative;
+}
+.pm-mockup-label {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.pm-cta {
+  display: flex;
+  gap: 10px;
+  margin-top: 24px;
+}
+.pm-cta-btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.pm-cta-primary {
+  background: linear-gradient(135deg, var(--accent), #6c5ce7);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(124,111,247,0.3);
+}
+.pm-cta-primary:hover { box-shadow: 0 8px 32px rgba(124,111,247,0.5); }
+.pm-cta-secondary {
+  background: var(--bg3);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.pm-cta-secondary:hover { background: var(--bg4); }
+
+/* ═══ TABLET ═══ */
+@media (max-width: 1024px) and (min-width: 641px) {
+  .pricing-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .preview-modal { max-width: 580px; }
+  .pm-hero-top { gap: 14px; }
+  .portfolio-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 640px) {
+  /* Preview → full-screen bottom sheet */
+  .preview-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .preview-modal {
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 100%;
+  }
+  .preview-overlay.active .preview-modal {
+    transform: translateY(0) scale(1);
+  }
+  .pm-hero { padding: 20px 16px 14px; }
+  .pm-hero-top { flex-direction: column; gap: 10px; }
+  .pm-emoji { font-size: 36px; }
+  .pm-title { font-size: 20px; }
+  .pm-subtitle { font-size: 13px; }
+  .pm-price { font-size: 22px; }
+  .pm-body { padding: 16px; }
+  .pm-features { grid-template-columns: 1fr; gap: 6px; }
+  .pm-feature { padding: 8px; font-size: 13px; }
+  .pm-section-title { font-size: 12px; }
+  .pm-audience { font-size: 13px; padding: 12px; }
+  .pm-cta { flex-direction: column; gap: 8px; margin-top: 16px; }
+  .pm-cta-btn { padding: 14px; font-size: 15px; }
+  .pm-mockup-body { padding: 14px !important; min-height: 180px !important; }
+  .pm-close { top: 12px; right: 12px; width: 32px; height: 32px; }
+
+  /* Drag indicator on mobile */
+  .preview-modal::before {
+    content: '';
+    display: block;
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--text3);
+    margin: 10px auto 0;
+    opacity: 0.5;
+  }
+}
 
 /* ═══ ORDER FORM ═══ */
 .order-section {
@@ -709,23 +986,81 @@ select.of-input {
 }
 
 /* ═══ MOBILE ═══ */
+/* ═══ TABLET GENERAL ═══ */
+@media (max-width: 1024px) and (min-width: 641px) {
+  .hero h1 { font-size: 40px; }
+  .hero p { font-size: 17px; }
+  .order-form { max-width: 500px; }
+  .trust { gap: 24px; }
+  .of-group[style*="grid-template-columns"] { grid-template-columns: 1fr 1fr; }
+}
+
+/* ═══ MOBILE GENERAL ═══ */
 @media (max-width: 640px) {
-  .hero { padding: 40px 0 24px; }
-  .hero h1 { font-size: 28px; letter-spacing: -0.5px; }
-  .hero p { font-size: 15px; }
-  .trust { gap: 16px; }
-  .trust-item { font-size: 12px; }
-  .pricing-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-  .price-card { padding: 16px; }
-  .pc-emoji { font-size: 24px; margin-bottom: 8px; }
+  .hero { padding: 36px 0 20px; }
+  .hero-eyebrow { font-size: 12px; padding: 6px 14px; margin-bottom: 18px; }
+  .hero h1 { font-size: 26px; letter-spacing: -0.5px; }
+  .hero p { font-size: 14px; margin-bottom: 24px; }
+  .hero-cta { padding: 14px 28px; font-size: 15px; width: 100%; justify-content: center; }
+  .trust { gap: 10px; justify-content: space-between; }
+  .trust-item { font-size: 11px; gap: 4px; }
+  .trust-item span { font-size: 15px; }
+
+  /* Pricing grid: 2 columns on phone */
+  .pricing-section { padding: 40px 0 24px; }
+  .section-title { font-size: 20px; }
+  .section-sub { font-size: 13px; margin-bottom: 24px; }
+  .pricing-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .price-card { padding: 14px 12px; }
+  .pc-emoji { font-size: 22px; margin-bottom: 6px; }
+  .pc-name { font-size: 13px; margin-bottom: 4px; }
+  .pc-desc { font-size: 11px; margin-bottom: 8px; line-height: 1.3; }
+  .pc-price { font-size: 18px; }
+  .pc-badge { top: 8px; right: 8px; font-size: 9px; padding: 2px 7px; }
+  .pc-info { font-size: 11px; padding: 5px 8px; margin-top: 8px; }
+
+  /* Order form */
+  .order-section { padding: 24px 0 40px; }
+  .order-form { padding: 20px 16px; border-radius: 14px; }
+  .of-title { font-size: 19px; }
+  .of-sub { font-size: 13px; }
+  .of-input { padding: 10px 14px; font-size: 14px; }
+  .of-submit { font-size: 15px; padding: 13px; }
+  .of-selected-type { padding: 10px 12px; font-size: 13px; }
+  .of-selected-type .emoji { font-size: 20px; }
+
+  /* Portfolio */
+  .portfolio-grid { grid-template-columns: 1fr; gap: 12px; }
+  .port-img { height: 140px; }
+
+  /* FAQ */
+  .faq-q { font-size: 14px; }
+  .faq-a { font-size: 13px; }
+
+  /* Chat */
+  .container { padding: 0 14px; }
+  .chat-messages { padding: 12px; }
+  .msg { max-width: 92%; font-size: 14px; padding: 10px 14px; }
+  .chat-header { padding: 12px 16px; }
+  .chat-input-area { padding: 10px 12px; }
+  .chat-textarea { font-size: 15px; padding: 10px 12px; }
+  .chat-attach, .chat-send { width: 40px; height: 40px; }
+
+  /* Header */
+  .logo-text { font-size: 16px; }
+  .header-badge { font-size: 11px; padding: 5px 10px; }
+}
+
+/* ═══ VERY SMALL PHONES ═══ */
+@media (max-width: 380px) {
+  .pricing-grid { grid-template-columns: 1fr; }
+  .price-card { display: flex; gap: 12px; align-items: center; padding: 14px; }
+  .pc-emoji { font-size: 28px; margin-bottom: 0; flex-shrink: 0; }
   .pc-name { font-size: 14px; }
-  .pc-desc { font-size: 12px; margin-bottom: 10px; }
-  .pc-price { font-size: 20px; }
-  .order-form { padding: 24px 20px; }
-  .container { padding: 0 16px; }
-  .section-title { font-size: 22px; }
-  .chat-messages { padding: 14px; }
-  .msg { max-width: 90%; font-size: 14px; }
+  .pc-desc { margin-bottom: 4px; }
+  .pc-info { margin-top: 6px; }
+  .hero h1 { font-size: 24px; }
+  .of-group[style*="grid-template-columns"] { display: flex !important; flex-direction: column; gap: 12px !important; }
 }
 </style>
 </head>
@@ -873,6 +1208,11 @@ select.of-input {
   </div>
 </div>
 
+<!-- Preview Modal -->
+<div class="preview-overlay" id="previewOverlay" onclick="if(event.target===this)closePreview()">
+  <div class="preview-modal" id="previewModal"></div>
+</div>
+
 <!-- Toast -->
 <div class="toast-msg" id="toastEl"></div>
 
@@ -885,14 +1225,198 @@ const AI_URL = 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai';
 const SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 const PRICING = {
-  'Визитка':     { price: 5000,  emoji: '📄', desc: '1–3 страницы, базовая информация', badge: '' },
-  'Лендинг':     { price: 10000, emoji: '🎯', desc: 'Продающая страница с анимациями', badge: 'Популярный' },
-  'Каталог':     { price: 15000, emoji: '🛒', desc: '5+ страниц, каталог товаров/услуг', badge: '' },
-  'Премиум':     { price: 25000, emoji: '⭐', desc: 'Индивидуальный дизайн, SEO, CRM', badge: '' },
-  'Свадебный':   { price: 8000,  emoji: '💍', desc: 'Приглашение, RSVP, фотогалерея', badge: '' },
-  'Портфолио':   { price: 7000,  emoji: '🎨', desc: 'Галерея работ, резюме, контакты', badge: '' },
-  'Мероприятие':  { price: 8000,  emoji: '🎉', desc: 'Событие, программа, регистрация', badge: '' },
-  'Блог/Медиа':  { price: 10000, emoji: '📰', desc: 'Блог, статьи, медиаконтент', badge: '' }
+  'Визитка': {
+    price: 5000, emoji: '📄', desc: '1–3 страницы, базовая информация', badge: '',
+    full_desc: 'Простой и элегантный сайт с основной информацией о вашем бизнесе. Идеально подходит как цифровая визитная карточка — клиенты найдут вас в Google, узнают контакты и часы работы.',
+    features: [
+      ['📱', 'Адаптивный дизайн (телефон + компьютер)'],
+      ['📍', 'Страница с адресом и картой'],
+      ['📞', 'Кнопки звонка и WhatsApp'],
+      ['🕐', 'Часы работы и контакты'],
+      ['🎨', '1–3 страницы с вашим стилем'],
+      ['🔍', 'Индексация в поисковиках']
+    ],
+    audience: 'Мастера, фрилансеры, небольшие мастерские, точки услуг, кофейни — все, кому нужно базовое присутствие в интернете.',
+    timeline: '1–2 дня',
+    mockup: {
+      url: 'мой-бизнес.рф',
+      bg: 'linear-gradient(180deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%)',
+      sections: [
+        { type: 'header', text: 'Барбершоп «Бритва»', sub: 'Мужские стрижки · Бороды · Укладки' },
+        { type: 'info', items: ['📍 ул. Пушкина, 15', '📞 +7 (999) 123-45-67', '🕐 Пн–Сб 10:00–21:00'] },
+        { type: 'cta', text: '📞 Записаться' }
+      ]
+    }
+  },
+  'Лендинг': {
+    price: 10000, emoji: '🎯', desc: 'Продающая страница с анимациями', badge: 'Популярный',
+    full_desc: 'Одна мощная продающая страница, которая убеждает клиента обратиться к вам. С красивыми анимациями, блоками преимуществ, отзывами и формой заявки. Конвертирует посетителей в клиентов.',
+    features: [
+      ['🎯', 'Продающая структура (проверенная)'],
+      ['✨', 'Анимации при прокрутке'],
+      ['💬', 'Форма заявки / обратного звонка'],
+      ['⭐', 'Блок отзывов клиентов'],
+      ['📊', 'Блоки преимуществ и услуг'],
+      ['📱', 'Идеальный вид на телефоне'],
+      ['🚀', 'Быстрая загрузка (< 2 сек)'],
+      ['📈', 'Подключение Яндекс.Метрики']
+    ],
+    audience: 'Кафе, рестораны, салоны красоты, автосервисы, доставки — бизнес, который хочет получать заявки с сайта.',
+    timeline: '2–3 дня',
+    mockup: {
+      url: 'вкусная-доставка.рф',
+      bg: 'linear-gradient(180deg, #ff6b35 0%, #f7c59f 30%, #fff 50%)',
+      sections: [
+        { type: 'header', text: '🍕 Доставка за 30 минут', sub: 'Пицца · Роллы · Бургеры — горячие и свежие!' },
+        { type: 'features', items: ['🚗 Бесплатная доставка', '⏰ 30 минут или бесплатно', '⭐ 4.9 на Яндекс Картах'] },
+        { type: 'cta', text: '🛒 Смотреть меню' }
+      ]
+    }
+  },
+  'Каталог': {
+    price: 15000, emoji: '🛒', desc: '5+ страниц, каталог товаров/услуг', badge: '',
+    full_desc: 'Многостраничный сайт с полным каталогом ваших товаров или услуг. Каждая позиция — с описанием, фото и ценой. Удобная навигация и поиск. Клиенты могут выбрать и сразу позвонить.',
+    features: [
+      ['🛒', 'Каталог с категориями'],
+      ['📷', 'Фото и описание каждой позиции'],
+      ['💰', 'Цены и фильтры'],
+      ['🔍', 'Поиск по каталогу'],
+      ['📄', '5–15 страниц'],
+      ['📱', 'Удобно листать на телефоне'],
+      ['📞', 'Кнопка заказа / звонка'],
+      ['🗂️', 'Страница «О нас» + Контакты']
+    ],
+    audience: 'Магазины, автозапчасти, мебельные салоны, оптовые компании — бизнес с ассортиментом товаров или услуг.',
+    timeline: '3–5 дней',
+    mockup: {
+      url: 'мебель-дом.рф/каталог',
+      bg: 'linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%)',
+      sections: [
+        { type: 'header', text: 'Мебель для дома', sub: 'Каталог · 240 позиций', dark: true },
+        { type: 'grid', items: ['🛋️ Диваны\n₽от 25 000', '🪑 Стулья\n₽от 3 500', '🛏️ Кровати\n₽от 18 000', '🗄️ Шкафы\n₽от 12 000'] },
+        { type: 'cta', text: '📞 Заказать' }
+      ]
+    }
+  },
+  'Премиум': {
+    price: 25000, emoji: '⭐', desc: 'Индивидуальный дизайн, SEO, CRM', badge: '',
+    full_desc: 'Полностью индивидуальный сайт с уникальным дизайном под ваш бренд. SEO-оптимизация для выхода в топ поиска. Интеграция с CRM, аналитикой и системами бронирования. Максимальный результат.',
+    features: [
+      ['🎨', 'Уникальный дизайн с нуля'],
+      ['🔍', 'SEO-оптимизация (ТОП Яндекса)'],
+      ['📊', 'CRM + аналитика'],
+      ['📅', 'Онлайн-бронирование / запись'],
+      ['💳', 'Интеграция оплаты'],
+      ['📱', 'PWA (работает как приложение)'],
+      ['🔒', 'SSL-сертификат'],
+      ['🛠️', 'Поддержка 30 дней']
+    ],
+    audience: 'Рестораны, клиники, отели, крупные салоны — бизнес, для которого сайт это основной канал клиентов.',
+    timeline: '5–10 дней',
+    mockup: {
+      url: 'рестоклуб-брежнев.рф',
+      bg: 'linear-gradient(180deg, #0c0c0c 0%, #1a1a2e 40%, #2d2d44 100%)',
+      sections: [
+        { type: 'header', text: 'РЕСТОКЛУБ БРЕЖНЕВ', sub: 'Авторская кухня · Винная карта · Живая музыка' },
+        { type: 'features', items: ['📅 Забронировать стол', '📖 Меню и цены', '🎵 Афиша событий'] },
+        { type: 'cta', text: '📅 Забронировать' }
+      ]
+    }
+  },
+  'Свадебный': {
+    price: 8000, emoji: '💍', desc: 'Приглашение, RSVP, фотогалерея', badge: '',
+    full_desc: 'Красивый свадебный сайт-приглашение с таймером обратного отсчёта, фотогалереей, картой проезда и формой подтверждения (RSVP). Гости получают ссылку и подтверждают присутствие онлайн.',
+    features: [
+      ['💒', 'Красивый дизайн-приглашение'],
+      ['⏰', 'Таймер обратного отсчёта'],
+      ['📸', 'Фотогалерея пары'],
+      ['✅', 'RSVP — подтверждение гостей'],
+      ['📍', 'Карта проезда до места'],
+      ['📋', 'Программа дня'],
+      ['💐', 'Список желаний / подарков'],
+      ['🎵', 'Фоновая музыка']
+    ],
+    audience: 'Пары, которые хотят стильно пригласить гостей и собрать подтверждения онлайн вместо бумажных приглашений.',
+    timeline: '2–3 дня',
+    mockup: {
+      url: 'аня-и-дима.рф',
+      bg: 'linear-gradient(180deg, #fdf2f8 0%, #fce7f3 30%, #fbcfe8 100%)',
+      sections: [
+        { type: 'header', text: 'Аня & Дима', sub: '15 августа 2025 · Москва', dark: true },
+        { type: 'features', items: ['⏰ До свадьбы: 142 дня', '📍 Усадьба «Архангельское»', '✅ 48 из 60 гостей'] },
+        { type: 'cta', text: '✅ Подтвердить присутствие', dark: true }
+      ]
+    }
+  },
+  'Портфолио': {
+    price: 7000, emoji: '🎨', desc: 'Галерея работ, резюме, контакты', badge: '',
+    full_desc: 'Стильный сайт для демонстрации ваших работ и навыков. Галерея проектов с фильтрацией, информация о вас, навыки и контакты. Произведите впечатление на клиентов и работодателей.',
+    features: [
+      ['🖼️', 'Галерея работ с фильтрами'],
+      ['👤', 'Страница «Обо мне»'],
+      ['🏆', 'Навыки и достижения'],
+      ['📬', 'Контактная форма'],
+      ['🔗', 'Ссылки на соцсети'],
+      ['📱', 'Красиво на любом устройстве']
+    ],
+    audience: 'Фотографы, дизайнеры, разработчики, фрилансеры — все, кто хочет показать свои работы потенциальным клиентам.',
+    timeline: '2–3 дня',
+    mockup: {
+      url: 'anna-photo.ru',
+      bg: 'linear-gradient(180deg, #f5f5f5 0%, #e0e0e0 100%)',
+      sections: [
+        { type: 'header', text: 'Анна Фотограф', sub: 'Свадьбы · Портреты · Репортажи', dark: true },
+        { type: 'grid', items: ['📷 Свадьбы\n45 работ', '📸 Портреты\n32 работы', '🎥 Репортажи\n18 работ', '🏙️ Городские\n27 работ'] },
+        { type: 'cta', text: '📬 Написать', dark: true }
+      ]
+    }
+  },
+  'Мероприятие': {
+    price: 8000, emoji: '🎉', desc: 'Событие, программа, регистрация', badge: '',
+    full_desc: 'Промо-сайт для конференции, концерта, мастер-класса или любого мероприятия. Программа, спикеры, регистрация участников и таймер до события.',
+    features: [
+      ['📋', 'Программа мероприятия'],
+      ['🎤', 'Спикеры / участники'],
+      ['🎟️', 'Онлайн-регистрация'],
+      ['⏰', 'Таймер обратного отсчёта'],
+      ['📍', 'Место и карта проезда'],
+      ['📸', 'Фотогалерея прошлых событий']
+    ],
+    audience: 'Организаторы конференций, мастер-классов, концертов, фестивалей — любое событие с регистрацией.',
+    timeline: '2–3 дня',
+    mockup: {
+      url: 'tech-conf-2025.рф',
+      bg: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      sections: [
+        { type: 'header', text: 'TechConf 2025', sub: '20 марта · Москва · 500 участников' },
+        { type: 'features', items: ['🎤 12 спикеров', '📋 8 докладов', '🎟️ Осталось 47 мест'] },
+        { type: 'cta', text: '🎟️ Зарегистрироваться' }
+      ]
+    }
+  },
+  'Блог/Медиа': {
+    price: 10000, emoji: '📰', desc: 'Блог, статьи, медиаконтент', badge: '',
+    full_desc: 'Контентный сайт для публикации статей, новостей и медиаматериалов. Удобный редактор, категории, поиск по статьям. Привлекает органический трафик из поисковиков.',
+    features: [
+      ['✏️', 'Удобная публикация статей'],
+      ['🗂️', 'Категории и теги'],
+      ['🔍', 'Поиск по контенту'],
+      ['📱', 'Читабельно на телефоне'],
+      ['📈', 'SEO для органического трафика'],
+      ['💬', 'Комментарии / обратная связь']
+    ],
+    audience: 'Блогеры, эксперты, медиа-проекты, компании с контент-маркетингом — все, кто публикует регулярный контент.',
+    timeline: '3–4 дня',
+    mockup: {
+      url: 'блог-эксперт.рф',
+      bg: 'linear-gradient(180deg, #fff 0%, #f8f9fa 100%)',
+      sections: [
+        { type: 'header', text: 'Блог Эксперта', sub: 'Маркетинг · Бизнес · Технологии', dark: true },
+        { type: 'grid', items: ['📄 Как привлечь\nклиентов', '📄 5 трендов\n2025 года', '📄 SEO для\nновичков', '📄 Реклама\nв соцсетях'] },
+        { type: 'cta', text: '📩 Подписаться', dark: true }
+      ]
+    }
+  }
 };
 
 const FAQ_DATA = [
@@ -947,13 +1471,22 @@ function renderPricing() {
   const grid = document.getElementById('pricingGrid');
   let html = '';
   for (const [name, p] of Object.entries(PRICING)) {
-    html += `<div class="price-card" onclick="selectPricing('${esc(name)}')" data-type="${esc(name)}">
+    html += `<div class="price-card" data-type="${esc(name)}">
       ${p.badge ? '<div class="pc-badge">' + p.badge + '</div>' : ''}
       <span class="pc-emoji">${p.emoji}</span>
       <div class="pc-name">${esc(name)}</div>
       <div class="pc-desc">${esc(p.desc)}</div>
       <div class="pc-price">${p.price.toLocaleString('ru')}₽</div>
+      <div class="pc-info" onclick="event.stopPropagation();showPreview('${esc(name)}')">👁 Посмотреть пример</div>
     </div>`;
+    // Card click selects pricing
+    setTimeout(() => {
+      const card = document.querySelector(`.price-card[data-type="${name}"]`);
+      if (card) card.addEventListener('click', (e) => {
+        if (e.target.closest('.pc-info')) return;
+        selectPricing(name);
+      });
+    }, 0);
   }
   grid.innerHTML = html;
 }
@@ -991,6 +1524,140 @@ function clearSelection() {
   document.getElementById('typeSelectGroup').style.display = 'block';
   document.getElementById('ofType').value = '';
 }
+
+// ═══ PREVIEW MODAL ═══
+function showPreview(type) {
+  const p = PRICING[type];
+  if (!p) return;
+
+  const modal = document.getElementById('previewModal');
+  let html = '';
+
+  // Close button
+  html += '<button class="pm-close" onclick="closePreview()">✕</button>';
+
+  // Hero
+  html += '<div class="pm-hero">';
+  html += '<div class="pm-hero-top">';
+  html += '<div class="pm-emoji">' + p.emoji + '</div>';
+  html += '<div>';
+  html += '<div class="pm-title">' + esc(type) + '</div>';
+  html += '<div class="pm-subtitle">' + esc(p.full_desc) + '</div>';
+  html += '<div class="pm-price-row"><span class="pm-price">' + p.price.toLocaleString('ru') + '₽</span><span class="pm-price-note">· готово за ' + esc(p.timeline) + '</span></div>';
+  html += '</div></div></div>';
+
+  // Body
+  html += '<div class="pm-body">';
+
+  // Mockup
+  html += '<div class="pm-section">';
+  html += '<div class="pm-section-title">📱 Как это выглядит</div>';
+  html += renderMockup(p.mockup, type);
+  html += '</div>';
+
+  // Features
+  html += '<div class="pm-section">';
+  html += '<div class="pm-section-title">✅ Что входит</div>';
+  html += '<div class="pm-features">';
+  p.features.forEach(f => {
+    html += '<div class="pm-feature"><span class="pm-feature-icon">' + f[0] + '</span><span>' + esc(f[1]) + '</span></div>';
+  });
+  html += '</div></div>';
+
+  // Audience
+  html += '<div class="pm-section">';
+  html += '<div class="pm-section-title">👥 Для кого</div>';
+  html += '<div class="pm-audience">' + esc(p.audience) + '</div>';
+  html += '</div>';
+
+  // CTA
+  html += '<div class="pm-cta">';
+  html += '<button class="pm-cta-btn pm-cta-primary" onclick="closePreview();selectPricing(\'' + esc(type) + '\')">Заказать ' + esc(type) + ' за ' + p.price.toLocaleString('ru') + '₽</button>';
+  html += '<button class="pm-cta-btn pm-cta-secondary" onclick="closePreview()">Назад</button>';
+  html += '</div>';
+
+  html += '</div>'; // pm-body
+
+  modal.innerHTML = html;
+  document.getElementById('previewOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closePreview() {
+  document.getElementById('previewOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function renderMockup(m, type) {
+  if (!m) return '';
+  const isDark = !m.sections.some(s => s.dark);
+
+  let html = '<div class="pm-mockup">';
+
+  // Browser bar
+  html += '<div class="pm-mockup-bar">';
+  html += '<div class="pm-dot pm-dot-r"></div><div class="pm-dot pm-dot-y"></div><div class="pm-dot pm-dot-g"></div>';
+  html += '<div class="pm-mockup-url">' + esc(m.url) + '</div>';
+  html += '</div>';
+
+  // Body
+  html += '<div class="pm-mockup-body" style="background:' + m.bg + ';padding:20px">';
+
+  m.sections.forEach(s => {
+    const textColor = s.dark ? '#333' : '#fff';
+    const subColor = s.dark ? '#666' : 'rgba(255,255,255,0.8)';
+
+    if (s.type === 'header') {
+      html += '<div style="text-align:center;padding:16px 0">';
+      html += '<div style="font-size:20px;font-weight:800;color:' + textColor + ';letter-spacing:-0.5px;font-family:Manrope,sans-serif">' + esc(s.text) + '</div>';
+      if (s.sub) html += '<div style="font-size:12px;color:' + subColor + ';margin-top:4px">' + esc(s.sub) + '</div>';
+      html += '</div>';
+    }
+    else if (s.type === 'info') {
+      html += '<div style="display:flex;flex-direction:column;gap:6px;padding:8px 0">';
+      s.items.forEach(item => {
+        html += '<div style="font-size:12px;color:' + textColor + ';text-align:center">' + esc(item) + '</div>';
+      });
+      html += '</div>';
+    }
+    else if (s.type === 'features') {
+      html += '<div style="display:flex;justify-content:center;gap:12px;padding:8px 0;flex-wrap:wrap">';
+      s.items.forEach(item => {
+        html += '<div style="padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.15);font-size:11px;color:' + textColor + ';backdrop-filter:blur(4px)">' + esc(item) + '</div>';
+      });
+      html += '</div>';
+    }
+    else if (s.type === 'grid') {
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0">';
+      s.items.forEach(item => {
+        const lines = item.split('\n');
+        html += '<div style="padding:12px;border-radius:8px;background:rgba(' + (s.dark ? '0,0,0,0.04' : '255,255,255,0.12') + ');text-align:center">';
+        html += '<div style="font-size:13px;font-weight:600;color:' + textColor + '">' + esc(lines[0]) + '</div>';
+        if (lines[1]) html += '<div style="font-size:11px;color:' + subColor + ';margin-top:2px">' + esc(lines[1]) + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+    }
+    else if (s.type === 'cta') {
+      const btnBg = s.dark ? 'linear-gradient(135deg,#333,#555)' : 'linear-gradient(135deg,rgba(255,255,255,0.2),rgba(255,255,255,0.1))';
+      const btnColor = s.dark ? '#fff' : '#fff';
+      const btnBorder = s.dark ? 'none' : '1px solid rgba(255,255,255,0.3)';
+      html += '<div style="text-align:center;padding:8px 0">';
+      html += '<div style="display:inline-block;padding:10px 28px;border-radius:10px;background:' + btnBg + ';color:' + btnColor + ';font-size:13px;font-weight:700;border:' + btnBorder + '">' + esc(s.text) + '</div>';
+      html += '</div>';
+    }
+  });
+
+  html += '<div class="pm-mockup-label">Пример · ' + esc(type) + '</div>';
+  html += '</div></div>';
+
+  return html;
+}
+
+// Close on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePreview();
+});
 
 function populateTypeSelect() {
   const sel = document.getElementById('ofType');
@@ -1628,6 +2295,63 @@ async function notifyTeam(name, type, phone, city) {
     });
   } catch(e) {}
 }
+
+// ═══ MOBILE: SWIPE-TO-CLOSE PREVIEW ═══
+(function() {
+  let startY = 0, currentY = 0, isDragging = false;
+  const overlay = document.getElementById('previewOverlay');
+  const modal = document.getElementById('previewModal');
+
+  modal.addEventListener('touchstart', (e) => {
+    // Only enable swipe if at scroll top
+    if (modal.scrollTop > 5) return;
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    modal.style.transition = 'none';
+  }, { passive: true });
+
+  modal.addEventListener('touchmove', (e) => {
+    if (!isDragging) return;
+    currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+    if (diff > 0) {
+      modal.style.transform = 'translateY(' + diff + 'px)';
+      overlay.style.background = 'rgba(0,0,0,' + Math.max(0.1, 0.7 - diff / 500) + ')';
+    }
+  }, { passive: true });
+
+  modal.addEventListener('touchend', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    modal.style.transition = 'transform 0.3s';
+    const diff = currentY - startY;
+    if (diff > 120) {
+      closePreview();
+    } else {
+      modal.style.transform = '';
+      overlay.style.background = '';
+    }
+    currentY = 0;
+    startY = 0;
+  });
+})();
+
+// ═══ TOUCH FEEDBACK FOR CARDS ═══
+document.addEventListener('DOMContentLoaded', () => {
+  // Add active states for touch devices
+  const style = document.createElement('style');
+  style.textContent = `
+    @media (hover: none) {
+      .price-card:active { transform: scale(0.97); }
+      .pc-info:active { background: rgba(124,111,247,0.2); }
+      .pm-cta-btn:active { transform: scale(0.97); }
+      .hero-cta:active { transform: scale(0.97); }
+      .of-submit:active { transform: scale(0.98); }
+      .faq-item:active { background: var(--bg2); }
+    }
+  `;
+  document.head.appendChild(style);
+});
 </script>
 </body>
 </html>
