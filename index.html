@@ -10449,15 +10449,16 @@ renderAll = function() {
   _origRenderAll();
 };
 
-// Check if client mode (?client=TOKEN)
+// Check if client mode (?client=TOKEN) → redirect to standalone order page
 (function() {
   const params = new URLSearchParams(window.location.search);
   const clientToken = params.get('client');
   if (clientToken) {
-    initClientMode(clientToken);
-  } else {
-    checkSavedLogin();
+    // Redirect to standalone order page
+    window.location.href = '/order.html?token=' + encodeURIComponent(clientToken);
+    return;
   }
+  checkSavedLogin();
 })();
 
 // ============================================================
@@ -10870,7 +10871,7 @@ async function generateClientLink(dirId) {
     dir.client_token = token;
   }
 
-  const url = window.location.origin + window.location.pathname + '?client=' + token;
+  const url = window.location.origin + '/order.html?token=' + token;
 
   try { await navigator.clipboard.writeText(url); } catch(e) {}
   toast('🔗 Ссылка для клиента скопирована!', 'success');
