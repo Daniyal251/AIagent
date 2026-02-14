@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Заказать сайт — Веб-студия</title>
+<meta name="description" content="Закажите сайт для вашего бизнеса от 5000₽. AI-ассистент поможет оформить заказ за 5 минут.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg: #0a0b0f;
+  --bg2: #12131a;
+  --bg3: #1a1b26;
+  --bg4: #22243a;
+  --surface: #1e2035;
+  --border: rgba(255,255,255,0.06);
+  --text: #e8e6f0;
+  --text2: #9d9bb0;
+  --text3: #6b6980;
+  --accent: #7c6ff7;
+  --accent2: #9b8aff;
+  --accent-glow: rgba(124,111,247,0.15);
+  --green: #4ade80;
+  --green-bg: rgba(74,222,128,0.08);
+  --orange: #fb923c;
+  --orange-bg: rgba(251,146,60,0.08);
+  --pink: #f472b6;
+  --blue: #60a5fa;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --radius: 16px;
+  --radius-sm: 10px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══ NOISE TEXTURE ═══ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══ GLOW ORBS ═══ */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+  z-index: 0;
+}
+.orb-1 { width: 500px; height: 500px; background: rgba(124,111,247,0.08); top: -150px; right: -150px; }
+.orb-2 { width: 400px; height: 400px; background: rgba(244,114,182,0.06); bottom: 10%; left: -100px; }
+.orb-3 { width: 300px; height: 300px; background: rgba(96,165,250,0.05); top: 50%; right: 10%; }
+
+/* ═══ CONTAINER ═══ */
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══ HEADER ═══ */
+.header {
+  padding: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), var(--pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1px;
+}
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.3px;
+}
+.header-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: var(--green-bg);
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid rgba(74,222,128,0.15);
+}
+
+/* ═══ HERO ═══ */
+.hero {
+  padding: 60px 0 40px;
+  text-align: center;
+}
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 30px;
+  background: var(--accent-glow);
+  border: 1px solid rgba(124,111,247,0.2);
+  color: var(--accent2);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+.hero h1 {
+  font-size: clamp(32px, 6vw, 56px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -1.5px;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent2) 50%, var(--pink) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero p {
+  font-size: clamp(16px, 2.5vw, 20px);
+  color: var(--text2);
+  max-width: 600px;
+  margin: 0 auto 32px;
+  line-height: 1.5;
+}
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 36px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), #6c5ce7);
+  color: #fff;
+  font-size: 17px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-decoration: none;
+  box-shadow: 0 4px 24px rgba(124,111,247,0.3);
+}
+.hero-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(124,111,247,0.5);
+}
+.hero-cta:active { transform: translateY(0); }
+
+/* ═══ TRUST ═══ */
+.trust {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  padding: 24px 0;
+  flex-wrap: wrap;
+}
+.trust-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text3);
+}
+.trust-item span { font-size: 18px; }
+
+/* ═══ PRICING CARDS ═══ */
+.pricing-section {
+  padding: 60px 0 40px;
+}
+.section-title {
+  text-align: center;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+.section-sub {
+  text-align: center;
+  color: var(--text2);
+  font-size: 15px;
+  margin-bottom: 40px;
+}
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+.price-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  transition: all 0.3s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.price-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--pink));
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.price-card:hover {
+  border-color: rgba(124,111,247,0.3);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.price-card:hover::before { opacity: 1; }
+.price-card.selected {
+  border-color: var(--accent);
+  background: rgba(124,111,247,0.05);
+}
+.price-card.selected::before { opacity: 1; }
+.pc-emoji { font-size: 32px; margin-bottom: 12px; display: block; }
+.pc-name { font-size: 17px; font-weight: 700; margin-bottom: 6px; }
+.pc-desc { font-size: 13px; color: var(--text2); margin-bottom: 16px; line-height: 1.4; }
+.pc-price {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--accent2);
+  letter-spacing: -0.5px;
+}
+.pc-price small { font-size: 14px; font-weight: 500; color: var(--text3); }
+.pc-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--orange-bg);
+  color: var(--orange);
+  border: 1px solid rgba(251,146,60,0.2);
+}
+
+/* ═══ ORDER FORM ═══ */
+.order-section {
+  padding: 40px 0 60px;
+}
+.order-form {
+  max-width: 560px;
+  margin: 0 auto;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow);
+}
+.of-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 4px;
+  letter-spacing: -0.3px;
+}
+.of-sub {
+  font-size: 14px;
+  color: var(--text2);
+  margin-bottom: 24px;
+}
+.of-group {
+  margin-bottom: 16px;
+}
+.of-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+.of-input {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.of-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-glow);
+}
+.of-input::placeholder { color: var(--text3); }
+select.of-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%239d9bb0' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 38px;
+}
+.of-selected-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-glow);
+  border: 1px solid rgba(124,111,247,0.2);
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+.of-selected-type .emoji { font-size: 24px; }
+.of-selected-type .info { flex: 1; }
+.of-selected-type .name { font-weight: 700; font-size: 15px; }
+.of-selected-type .price { color: var(--accent2); font-weight: 600; }
+.of-selected-type .change {
+  padding: 4px 12px;
+  border-radius: 8px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.of-submit {
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, var(--accent), #6c5ce7);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-top: 8px;
+  box-shadow: 0 4px 20px rgba(124,111,247,0.3);
+}
+.of-submit:hover { box-shadow: 0 8px 32px rgba(124,111,247,0.5); transform: translateY(-1px); }
+.of-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ═══ AI CHAT SCREEN ═══ */
+.chat-screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--bg);
+  flex-direction: column;
+}
+.chat-screen.active { display: flex; }
+
+.chat-header {
+  padding: 16px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.chat-back {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.chat-back:hover { background: var(--bg4); }
+.chat-info { flex: 1; }
+.chat-name { font-size: 15px; font-weight: 700; }
+.chat-status { font-size: 12px; color: var(--green); font-weight: 500; }
+
+.chat-progress {
+  padding: 10px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.cp-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.cp-bar { height: 4px; border-radius: 2px; background: var(--bg4); overflow: hidden; }
+.cp-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--green)); transition: width 0.5s ease; }
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+.msg {
+  max-width: 85%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  word-break: break-word;
+  animation: msgIn 0.3s ease;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.msg.assistant {
+  align-self: flex-start;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+  color: var(--text);
+}
+.msg.user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--accent), #6c5ce7);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+.msg.system {
+  align-self: center;
+  background: var(--orange-bg);
+  border: 1px solid rgba(251,146,60,0.15);
+  color: var(--orange);
+  font-size: 13px;
+  text-align: center;
+  max-width: 90%;
+}
+.msg img {
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 10px;
+  margin-top: 6px;
+  cursor: pointer;
+}
+.msg b { font-weight: 700; }
+
+.typing-dots {
+  display: flex;
+  gap: 5px;
+  padding: 4px 0;
+}
+.typing-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text3);
+  animation: blink 1.4s infinite both;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+.chat-input-area {
+  padding: 12px 16px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.chat-attach {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text2);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+.chat-attach:hover { background: var(--bg4); color: var(--text); }
+.chat-textarea {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  resize: none;
+  outline: none;
+  min-height: 42px;
+  max-height: 120px;
+  line-height: 1.4;
+  transition: border-color 0.2s;
+}
+.chat-textarea:focus {
+  border-color: var(--accent);
+}
+.chat-textarea::placeholder { color: var(--text3); }
+.chat-send {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--accent), #6c5ce7);
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  box-shadow: 0 2px 12px rgba(124,111,247,0.3);
+}
+.chat-send:hover { transform: scale(1.05); }
+.chat-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+.media-preview {
+  display: none;
+  padding: 8px 16px 0;
+  background: var(--bg2);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.media-preview.show { display: flex; }
+.media-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+.media-remove {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--red);
+  color: #fff;
+  font-size: 12px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.media-item {
+  position: relative;
+}
+
+/* ═══ PORTFOLIO ═══ */
+.portfolio-section {
+  padding: 40px 0;
+}
+.portfolio-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.port-card {
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  transition: all 0.3s;
+}
+.port-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+.port-img {
+  width: 100%;
+  height: 180px;
+  background: linear-gradient(135deg, var(--bg3), var(--bg4));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+.port-info { padding: 16px; }
+.port-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+.port-desc { font-size: 13px; color: var(--text2); }
+
+/* ═══ FAQ ═══ */
+.faq-section { padding: 40px 0 60px; }
+.faq-item {
+  border-bottom: 1px solid var(--border);
+  padding: 18px 0;
+}
+.faq-q {
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faq-q::after { content: '+'; font-size: 20px; color: var(--text3); transition: transform 0.2s; }
+.faq-item.open .faq-q::after { content: '−'; color: var(--accent); }
+.faq-a {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s, padding 0.3s;
+  font-size: 14px;
+  color: var(--text2);
+  line-height: 1.6;
+}
+.faq-item.open .faq-a { max-height: 200px; padding-top: 12px; }
+
+/* ═══ FOOTER ═══ */
+.footer {
+  padding: 30px 0;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text3);
+}
+
+/* ═══ TOAST ═══ */
+.toast-msg {
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  padding: 10px 24px;
+  border-radius: 12px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 999;
+  opacity: 0;
+  transition: all 0.3s;
+  box-shadow: var(--shadow);
+  pointer-events: none;
+}
+.toast-msg.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══ LOADING ═══ */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  flex-direction: column;
+  gap: 16px;
+}
+.loader {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═══ SAFE AREA ═══ */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .chat-input-area { padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+}
+
+/* ═══ MOBILE ═══ */
+@media (max-width: 640px) {
+  .hero { padding: 40px 0 24px; }
+  .hero h1 { font-size: 28px; letter-spacing: -0.5px; }
+  .hero p { font-size: 15px; }
+  .trust { gap: 16px; }
+  .trust-item { font-size: 12px; }
+  .pricing-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .price-card { padding: 16px; }
+  .pc-emoji { font-size: 24px; margin-bottom: 8px; }
+  .pc-name { font-size: 14px; }
+  .pc-desc { font-size: 12px; margin-bottom: 10px; }
+  .pc-price { font-size: 20px; }
+  .order-form { padding: 24px 20px; }
+  .container { padding: 0 16px; }
+  .section-title { font-size: 22px; }
+  .chat-messages { padding: 14px; }
+  .msg { max-width: 90%; font-size: 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Background orbs -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- Loading screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loader"></div>
+  <div style="color:var(--text2);font-size:14px">Загрузка...</div>
+</div>
+
+<!-- ═══ LANDING PAGE ═══ -->
+<div id="landingPage">
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <a href="#" class="logo">
+        <div class="logo-icon">S</div>
+        <div class="logo-text">Сайты</div>
+      </a>
+      <div class="header-badge">✓ Делаем за 3 дня</div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-eyebrow">🚀 Сайт для вашего бизнеса</div>
+      <h1>Сайт, который<br>приводит клиентов</h1>
+      <p>AI-ассистент соберёт всю информацию за 5 минут. Вы получите готовый сайт через 3 дня. От 5 000₽.</p>
+      <a href="#order" class="hero-cta" onclick="scrollToOrder(event)">Оформить заказ →</a>
+    </div>
+
+    <!-- Trust -->
+    <div class="trust">
+      <div class="trust-item"><span>⚡</span> Готово за 3 дня</div>
+      <div class="trust-item"><span>💰</span> От 5 000₽</div>
+      <div class="trust-item"><span>🔄</span> Правки бесплатно</div>
+      <div class="trust-item"><span>📱</span> Адаптивный дизайн</div>
+    </div>
+
+    <!-- Pricing -->
+    <div class="pricing-section" id="pricing">
+      <div class="section-title">Выберите тип сайта</div>
+      <div class="section-sub">Нажмите на карточку для оформления заказа</div>
+      <div class="pricing-grid" id="pricingGrid"></div>
+    </div>
+
+    <!-- Order Form -->
+    <div class="order-section" id="order">
+      <div class="order-form" id="orderForm">
+        <div class="of-title">📋 Оформить заказ</div>
+        <div class="of-sub">Заполните форму — AI-ассистент соберёт детали</div>
+        
+        <div id="selectedTypeBlock" style="display:none"></div>
+
+        <div class="of-group">
+          <label class="of-label">Название бизнеса *</label>
+          <input class="of-input" id="ofName" placeholder="Пример: Кафе «Уют»" autocomplete="organization">
+        </div>
+        <div class="of-group">
+          <label class="of-label">Ваше имя</label>
+          <input class="of-input" id="ofContact" placeholder="Как к вам обращаться?" autocomplete="name">
+        </div>
+        <div class="of-group" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="of-label">Телефон</label>
+            <input class="of-input" id="ofPhone" placeholder="+7..." type="tel" autocomplete="tel">
+          </div>
+          <div>
+            <label class="of-label">Город</label>
+            <input class="of-input" id="ofCity" placeholder="Москва" autocomplete="address-level2">
+          </div>
+        </div>
+        <div class="of-group" id="typeSelectGroup">
+          <label class="of-label">Тип сайта</label>
+          <select class="of-input" id="ofType"></select>
+        </div>
+        <div class="of-group">
+          <label class="of-label">Ссылка на бизнес (Яндекс карты, Instagram, 2ГИС)</label>
+          <input class="of-input" id="ofLink" placeholder="https://..." type="url">
+        </div>
+
+        <button class="of-submit" id="ofSubmit" onclick="submitOrder()">
+          🤖 Начать оформление с AI-ассистентом
+        </button>
+        <div style="text-align:center;margin-top:10px;font-size:12px;color:var(--text3)">
+          Бесплатно и без обязательств. AI задаст уточняющие вопросы.
+        </div>
+      </div>
+    </div>
+
+    <!-- Portfolio -->
+    <div class="portfolio-section" id="portfolio">
+      <div class="section-title">Наши работы</div>
+      <div class="section-sub">Примеры сайтов, которые мы создали</div>
+      <div class="portfolio-grid" id="portfolioGrid"></div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="section-title">Частые вопросы</div>
+      <div class="section-sub">Ответы на популярные вопросы</div>
+      <div id="faqList"></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      © 2025 Веб-студия · <a href="#" style="color:var(--accent);text-decoration:none">Telegram</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ AI CHAT SCREEN ═══ -->
+<div class="chat-screen" id="chatScreen">
+  <div class="chat-header">
+    <button class="chat-back" onclick="backToLanding()">←</button>
+    <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center;font-size:18px">🤖</div>
+    <div class="chat-info">
+      <div class="chat-name">AI-ассистент</div>
+      <div class="chat-status" id="chatStatus">● онлайн</div>
+    </div>
+  </div>
+  <div class="chat-progress">
+    <div class="cp-row">
+      <span>Готовность анкеты</span>
+      <span id="cpPct">0%</span>
+    </div>
+    <div class="cp-bar"><div class="cp-fill" id="cpFill" style="width:0%"></div></div>
+  </div>
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="media-preview" id="mediaPreview"></div>
+  <div class="chat-input-area">
+    <button class="chat-attach" onclick="attachFiles()">📎</button>
+    <textarea class="chat-textarea" id="chatInput" rows="1" placeholder="Напишите ответ..." 
+      oninput="autoResize(this)" 
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></textarea>
+    <button class="chat-send" id="chatSendBtn" onclick="sendMessage()">➤</button>
+    <input type="file" id="fileInput" multiple accept="image/*,.pdf,.doc,.docx" style="display:none" onchange="filesSelected(this)">
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-msg" id="toastEl"></div>
+
+<script>
+// ═══ CONFIG ═══
+const SUPABASE_URL = 'https://prparzgqevfelwsndmkc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBycGFyemdxZXZmZWx3c25kbWtjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM1MTM5NDIsImV4cCI6MjA1OTA4OTk0Mn0.D3xHFWu7WwVsLZMh-vs-Hv2Fo8k1GFoFQXOLuJ3i6Ew';
+const AI_URL = 'https://daniyal2212.app.n8n.cloud/webhook/rkt-ai';
+
+const SB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const PRICING = {
+  'Визитка':     { price: 5000,  emoji: '📄', desc: '1–3 страницы, базовая информация', badge: '' },
+  'Лендинг':     { price: 10000, emoji: '🎯', desc: 'Продающая страница с анимациями', badge: 'Популярный' },
+  'Каталог':     { price: 15000, emoji: '🛒', desc: '5+ страниц, каталог товаров/услуг', badge: '' },
+  'Премиум':     { price: 25000, emoji: '⭐', desc: 'Индивидуальный дизайн, SEO, CRM', badge: '' },
+  'Свадебный':   { price: 8000,  emoji: '💍', desc: 'Приглашение, RSVP, фотогалерея', badge: '' },
+  'Портфолио':   { price: 7000,  emoji: '🎨', desc: 'Галерея работ, резюме, контакты', badge: '' },
+  'Мероприятие':  { price: 8000,  emoji: '🎉', desc: 'Событие, программа, регистрация', badge: '' },
+  'Блог/Медиа':  { price: 10000, emoji: '📰', desc: 'Блог, статьи, медиаконтент', badge: '' }
+};
+
+const FAQ_DATA = [
+  { q: 'Сколько времени занимает создание сайта?', a: 'Сайт-визитка — 1–2 дня, лендинг — 2–3 дня, каталог — 3–5 дней. Мы начинаем работу сразу после оформления заказа.' },
+  { q: 'Что входит в стоимость?', a: 'Дизайн, вёрстка, адаптация под мобильные, базовая SEO-настройка, размещение на хостинге. Домен и хостинг на год — отдельно за 3 000₽.' },
+  { q: 'Нужно ли мне что-то делать?', a: 'Минимум! AI-ассистент задаст вопросы о вашем бизнесе, а вы просто ответите. Можно прислать фото — и мы сделаем всё остальное.' },
+  { q: 'Можно ли вносить правки?', a: 'Да, одна итерация правок входит в стоимость. Дополнительные правки — по договорённости.' },
+  { q: 'Какие способы оплаты?', a: 'Перевод на карту, по счёту для юрлиц. Оплата после утверждения макета — никаких предоплат.' },
+  { q: 'Что если мне не понравится результат?', a: 'Мы покажем демо-версию сайта до оплаты. Если не подойдёт — вы ничего не платите.' }
+];
+
+const PORTFOLIO_DATA = [
+  { name: 'Пышки мира', desc: 'Ресторан — каталог меню + доставка', emoji: '🍩' },
+  { name: 'Рестоклуб Брежнев', desc: 'Ресторан — бронирование + меню', emoji: '🍽️' },
+  { name: 'Кератин Агрыз', desc: 'Салон красоты — услуги + запись', emoji: '💇' }
+];
+
+// ═══ STATE ═══
+let selectedType = '';
+let currentDir = null;
+let clientToken = '';
+let chatHistory = [];
+let pendingFiles = [];
+let sending = false;
+
+// ═══ INIT ═══
+document.addEventListener('DOMContentLoaded', () => {
+  renderPricing();
+  renderFAQ();
+  renderPortfolio();
+  populateTypeSelect();
+
+  // Check for token in URL
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token') || params.get('client');
+
+  if (token) {
+    loadExistingClient(token);
+  } else {
+    hideLoading();
+  }
+});
+
+function hideLoading() {
+  const el = document.getElementById('loadingScreen');
+  el.style.opacity = '0';
+  setTimeout(() => el.style.display = 'none', 300);
+}
+
+// ═══ RENDER PRICING ═══
+function renderPricing() {
+  const grid = document.getElementById('pricingGrid');
+  let html = '';
+  for (const [name, p] of Object.entries(PRICING)) {
+    html += `<div class="price-card" onclick="selectPricing('${esc(name)}')" data-type="${esc(name)}">
+      ${p.badge ? '<div class="pc-badge">' + p.badge + '</div>' : ''}
+      <span class="pc-emoji">${p.emoji}</span>
+      <div class="pc-name">${esc(name)}</div>
+      <div class="pc-desc">${esc(p.desc)}</div>
+      <div class="pc-price">${p.price.toLocaleString('ru')}₽</div>
+    </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function selectPricing(type) {
+  selectedType = type;
+  // Highlight card
+  document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
+  const card = document.querySelector(`.price-card[data-type="${type}"]`);
+  if (card) card.classList.add('selected');
+
+  // Update form
+  const p = PRICING[type];
+  document.getElementById('selectedTypeBlock').style.display = 'block';
+  document.getElementById('selectedTypeBlock').innerHTML = `
+    <div class="of-selected-type">
+      <div class="emoji">${p.emoji}</div>
+      <div class="info">
+        <div class="name">${esc(type)}</div>
+        <div class="price">${p.price.toLocaleString('ru')}₽ · ${esc(p.desc)}</div>
+      </div>
+      <button class="change" onclick="clearSelection()">Изменить</button>
+    </div>`;
+  document.getElementById('typeSelectGroup').style.display = 'none';
+  document.getElementById('ofType').value = type;
+
+  // Scroll to form
+  document.getElementById('order').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearSelection() {
+  selectedType = '';
+  document.querySelectorAll('.price-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('selectedTypeBlock').style.display = 'none';
+  document.getElementById('typeSelectGroup').style.display = 'block';
+  document.getElementById('ofType').value = '';
+}
+
+function populateTypeSelect() {
+  const sel = document.getElementById('ofType');
+  sel.innerHTML = '<option value="">— Выберите тип —</option>';
+  for (const [name, p] of Object.entries(PRICING)) {
+    sel.innerHTML += `<option value="${esc(name)}">${p.emoji} ${esc(name)} — ${p.price.toLocaleString('ru')}₽</option>`;
+  }
+  sel.innerHTML += '<option value="Другое">📌 Другое (обсудим)</option>';
+}
+
+// ═══ RENDER FAQ ═══
+function renderFAQ() {
+  const list = document.getElementById('faqList');
+  list.innerHTML = FAQ_DATA.map((f, i) => `
+    <div class="faq-item" onclick="this.classList.toggle('open')">
+      <div class="faq-q">${esc(f.q)}</div>
+      <div class="faq-a">${esc(f.a)}</div>
+    </div>
+  `).join('');
+}
+
+// ═══ RENDER PORTFOLIO ═══
+function renderPortfolio() {
+  const grid = document.getElementById('portfolioGrid');
+  grid.innerHTML = PORTFOLIO_DATA.map(p => `
+    <div class="port-card">
+      <div class="port-img">${p.emoji}</div>
+      <div class="port-info">
+        <div class="port-name">${esc(p.name)}</div>
+        <div class="port-desc">${esc(p.desc)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══ SCROLL ═══
+function scrollToOrder(e) {
+  e.preventDefault();
+  document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ═══ SUBMIT ORDER ═══
+async function submitOrder() {
+  const name = document.getElementById('ofName').value.trim();
+  if (!name) { toast('Введите название бизнеса'); document.getElementById('ofName').focus(); return; }
+
+  const contact = document.getElementById('ofContact').value.trim();
+  const phone = document.getElementById('ofPhone').value.trim();
+  const city = document.getElementById('ofCity').value.trim();
+  const type = selectedType || document.getElementById('ofType').value || 'Лендинг';
+  const link = document.getElementById('ofLink').value.trim();
+  const pricing = PRICING[type] || { price: 0 };
+
+  const btn = document.getElementById('ofSubmit');
+  btn.disabled = true;
+  btn.textContent = '⏳ Создаём заказ...';
+
+  try {
+    // Generate unique token for this client
+    const token = generateToken();
+
+    // Create direction in Supabase
+    const row = {
+      name: name,
+      project: 'Сайты',
+      status: 'В работе',
+      stage: 'prospect',
+      site_type: type,
+      price: pricing.price || 0,
+      paid: false,
+      client_name: contact || name,
+      phone: phone,
+      city: city,
+      link: link,
+      source: 'Онлайн-заявка',
+      next_contact: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+      manager: '',
+      touches: 0,
+      created_at: new Date().toISOString().slice(0, 10),
+      client_token: token,
+      questionnaire: JSON.stringify({
+        _version: 2,
+        _source: 'client_order_form',
+        _created: new Date().toISOString(),
+        business_info: { name, type: type, city, link },
+        contact: { name: contact, phone }
+      })
+    };
+
+    const { data, error } = await SB.from('directions').insert(row).select();
+    if (error) throw error;
+
+    currentDir = data[0];
+    clientToken = token;
+
+    // Save token to localStorage for return visits
+    localStorage.setItem('rkt_order_token', token);
+
+    // Notify team via n8n (non-blocking)
+    notifyTeam(name, type, phone, city).catch(e => console.warn('Notify failed:', e));
+
+    // Open chat
+    openChat();
+
+  } catch(e) {
+    console.error('Submit error:', e);
+    toast('Ошибка: ' + (e.message || 'Попробуйте ещё раз'));
+    btn.disabled = false;
+    btn.textContent = '🤖 Начать оформление с AI-ассистентом';
+  }
+}
+
+// ═══ LOAD EXISTING CLIENT ═══
+async function loadExistingClient(token) {
+  try {
+    const { data, error } = await SB.from('directions').select('*').eq('client_token', token).single();
+    if (error || !data) {
+      hideLoading();
+      toast('Ссылка устарела. Оформите новый заказ.');
+      return;
+    }
+
+    currentDir = data;
+    clientToken = token;
+
+    // Load chat history
+    const dirId = data.id;
+    const { data: msgs } = await SB.from('anketa_chat').select('*').eq('direction_id', dirId).order('created_at', { ascending: true });
+    chatHistory = msgs || [];
+
+    hideLoading();
+    openChat(true);
+
+  } catch(e) {
+    console.error('Load error:', e);
+    hideLoading();
+    toast('Ошибка загрузки');
+  }
+}
+
+// ═══ CHAT ═══
+function openChat(skipGreeting) {
+  document.getElementById('landingPage').style.display = 'none';
+  document.getElementById('chatScreen').classList.add('active');
+  hideLoading();
+
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = '';
+
+  // Render existing messages
+  chatHistory.forEach(m => {
+    if (m.role === 'user' || m.role === 'assistant') {
+      appendMsg(m.role, m.content, m.media_urls);
+    }
+  });
+
+  // Update progress
+  if (currentDir) {
+    updateProgress(currentDir.anketa_completeness || 0);
+  }
+
+  // Auto-greeting if new
+  if (!skipGreeting || !chatHistory.length) {
+    sendAutoGreeting();
+  }
+
+  // Scroll to bottom
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Focus input
+  setTimeout(() => document.getElementById('chatInput').focus(), 300);
+}
+
+function backToLanding() {
+  document.getElementById('chatScreen').classList.remove('active');
+  document.getElementById('landingPage').style.display = 'block';
+}
+
+function appendMsg(role, content, mediaUrls) {
+  const container = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'msg ' + role;
+
+  let html = '';
+  if (mediaUrls && Array.isArray(mediaUrls) && mediaUrls.length) {
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">';
+    mediaUrls.forEach(m => {
+      if ((m.type === 'image' || /\.(jpg|jpeg|png|gif|webp)/i.test(m.url || ''))) {
+        html += '<img src="' + escA(m.url) + '" onclick="window.open(this.src)" alt="фото">';
+      }
+    });
+    html += '</div>';
+  }
+  if (content) {
+    html += formatText(content);
+  }
+  div.innerHTML = html;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function formatText(text) {
+  return esc(text)
+    .replace(/\n/g, '<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>');
+}
+
+// ═══ AUTO GREETING ═══
+async function sendAutoGreeting() {
+  const dir = currentDir;
+  if (!dir) return;
+  const dirId = dir.id;
+
+  const typingDiv = appendMsg('assistant', '');
+  typingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  document.getElementById('chatStatus').textContent = '● печатает...';
+
+  try {
+    const q = parseQ(dir);
+    const prompt = buildSystemPrompt(dir, q);
+
+    const res = await fetch(AI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Поприветствуй клиента и начни собирать информацию. Представься как AI-ассистент веб-студии.',
+        context: 'anketa',
+        source: 'client_order',
+        direction: dir.name || '',
+        directionId: dirId,
+        user: 'Клиент',
+        questionnaire: q,
+        stage: dir.stage || 'prospect',
+        history: [],
+        media: [],
+        systemPrompt: prompt,
+        isClientMode: true
+      }),
+      signal: AbortSignal.timeout(60000)
+    });
+
+    let data = await res.json();
+    if (Array.isArray(data)) data = data[0] || {};
+    if (data.json) data = data.json;
+    let aiText = data.reply || data.response || data.text || data.message || '';
+    if (!aiText && data.content) { try { aiText = data.content[0].text; } catch(e) {} }
+    if (!aiText) aiText = 'Здравствуйте! 👋 Я AI-ассистент веб-студии. Расскажите подробнее о вашем бизнесе, и мы создадим для вас идеальный сайт!';
+
+    const parsed = parseAiResponse(aiText);
+    typingDiv.innerHTML = formatText(parsed.visibleText);
+
+    // Save to DB
+    await SB.from('anketa_chat').insert({
+      direction_id: dirId,
+      role: 'assistant',
+      content: parsed.visibleText,
+      extracted_data: parsed.extracted || {}
+    });
+    chatHistory.push({ role: 'assistant', content: parsed.visibleText });
+
+    if (parsed.completeness !== null) updateProgress(parsed.completeness);
+
+  } catch(e) {
+    console.warn('Greeting error:', e);
+    typingDiv.innerHTML = formatText('Здравствуйте! 👋 Я AI-ассистент веб-студии. Расскажите о вашем бизнесе — какие услуги предлагаете, кто ваши клиенты? Это поможет мне сделать для вас лучший сайт!');
+  }
+
+  document.getElementById('chatStatus').textContent = '● онлайн';
+}
+
+// ═══ SEND MESSAGE ═══
+async function sendMessage() {
+  if (sending) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text && !pendingFiles.length) return;
+
+  const dir = currentDir;
+  if (!dir) return;
+  const dirId = dir.id;
+
+  sending = true;
+  document.getElementById('chatSendBtn').disabled = true;
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Upload files
+  let mediaUrls = [];
+  if (pendingFiles.length) {
+    toast('📤 Загрузка файлов...');
+    for (const file of pendingFiles) {
+      try {
+        const resized = await resizeImage(file);
+        const path = 'client/' + dirId + '/' + Date.now() + '_' + slugify(file.name);
+        const { error } = await SB.storage.from('anketa').upload(path, resized, { contentType: resized.type, upsert: false });
+        if (!error) {
+          const { data: urlData } = SB.storage.from('anketa').getPublicUrl(path);
+          if (urlData?.publicUrl) mediaUrls.push({ type: 'image', url: urlData.publicUrl, name: file.name });
+        }
+      } catch(e) { console.warn('Upload error:', e); }
+    }
+    pendingFiles = [];
+    document.getElementById('mediaPreview').innerHTML = '';
+    document.getElementById('mediaPreview').classList.remove('show');
+  }
+
+  // Show user message
+  let displayText = text;
+  if (mediaUrls.length) displayText += (text ? '\n' : '') + '📎 ' + mediaUrls.length + ' файл(ов)';
+  appendMsg('user', displayText, mediaUrls);
+
+  // Save user message
+  let fullContent = text;
+  if (mediaUrls.length) fullContent += '\n[Прикреплено: ' + mediaUrls.map(m => m.name).join(', ') + ']';
+  await SB.from('anketa_chat').insert({ direction_id: dirId, role: 'user', content: fullContent, media_urls: mediaUrls });
+  chatHistory.push({ role: 'user', content: fullContent, media_urls: mediaUrls });
+
+  // Typing indicator
+  const typingDiv = appendMsg('assistant', '');
+  typingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  document.getElementById('chatStatus').textContent = '● печатает...';
+
+  try {
+    const history = chatHistory.slice(-16).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: (m.content || '').slice(0, 2000) }));
+    const q = parseQ(dir);
+    const prompt = buildSystemPrompt(dir, q);
+    const hasMedia = mediaUrls.length > 0;
+    const isLongRequest = /(?:напиши|составь|подготовь|сделай|создай|оформи|давай)[^.]{0,30}(?:текст|кп|предложен|письм|описан)/i.test((text || '').toLowerCase());
+    const timeout = isLongRequest ? 150000 : hasMedia ? 120000 : 90000;
+
+    // Retry logic
+    let aiText = '';
+    for (let attempt = 1; attempt <= 2; attempt++) {
+      try {
+        const controller = new AbortController();
+        const tmr = setTimeout(() => controller.abort(), attempt === 1 ? timeout : timeout + 60000);
+        const res = await fetch(AI_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: fullContent,
+            context: 'anketa',
+            source: 'client_order',
+            direction: dir.name || '',
+            directionId: dirId,
+            user: 'Клиент',
+            questionnaire: q,
+            stage: dir.stage || 'prospect',
+            history: history,
+            media: mediaUrls,
+            systemPrompt: prompt,
+            isClientMode: true
+          }),
+          signal: controller.signal
+        });
+        clearTimeout(tmr);
+
+        let data = await res.json();
+        if (Array.isArray(data)) data = data[0] || {};
+        if (data.json) data = data.json;
+        aiText = data.reply || data.response || data.text || data.message || '';
+        if (!aiText && data.content) { try { aiText = data.content[0].text; } catch(e) {} }
+        if (aiText) break;
+      } catch(retryErr) {
+        if (attempt < 2 && retryErr.name === 'AbortError') {
+          typingDiv.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div><div style="font-size:11px;color:var(--text3);margin-top:4px">Повторная попытка...</div>';
+          continue;
+        }
+        throw retryErr;
+      }
+    }
+
+    if (!aiText) aiText = 'Извините, не удалось обработать запрос. Попробуйте ещё раз или напишите по-другому.';
+
+    const parsed = parseAiResponse(aiText);
+
+    // Typewriter effect
+    typingDiv.innerHTML = '';
+    const words = parsed.visibleText.split(/([\s]+)/);
+    let idx = 0;
+    await new Promise(resolve => {
+      const iv = setInterval(() => {
+        if (idx >= words.length) { clearInterval(iv); resolve(); return; }
+        const chunk = words.slice(idx, idx + 4).join('');
+        typingDiv.innerHTML += formatText(chunk);
+        idx += 4;
+        document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+      }, 25);
+    });
+
+    // Save assistant message
+    await SB.from('anketa_chat').insert({
+      direction_id: dirId,
+      role: 'assistant',
+      content: parsed.visibleText,
+      extracted_data: parsed.extracted || {}
+    });
+    chatHistory.push({ role: 'assistant', content: parsed.visibleText });
+
+    // Update questionnaire
+    if (parsed.extracted && Object.keys(parsed.extracted).length) {
+      const updatedQ = mergeQ(q, parsed.extracted);
+      if (parsed.completeness !== null) updatedQ._completeness = parsed.completeness;
+      await SB.from('directions').update({
+        questionnaire: JSON.stringify(updatedQ),
+        anketa_completeness: parsed.completeness || dir.anketa_completeness || 0
+      }).eq('id', dirId);
+      dir.questionnaire = JSON.stringify(updatedQ);
+    }
+
+    if (parsed.completeness !== null) updateProgress(parsed.completeness);
+
+  } catch(e) {
+    console.error('Send error:', e);
+    const isAbort = e.name === 'AbortError';
+    typingDiv.innerHTML = isAbort
+      ? '<span style="color:var(--yellow)">⏱ Время ожидания истекло. Попробуйте ещё раз — AI обработает ваш запрос.</span>'
+      : '<span style="color:var(--red)">Ошибка связи. Попробуйте ещё раз.</span>';
+  }
+
+  sending = false;
+  document.getElementById('chatSendBtn').disabled = false;
+  document.getElementById('chatStatus').textContent = '● онлайн';
+  document.getElementById('chatInput').focus();
+}
+
+// ═══ FILE HANDLING ═══
+function attachFiles() {
+  document.getElementById('fileInput').click();
+}
+
+function filesSelected(input) {
+  const files = Array.from(input.files);
+  if (!files.length) return;
+  pendingFiles.push(...files);
+  renderMediaPreview();
+  input.value = '';
+}
+
+function renderMediaPreview() {
+  const container = document.getElementById('mediaPreview');
+  if (!pendingFiles.length) { container.classList.remove('show'); container.innerHTML = ''; return; }
+  container.classList.add('show');
+  container.innerHTML = pendingFiles.map((f, i) => {
+    const isImg = f.type.startsWith('image/');
+    return `<div class="media-item">
+      ${isImg ? '<img class="media-thumb" src="' + URL.createObjectURL(f) + '">' : '<div class="media-thumb" style="display:flex;align-items:center;justify-content:center;background:var(--bg3);font-size:11px;color:var(--text2)">📄</div>'}
+      <button class="media-remove" onclick="removeFile(${i})">×</button>
+    </div>`;
+  }).join('');
+}
+
+function removeFile(idx) {
+  pendingFiles.splice(idx, 1);
+  renderMediaPreview();
+}
+
+// ═══ AI RESPONSE PARSING ═══
+function parseAiResponse(text) {
+  let visibleText = text;
+  let extracted = {};
+  let completeness = null;
+
+  // Extract JSON block
+  const jsonMatch = text.match(/```json\s*([\s\S]*?)```/);
+  if (jsonMatch) {
+    try {
+      extracted = JSON.parse(jsonMatch[1]);
+      visibleText = text.replace(/```json[\s\S]*?```/, '').trim();
+    } catch(e) {}
+  }
+
+  // Extract completeness
+  const compMatch = text.match(/(?:completeness|готовность|заполнен)[:\s]*(\d+)/i);
+  if (compMatch) completeness = Math.min(100, parseInt(compMatch[1]));
+  if (extracted.completeness) completeness = Math.min(100, parseInt(extracted.completeness));
+  if (extracted._completeness) completeness = Math.min(100, parseInt(extracted._completeness));
+
+  // Clean markdown artifacts
+  visibleText = visibleText.replace(/---[\s]*$/gm, '').replace(/^\s*#{1,3}\s*/gm, '').trim();
+
+  return { visibleText, extracted, completeness };
+}
+
+// ═══ SYSTEM PROMPT ═══
+function buildSystemPrompt(dir, q) {
+  const name = dir.name || 'Клиент';
+  const type = dir.site_type || q?.business_info?.type || '';
+  const city = dir.city || q?.business_info?.city || '';
+  const stage = dir.stage || 'prospect';
+
+  let collected = '';
+  if (q && q._version === 2) {
+    ['business_info','contact','content','design','media','services','custom'].forEach(s => {
+      if (q[s] && Object.keys(q[s]).length) collected += '\n' + s + ': ' + JSON.stringify(q[s]);
+    });
+  }
+
+  let p = 'Ты — AI-ассистент веб-студии. Общаешься НАПРЯМУЮ с клиентом.\n\n';
+
+  p += '## ПРАВИЛА:\n';
+  p += '- Задавай по ОДНОМУ вопросу за раз, не перегружай\n';
+  p += '- Будь дружелюбным, профессиональным, кратким\n';
+  p += '- Отвечай на вопросы клиента, если спрашивает — НЕ игнорируй\n';
+  p += '- Если клиент просит написать текст/КП/описание — НАПИШИ его, а не задавай вопросы\n';
+  p += '- Формат: обычный текст, используй **жирный** для акцентов\n';
+  p += '- В конце каждого ответа добавь JSON-блок с извлечёнными данными\n\n';
+
+  p += '## О КЛИЕНТЕ:\n';
+  p += '- Бизнес: ' + name + '\n';
+  if (type) p += '- Тип сайта: ' + type + '\n';
+  if (city) p += '- Город: ' + city + '\n';
+
+  if (collected) {
+    p += '\n## СОБРАНО:\n' + collected + '\n';
+    p += '\nНЕ спрашивай то, что уже известно!\n';
+  }
+
+  p += '\n## ЧТО УЗНАТЬ (по одному!):\n';
+  p += '1. Подробнее о бизнесе (чем занимаетесь, преимущества, аудитория)\n';
+  p += '2. Услуги/товары с ценами\n';
+  p += '3. Контакты (телефон, соцсети, адрес, часы работы)\n';
+  p += '4. Стиль (цвета, примеры сайтов которые нравятся)\n';
+  p += '5. Фотографии (логотип, фото продукции/интерьера)\n';
+  p += '6. Дополнительные пожелания\n\n';
+
+  p += '## JSON-ФОРМАТ (в конце ответа):\n';
+  p += '```json\n{"business_info":{"type":"...","description":"..."},"services":[...],"contact":{"phone":"...","hours":"..."},"design":{"colors":"...","style":"..."},"completeness":25}\n```\n';
+  p += 'completeness — оценка заполненности от 0 до 100.\n';
+
+  return p;
+}
+
+// ═══ HELPERS ═══
+function parseQ(dir) {
+  try { return JSON.parse(dir.questionnaire || '{}'); } catch(e) { return {}; }
+}
+
+function mergeQ(existing, newData) {
+  const m = JSON.parse(JSON.stringify(existing));
+  m._version = 2;
+  m._last_updated = new Date().toISOString();
+  for (const [k, v] of Object.entries(newData)) {
+    if (k.startsWith('_')) { m[k] = v; continue; }
+    if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+      if (!m[k]) m[k] = {};
+      for (const [kk, vv] of Object.entries(v)) {
+        if (vv !== null && vv !== undefined && vv !== '') m[k][kk] = vv;
+      }
+    } else {
+      m[k] = v;
+    }
+  }
+  return m;
+}
+
+function updateProgress(pct) {
+  const n = Math.min(100, Math.max(0, parseInt(pct) || 0));
+  document.getElementById('cpPct').textContent = n + '%';
+  document.getElementById('cpFill').style.width = n + '%';
+}
+
+function generateToken() {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let t = '';
+  for (let i = 0; i < 24; i++) t += chars[Math.floor(Math.random() * chars.length)];
+  return t;
+}
+
+function slugify(s) {
+  return s.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 60);
+}
+
+function esc(s) {
+  if (!s) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+function escA(s) {
+  return esc(s).replace(/"/g, '&quot;');
+}
+
+function toast(msg) {
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function resizeImage(file, maxDim = 1568, quality = 0.85) {
+  return new Promise(resolve => {
+    if (!file.type.startsWith('image/') || file.size < 1024 * 1024) return resolve(file);
+    if (file.type === 'image/gif' || file.type === 'image/svg+xml') return resolve(file);
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width <= maxDim && height <= maxDim && file.size < 3 * 1024 * 1024) return resolve(file);
+      if (width > height) { if (width > maxDim) { height = Math.round(height * maxDim / width); width = maxDim; } }
+      else { if (height > maxDim) { width = Math.round(width * maxDim / height); height = maxDim; } }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      canvas.toBlob(blob => {
+        if (blob && blob.size < file.size) resolve(new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), { type: 'image/jpeg' }));
+        else resolve(file);
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+async function notifyTeam(name, type, phone, city) {
+  try {
+    await fetch(AI_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: '🆕 Новая заявка с сайта!\n\nКлиент: ' + name + '\nТип: ' + type + '\nТелефон: ' + (phone || 'не указан') + '\nГород: ' + (city || 'не указан'),
+        context: 'notification',
+        source: 'client_order'
+      }),
+      signal: AbortSignal.timeout(10000)
+    });
+  } catch(e) {}
+}
+</script>
+</body>
+</html>
